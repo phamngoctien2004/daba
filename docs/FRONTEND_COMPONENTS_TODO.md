@@ -444,7 +444,7 @@ interface PatientFormProps {
 
 **API Integration:**
 - GET /api/appointments/{id} (get appointment data)
-- GET /api/health-plans?keyword={query}
+- GET /api/services?keyword={query}
 - GET /api/doctors?available=true
 - POST /api/medical-record (cash)
 - POST /api/payments/create-link (QR)
@@ -655,7 +655,7 @@ interface QRPaymentModalProps {
 
 **Components:**
 - HealthPlan/Service SearchableSelect
-  - API: GET /api/health-plans?keyword={query}
+  - API: GET /api/services?keyword={query}
   - Display: name, price, typeService
 - Doctor SearchableSelect
   - API: GET /api/doctors?available=true
@@ -1113,7 +1113,7 @@ interface PaymentContext {
 **Supporting:**
 - useDepartments() - GET /api/departments
 - useDoctors() - GET /api/doctors
-- useHealthPlans() - GET /api/health-plans
+- useHealthPlans() - GET /api/services
 
 ---
 

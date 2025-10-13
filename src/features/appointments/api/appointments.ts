@@ -25,6 +25,7 @@ export interface AppointmentDepartment {
 
 export interface Appointment {
   id: number
+  patientId: number
   fullName: string
   phone: string | null
   gender: 'NAM' | 'NU'
@@ -112,7 +113,7 @@ const takeFirstNumber = (...values: unknown[]) => {
 
 const normalisePage = (page?: number) => {
   if (typeof page !== 'number' || Number.isNaN(page)) {
-  return DEFAULT_APPOINTMENT_PAGE
+    return DEFAULT_APPOINTMENT_PAGE
   }
 
   if (page < 1) {
@@ -151,36 +152,38 @@ const extractPaginationNumbers = (
   responsePagination: unknown,
   params: AppointmentListParams
 ): AppointmentPagination => {
-  const fallbackPage = params.page ?? DEFAULT_APPOINTMENT_PAGE
-  const fallbackPageSize = params.pageSize ?? DEFAULT_APPOINTMENT_PAGE_SIZE
+  const requestedPage = params.page ?? DEFAULT_APPOINTMENT_PAGE
+  const requestedPageSize = params.pageSize ?? DEFAULT_APPOINTMENT_PAGE_SIZE
 
-  let page = fallbackPage
-  let pageSize = fallbackPageSize
+  let page = requestedPage
+  let pageSize = requestedPageSize
   let total = 0
   let totalPages = 0
 
-  if (raw) {
-    const inferredPage = takeFirstNumber(
-      raw.page,
-      raw.pageNumber,
-      raw.currentPage
-    )
-    const inferredPageSize = takeFirstNumber(raw.pageSize, raw.size, raw.limit)
-    const inferredTotal = takeFirstNumber(
-      raw.total,
-      raw.totalElements,
-      raw.totalCount
-    )
-    const inferredTotalPages = takeFirstNumber(raw.totalPages)
+  // Try to extract from Spring Data's pageable structure first
+  if (isRecord(raw) && isRecord(raw.pageable)) {
+    const pageable = raw.pageable
+    const inferredPageNumber = takeFirstNumber(pageable.pageNumber)
+    const inferredPageSize = takeFirstNumber(pageable.pageSize)
 
-    if (typeof inferredPage === 'number') {
-      page = inferredPage <= 0 ? inferredPage + 1 : inferredPage
-      page = normalisePage(page)
+    // Spring Data pageNumber is 0-based, convert to 1-based
+    if (typeof inferredPageNumber === 'number') {
+      page = inferredPageNumber + 1
     }
 
     if (typeof inferredPageSize === 'number') {
       pageSize = Math.max(1, Math.floor(inferredPageSize))
     }
+  }
+
+  // Extract total and totalPages from Spring Data response
+  if (raw) {
+    const inferredTotal = takeFirstNumber(
+      raw.totalElements,
+      raw.total,
+      raw.totalCount
+    )
+    const inferredTotalPages = takeFirstNumber(raw.totalPages)
 
     if (typeof inferredTotal === 'number') {
       total = Math.max(0, Math.floor(inferredTotal))
@@ -191,10 +194,12 @@ const extractPaginationNumbers = (
     }
   }
 
+  // Fallback: try separate pagination object
   if (isRecord(responsePagination)) {
     const inferredPage = takeFirstNumber(
       responsePagination.page,
-      responsePagination.currentPage
+      responsePagination.currentPage,
+      responsePagination.pageNumber
     )
     const inferredPageSize = takeFirstNumber(
       responsePagination.pageSize,
@@ -210,7 +215,8 @@ const extractPaginationNumbers = (
     )
 
     if (typeof inferredPage === 'number') {
-      page = normalisePage(inferredPage)
+      // Assume 0-based, convert to 1-based
+      page = inferredPage >= 0 ? inferredPage + 1 : normalisePage(inferredPage)
     }
 
     if (typeof inferredPageSize === 'number') {
@@ -226,6 +232,7 @@ const extractPaginationNumbers = (
     }
   }
 
+  // Calculate missing values
   if (totalPages === 0 && pageSize > 0 && total > 0) {
     totalPages = Math.max(1, Math.ceil(total / pageSize))
   }
@@ -234,30 +241,13 @@ const extractPaginationNumbers = (
     totalPages = 0
   }
 
-  if (total === 0 && raw && isAppointmentArray(raw.items)) {
-    total = raw.items.length
-    totalPages = total === 0 ? 0 : Math.ceil(total / pageSize)
-  }
-
   if (total === 0 && raw && isAppointmentArray(raw.content)) {
     total = raw.content.length
     totalPages = total === 0 ? 0 : Math.ceil(total / pageSize)
   }
 
-  if (total === 0 && pageSize > 0 && totalPages > 0) {
-    total = totalPages * pageSize
-  }
-
-  if (total === 0) {
-    total = 0
-  }
-
-  if (totalPages === 0 && total > 0 && pageSize > 0) {
-    totalPages = Math.ceil(total / pageSize)
-  }
-
   return {
-    page,
+    page: normalisePage(page),
     pageSize,
     total,
     totalPages,
@@ -281,13 +271,12 @@ export const fetchAppointments = async (
     searchParams.status = params.status
   }
 
-  if (typeof params.page === 'number') {
-    searchParams.page = String(params.page)
-  }
+  // Send page and limit directly to API
+  const page = params.page ?? DEFAULT_APPOINTMENT_PAGE
+  const limit = params.pageSize ?? DEFAULT_APPOINTMENT_PAGE_SIZE
 
-  if (typeof params.pageSize === 'number') {
-    searchParams.pageSize = String(params.pageSize)
-  }
+  searchParams.page = String(page)
+  searchParams.limit = String(limit)
 
   const { data } = await get<AppointmentsApiResponse>('/appointments', {
     params: searchParams,

@@ -41,7 +41,7 @@ import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_a
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedAppointmentsCreateRouteImport } from './routes/_authenticated/appointments/create'
-import { Route as AuthenticatedAppointmentsCreateMedicalRecordAppointmentIdRouteImport } from './routes/_authenticated/appointments/create-medical-record/$appointmentId'
+import { Route as AuthenticatedAppointmentsRecordCreateRouteImport } from './routes/_authenticated/appointments/record/create'
 
 const ClerkRouteRoute = ClerkRouteRouteImport.update({
   id: '/clerk',
@@ -211,10 +211,10 @@ const AuthenticatedAppointmentsCreateRoute =
     path: '/appointments/create',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAppointmentsCreateMedicalRecordAppointmentIdRoute =
-  AuthenticatedAppointmentsCreateMedicalRecordAppointmentIdRouteImport.update({
-    id: '/appointments/create-medical-record/$appointmentId',
-    path: '/appointments/create-medical-record/$appointmentId',
+const AuthenticatedAppointmentsRecordCreateRoute =
+  AuthenticatedAppointmentsRecordCreateRouteImport.update({
+    id: '/appointments/record/create',
+    path: '/appointments/record/create',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
@@ -249,7 +249,7 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
-  '/appointments/create-medical-record/$appointmentId': typeof AuthenticatedAppointmentsCreateMedicalRecordAppointmentIdRoute
+  '/appointments/record/create': typeof AuthenticatedAppointmentsRecordCreateRoute
 }
 export interface FileRoutesByTo {
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
@@ -280,7 +280,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
-  '/appointments/create-medical-record/$appointmentId': typeof AuthenticatedAppointmentsCreateMedicalRecordAppointmentIdRoute
+  '/appointments/record/create': typeof AuthenticatedAppointmentsRecordCreateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -316,7 +316,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
-  '/_authenticated/appointments/create-medical-record/$appointmentId': typeof AuthenticatedAppointmentsCreateMedicalRecordAppointmentIdRoute
+  '/_authenticated/appointments/record/create': typeof AuthenticatedAppointmentsRecordCreateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -351,7 +351,7 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/tasks'
     | '/users'
-    | '/appointments/create-medical-record/$appointmentId'
+    | '/appointments/record/create'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/clerk'
@@ -382,7 +382,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/users'
-    | '/appointments/create-medical-record/$appointmentId'
+    | '/appointments/record/create'
   id:
     | '__root__'
     | '/_authenticated'
@@ -417,7 +417,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
-    | '/_authenticated/appointments/create-medical-record/$appointmentId'
+    | '/_authenticated/appointments/record/create'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -661,11 +661,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppointmentsCreateRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/appointments/create-medical-record/$appointmentId': {
-      id: '/_authenticated/appointments/create-medical-record/$appointmentId'
-      path: '/appointments/create-medical-record/$appointmentId'
-      fullPath: '/appointments/create-medical-record/$appointmentId'
-      preLoaderRoute: typeof AuthenticatedAppointmentsCreateMedicalRecordAppointmentIdRouteImport
+    '/_authenticated/appointments/record/create': {
+      id: '/_authenticated/appointments/record/create'
+      path: '/appointments/record/create'
+      fullPath: '/appointments/record/create'
+      preLoaderRoute: typeof AuthenticatedAppointmentsRecordCreateRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -705,7 +705,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
-  AuthenticatedAppointmentsCreateMedicalRecordAppointmentIdRoute: typeof AuthenticatedAppointmentsCreateMedicalRecordAppointmentIdRoute
+  AuthenticatedAppointmentsRecordCreateRoute: typeof AuthenticatedAppointmentsRecordCreateRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -719,8 +719,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
-  AuthenticatedAppointmentsCreateMedicalRecordAppointmentIdRoute:
-    AuthenticatedAppointmentsCreateMedicalRecordAppointmentIdRoute,
+  AuthenticatedAppointmentsRecordCreateRoute:
+    AuthenticatedAppointmentsRecordCreateRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

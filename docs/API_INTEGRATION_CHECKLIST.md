@@ -442,7 +442,7 @@ Checklist này liệt kê TẤT CẢ các API endpoints cần integrate theo t�
 ### UC006: Thêm chỉ định xét nghiệm/dịch vụ
 
 #### Get Health Plans (Services/Tests)
-- ❌ **GET /api/health-plans**
+- ❌ **GET /api/services**
   - **UC:** UC006 (search services)
   - **Query Params:**
     - `keyword` (optional): string
@@ -812,7 +812,7 @@ Checklist này liệt kê TẤT CẢ các API endpoints cần integrate theo t�
 - ❌ GET /api/medical-record/patient/{patientId}
 
 #### P2 - Medium (10 APIs)
-- ❌ GET /api/health-plans
+- ❌ GET /api/services
 - ❌ POST /api/lab-orders
 - ❌ PUT /api/lab-orders/status
 - ❌ POST /api/lab-results

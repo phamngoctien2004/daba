@@ -23,7 +23,6 @@ import {
   fetchAppointments,
   type AppointmentStatus,
 } from './api/appointments'
-import { createMedicalRecordRoutePath } from '@/routes/_authenticated/appointments/create-medical-record/$appointmentId'
 import type { AppointmentsSearch } from './types'
 
 const appointmentsRoute = getRouteApi('/_authenticated/appointments/')
@@ -141,16 +140,6 @@ export function AppointmentsManagement() {
     [mutateAppointmentStatus]
   )
 
-  const handleOpenMedicalRecord = useCallback(
-    (appointmentId: number) => {
-      globalNavigate({
-        to: createMedicalRecordRoutePath as never,
-        params: { appointmentId: String(appointmentId) } as never,
-      })
-    },
-    [globalNavigate]
-  )
-
   const appointments = appointmentsQuery.data?.appointments ?? []
   const pagination = appointmentsQuery.data?.pagination ?? {
     page,
@@ -158,6 +147,63 @@ export function AppointmentsManagement() {
     total: appointments.length,
     totalPages: appointments.length > 0 ? 1 : 0,
   }
+
+  const handleOpenMedicalRecord = useCallback(
+    (appointmentId: number) => {
+      // Find the appointment in current data
+      const appointment = appointments.find((apt) => apt.id === appointmentId)
+
+      if (appointment) {
+        console.log('🔵 [handleOpenMedicalRecord] Appointment found:', appointment)
+
+        // Clear old data first, then save new appointment data
+        import('@/lib/appointment-storage').then(
+          ({ clearAppointmentForMedicalRecord, saveAppointmentForMedicalRecord }) => {
+            // Clear previous data
+            clearAppointmentForMedicalRecord()
+            console.log('🗑️ [handleOpenMedicalRecord] Cleared old appointment data')
+
+            // Prepare new appointment data
+            const appointmentData = {
+              appointmentId: appointment.id,
+              patientId: appointment.patientId || appointment.id, // Use actual patientId from appointment
+              patientName: appointment.fullName,
+              patientPhone: appointment.phone,
+              patientEmail: appointment.email,
+              patientGender: appointment.gender,
+              patientBirth: appointment.birth,
+              patientAddress: appointment.address,
+              doctorId: appointment.doctorResponse?.id ?? null,
+              doctorName: appointment.doctorResponse?.position ?? null,
+              departmentId: appointment.departmentResponse?.id ?? null,
+              departmentName: appointment.departmentResponse?.name ?? null,
+              healthPlanId: appointment.healthPlanResponse?.id ?? null,
+              healthPlanName: appointment.healthPlanResponse?.name ?? null,
+              symptoms: appointment.symptoms,
+              appointmentDate: appointment.date,
+              appointmentTime: appointment.time,
+            }
+
+            console.log('💾 [handleOpenMedicalRecord] Saving new appointment data:', appointmentData)
+            // Save new data
+            saveAppointmentForMedicalRecord(appointmentData)
+
+            // Navigate after saving
+            globalNavigate({
+              to: '/appointments/record/create',
+            })
+          }
+        )
+      } else {
+        // No appointment found, still navigate but show warning
+        console.warn('⚠️ [handleOpenMedicalRecord] Appointment not found:', appointmentId)
+        globalNavigate({
+          to: '/appointments/record/create',
+        })
+      }
+    },
+    [globalNavigate, appointments]
+  )
 
   const isLoading = appointmentsQuery.isPending
   const isRefetching =

@@ -429,7 +429,7 @@ src/features/lab-orders/
   - Response: Lab order với code XN{timestamp}, status=CHO_THUC_HIEN
   - Auto chuyển medical record status → CHO_XET_NGHIEM
 
-- ❌ **GET /api/health-plans** - Danh sách dịch vụ/xét nghiệm
+- ❌ **GET /api/services** - Danh sách dịch vụ/xét nghiệm
   - Query param: keyword (search)
 
 - ❌ **GET /api/doctors** - Danh sách bác sĩ

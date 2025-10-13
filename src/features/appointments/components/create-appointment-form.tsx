@@ -32,7 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { TimePicker } from '@/components/time-picker'
 import { Calendar } from '@/components/ui/calendar'
@@ -99,7 +98,7 @@ export function CreateAppointmentForm({
       onSuccess?.()
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Có l×i x£y ra khi ·t lËch khám')
+      toast.error(error.response?.data?.message || 'Cï¿½ lï¿½i xï¿½y ra khi ï¿½t lï¿½ch khï¿½m')
     },
   })
 
@@ -117,7 +116,7 @@ export function CreateAppointmentForm({
   const handlePatientCreated = (patient: Patient) => {
     setIsCreatePatientOpen(false)
     handlePatientSelect(patient)
-    toast.success('T¡o bÇnh nhân thành công')
+    toast.success('Tï¿½o bï¿½nh nhï¿½n thï¿½nh cï¿½ng')
   }
 
   const handleDepartmentChange = (value: string) => {
@@ -147,9 +146,9 @@ export function CreateAppointmentForm({
           <FormField
             control={form.control}
             name="patientId"
-            render={({ field }) => (
+            render={() => (
               <FormItem>
-                <FormLabel>BÇnh nhân *</FormLabel>
+                <FormLabel>Bï¿½nh nhï¿½n *</FormLabel>
                 <FormControl>
                   <PatientSearch
                     value={selectedPatient}
@@ -166,10 +165,10 @@ export function CreateAppointmentForm({
           {/* Patient Info (Read-only when patient selected) */}
           {selectedPatient && (
             <div className="rounded-lg border p-4 bg-muted/50 space-y-3">
-              <h3 className="font-medium text-sm">Thông tin bÇnh nhân</h3>
+              <h3 className="font-medium text-sm">Thï¿½ng tin bï¿½nh nhï¿½n</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground">HÍ tên:</span>{' '}
+                  <span className="text-muted-foreground">Hï¿½ tï¿½n:</span>{' '}
                   <span className="font-medium">{selectedPatient.name}</span>
                 </div>
                 <div>
@@ -177,13 +176,13 @@ export function CreateAppointmentForm({
                   <span className="font-medium">{selectedPatient.phone || 'N/A'}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Ngày sinh:</span>{' '}
+                  <span className="text-muted-foreground">Ngï¿½y sinh:</span>{' '}
                   <span className="font-medium">{selectedPatient.birth}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">GiÛi tính:</span>{' '}
+                  <span className="text-muted-foreground">Giï¿½i tï¿½nh:</span>{' '}
                   <span className="font-medium">
-                    {selectedPatient.gender === 'NAM' ? 'Nam' : 'Nï'}
+                    {selectedPatient.gender === 'NAM' ? 'Nam' : 'Nï¿½'}
                   </span>
                 </div>
               </div>
@@ -197,7 +196,7 @@ export function CreateAppointmentForm({
               name="departmentId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Khoa khám *</FormLabel>
+                  <FormLabel>Khoa khï¿½m *</FormLabel>
                   <Select
                     onValueChange={handleDepartmentChange}
                     value={field.value?.toString() || ''}
@@ -205,7 +204,7 @@ export function CreateAppointmentForm({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="ChÍn khoa khám" />
+                        <SelectValue placeholder="Chï¿½n khoa khï¿½m" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -227,7 +226,7 @@ export function CreateAppointmentForm({
               name="doctorId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Bác s) *</FormLabel>
+                  <FormLabel>Bï¿½c s) *</FormLabel>
                   <Select
                     onValueChange={(value) => field.onChange(parseInt(value))}
                     value={field.value?.toString() || ''}
@@ -235,7 +234,7 @@ export function CreateAppointmentForm({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="ChÍn bác s)" />
+                        <SelectValue placeholder="Chï¿½n bï¿½c s)" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -260,7 +259,7 @@ export function CreateAppointmentForm({
               name="date"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Ngày khám *</FormLabel>
+                  <FormLabel>Ngï¿½y khï¿½m *</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -275,7 +274,7 @@ export function CreateAppointmentForm({
                           {field.value ? (
                             format(new Date(field.value), 'dd/MM/yyyy')
                           ) : (
-                            <span>ChÍn ngày</span>
+                            <span>Chï¿½n ngï¿½y</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -306,7 +305,7 @@ export function CreateAppointmentForm({
               name="time"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>GiÝ khám *</FormLabel>
+                  <FormLabel>Giï¿½ khï¿½m *</FormLabel>
                   <FormControl>
                     <TimePicker
                       value={field.value}
@@ -326,10 +325,10 @@ export function CreateAppointmentForm({
             name="symptoms"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>TriÇu chéng</FormLabel>
+                <FormLabel>Triï¿½u chï¿½ng</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Mô t£ triÇu chéng ho·c lý do khám..."
+                    placeholder="Mï¿½ tï¿½ triï¿½u chï¿½ng hoï¿½c lï¿½ do khï¿½m..."
                     className="resize-none"
                     rows={4}
                     disabled={isFormDisabled}
@@ -350,12 +349,12 @@ export function CreateAppointmentForm({
                 onClick={onCancel}
                 disabled={isFormDisabled}
               >
-                Hçy
+                Hï¿½y
               </Button>
             )}
             <Button type="submit" disabled={isFormDisabled}>
               {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              ·t lËch khám
+              ï¿½t lï¿½ch khï¿½m
             </Button>
           </div>
         </form>

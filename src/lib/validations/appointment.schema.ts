@@ -15,15 +15,13 @@ export const phoneSchema = z
  */
 export const createAppointmentSchema = z
   .object({
-    patientId: z.number({ required_error: 'Vui lòng chọn bệnh nhân' }).min(1, 'Vui lòng chọn bệnh nhân'),
-    departmentId: z.number({ required_error: 'Vui lòng chọn khoa' }).min(1, 'Vui lòng chọn khoa'),
-    doctorId: z.number({ required_error: 'Vui lòng chọn bác sĩ' }).min(1, 'Vui lòng chọn bác sĩ'),
+    patientId: z.number().min(1, 'Vui lòng chọn bệnh nhân'),
+    departmentId: z.number().min(1, 'Vui lòng chọn khoa'),
+    doctorId: z.number().min(1, 'Vui lòng chọn bác sĩ'),
     healthPlanId: z.number().optional(),
     fullName: z.string().min(1, 'Họ tên là bắt buộc'),
     phone: phoneSchema,
-    gender: z.enum(['NAM', 'NU'], {
-      errorMap: () => ({ message: 'Vui lòng chọn giới tính' }),
-    }),
+    gender: z.enum(['NAM', 'NU'], { message: 'Vui lòng chọn giới tính' }),
     birth: z.string().min(1, 'Ngày sinh là bắt buộc'),
     email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
     address: z.string().optional(),
@@ -65,9 +63,7 @@ export const createPatientSchema = z.object({
   name: z.string().min(1, 'Họ tên là bắt buộc').max(100, 'Họ tên không được vượt quá 100 ký tự'),
   phone: phoneSchema,
   email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
-  gender: z.enum(['NAM', 'NU'], {
-    errorMap: () => ({ message: 'Vui lòng chọn giới tính' }),
-  }),
+  gender: z.enum(['NAM', 'NU'], { message: 'Vui lòng chọn giới tính' }),
   birth: z.string().refine(
     (date) => {
       try {
