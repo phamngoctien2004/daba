@@ -1,0 +1,1 @@
+Các component đều phải sử dụng của shadcn ui

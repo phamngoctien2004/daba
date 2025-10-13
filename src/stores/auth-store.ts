@@ -1,53 +1,65 @@
 import { create } from 'zustand'
-import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
 
-const ACCESS_TOKEN = 'thisisjustarandomstring'
-
-interface AuthUser {
-  accountNo: string
-  email: string
-  role: string[]
-  exp: number
-}
+import {
+  clearAuthData,
+  getAuthToken,
+  getUserData,
+  setAuthToken,
+  setUserData,
+} from '@/lib/auth-storage'
+import { type User } from '@/types/auth'
 
 interface AuthState {
-  auth: {
-    user: AuthUser | null
-    setUser: (user: AuthUser | null) => void
-    accessToken: string
-    setAccessToken: (accessToken: string) => void
-    resetAccessToken: () => void
-    reset: () => void
-  }
+  user: User | null
+  accessToken: string
+  isAuthenticated: boolean
+  setUser: (user: User | null) => void
+  setAccessToken: (accessToken: string) => void
+  login: (user: User, accessToken: string) => void
+  logout: () => void
 }
 
 export const useAuthStore = create<AuthState>()((set) => {
-  const cookieState = getCookie(ACCESS_TOKEN)
-  const initToken = cookieState ? JSON.parse(cookieState) : ''
+  // Initialize from localStorage
+  const initToken = getAuthToken() || ''
+  const initUser = getUserData<User>()
+
   return {
-    auth: {
-      user: null,
-      setUser: (user) =>
-        set((state) => ({ ...state, auth: { ...state.auth, user } })),
-      accessToken: initToken,
-      setAccessToken: (accessToken) =>
-        set((state) => {
-          setCookie(ACCESS_TOKEN, JSON.stringify(accessToken))
-          return { ...state, auth: { ...state.auth, accessToken } }
-        }),
-      resetAccessToken: () =>
-        set((state) => {
-          removeCookie(ACCESS_TOKEN)
-          return { ...state, auth: { ...state.auth, accessToken: '' } }
-        }),
-      reset: () =>
-        set((state) => {
-          removeCookie(ACCESS_TOKEN)
-          return {
-            ...state,
-            auth: { ...state.auth, user: null, accessToken: '' },
-          }
-        }),
+    user: initUser,
+    accessToken: initToken,
+    isAuthenticated: !!initToken && !!initUser,
+
+    setUser: (user) => {
+      if (user) {
+        setUserData(user)
+      }
+      set({ user, isAuthenticated: !!user })
+    },
+
+    setAccessToken: (accessToken) => {
+      if (accessToken) {
+        setAuthToken(accessToken)
+      }
+      set({ accessToken, isAuthenticated: !!accessToken })
+    },
+
+    login: (user, accessToken) => {
+      setUserData(user)
+      setAuthToken(accessToken)
+      set({
+        user,
+        accessToken,
+        isAuthenticated: true,
+      })
+    },
+
+    logout: () => {
+      clearAuthData()
+      set({
+        user: null,
+        accessToken: '',
+        isAuthenticated: false,
+      })
     },
   }
 })

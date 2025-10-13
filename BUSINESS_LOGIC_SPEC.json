@@ -1,0 +1,871 @@
+{
+  "use_cases": [
+    {
+      "id": "UC001",
+      "intent": "Đặt lịch khám cho bệnh nhân",
+      "preconditions": [
+        "User có role LE_TAN",
+        "Token JWT còn hiệu lực",
+        "Bác sĩ được chọn available=true",
+        "Có slot lịch trống tại thời gian đặt"
+      ],
+      "postconditions": [
+        "Appointment được tạo với status CHO_XAC_NHAN",
+        "Appointment code được auto-generate: LH{timestamp}",
+        "Patient được liên kết với appointment"
+      ],
+      "main_flow": [
+        "Lễ tân tìm kiếm bệnh nhân theo phone hoặc keyword",
+        "Nếu không tìm thấy → tạo bệnh nhân mới (UC002)",
+        "Chọn khoa (departmentId)",
+        "Load danh sách bác sĩ theo khoa",
+        "Chọn bác sĩ, ngày, giờ khám",
+        "Nhập triệu chứng và ghi chú",
+        "Submit → API POST /api/appointments → trả về appointment mới"
+      ],
+      "alt_flows": [
+        "Nếu bác sĩ không khả dụng → hiển thị lỗi Conflict 409",
+        "Nếu thiếu thông tin bắt buộc → hiển thị lỗi 400"
+      ],
+      "non_functional": {
+        "rate_limit": null,
+        "ttl_cache": null,
+        "pagination": null
+      }
+    },
+    {
+      "id": "UC002",
+      "intent": "Tạo hồ sơ bệnh nhân mới",
+      "preconditions": [
+        "User có role LE_TAN",
+        "CCCD chưa tồn tại trong hệ thống",
+        "Có đầy đủ thông tin bắt buộc: fullName, cccd, birth, address, gender, bloodType, weight, height"
+      ],
+      "postconditions": [
+        "Patient được tạo với code BN{timestamp}",
+        "Patient có relationship=CHU TAI KHOAN (nếu có phone)",
+        "registrationDate = ngày hiện tại"
+      ],
+      "main_flow": [
+        "Nhập thông tin bệnh nhân: phone, email, fullName, address, cccd, birth, gender, bloodType, weight, height",
+        "Validate input (cccd unique, birth <= today, bloodType in [A,B,AB,O], gender in [NAM,NU])",
+        "Submit → API POST /api/patients → trả về patient mới"
+      ],
+      "alt_flows": [
+        "Nếu CCCD đã tồn tại → hiển thị lỗi Conflict 409",
+        "Nếu phone đã tồn tại → gợi ý thêm bệnh nhân liên kết"
+      ],
+      "non_functional": {
+        "rate_limit": null,
+        "ttl_cache": null,
+        "pagination": null
+      }
+    },
+    {
+      "id": "UC003",
+      "intent": "Xác nhận lịch hẹn",
+      "preconditions": [
+        "User có role LE_TAN",
+        "Appointment tồn tại",
+        "Status hiện tại cho phép chuyển đổi theo state machine"
+      ],
+      "postconditions": [
+        "Appointment status được cập nhật",
+        "updatedAt timestamp được cập nhật"
+      ],
+      "main_flow": [
+        "Lễ tân gọi điện xác nhận → cập nhật status = DA_XAC_NHAN",
+        "Bệnh nhân đến → cập nhật status = DA_DEN → chuyển sang tab phiếu khám",
+        "Nếu không liên lạc được hoặc không đến → status = KHONG_DEN"
+      ],
+      "alt_flows": [
+        "Nếu status không hợp lệ theo state machine → lỗi 400"
+      ],
+      "non_functional": {
+        "rate_limit": null,
+        "ttl_cache": null,
+        "pagination": null
+      }
+    },
+    {
+      "id": "UC004",
+      "intent": "Tạo phiếu khám và thanh toán",
+      "preconditions": [
+        "User có role LE_TAN",
+        "Patient đã tồn tại hoặc vừa tạo mới",
+        "Đã chọn dịch vụ khám/health plan",
+        "Phương thức thanh toán được chọn (cash hoặc qr)"
+      ],
+      "postconditions": [
+        "Invoice được tạo với invoiceId",
+        "Nếu thanh toán cash → Medical Record được tạo ngay với invoiceId undefined",
+        "Nếu thanh toán QR → đợi QR payment success → tạo Medical Record với invoiceId",
+        "Medical Record có code PK{timestamp}, status=DANG_KHAM"
+      ],
+      "main_flow": [
+        "Chọn bệnh nhân, dịch vụ khám (healthPlanId), nhập triệu chứng",
+        "Tính phí khám dựa trên dịch vụ/bác sĩ",
+        "Chọn phương thức thanh toán:",
+        "  - Cash: POST /api/medical-record với invoiceId=undefined → tạo phiếu khám ngay",
+        "  - QR: POST /api/payments/create-link → hiển thị QR → polling GET /api/payments/status/{orderCode} → khi success → POST /api/medical-record với invoiceId"
+      ],
+      "alt_flows": [
+        "QR payment timeout sau 5 phút → dừng polling",
+        "QR payment fail → không tạo medical record"
+      ],
+      "non_functional": {
+        "rate_limit": null,
+        "ttl_cache": 300000,
+        "pagination": null
+      }
+    },
+    {
+      "id": "UC005",
+      "intent": "Bác sĩ khám bệnh và cập nhật phiếu khám",
+      "preconditions": [
+        "User có role BAC_SI",
+        "Medical Record tồn tại với status=DANG_KHAM hoặc CHO_XET_NGHIEM",
+        "Medical Record đã được thanh toán"
+      ],
+      "postconditions": [
+        "Các trường clinicalExamination, diagnosis, treatmentPlan, note được cập nhật",
+        "Status có thể chuyển sang CHO_XET_NGHIEM hoặc HOAN_THANH",
+        "Lab orders được tạo nếu có chỉ định",
+        "Prescription được tạo nếu có kê đơn"
+      ],
+      "main_flow": [
+        "Bác sĩ mở chi tiết phiếu khám",
+        "Nhập thông tin khám lâm sàng, chẩn đoán, hướng điều trị",
+        "PUT /api/medical-record để lưu tạm các trường",
+        "Nếu cần xét nghiệm → POST /api/lab-orders (có thể nhiều lần)",
+        "Nếu cần kê đơn → POST /api/prescriptions → POST /api/prescriptions/details",
+        "Hoàn thành khám → PUT /api/medical-record/status với status=HOAN_THANH"
+      ],
+      "alt_flows": [
+        "Nếu cần thêm dịch vụ chưa thanh toán → tạo payment link",
+        "Nếu huỷ phiếu → status=HUY"
+      ],
+      "non_functional": {
+        "rate_limit": null,
+        "ttl_cache": null,
+        "pagination": null
+      }
+    },
+    {
+      "id": "UC006",
+      "intent": "Thêm chỉ định xét nghiệm/dịch vụ",
+      "preconditions": [
+        "User có role BAC_SI",
+        "Medical Record status=DANG_KHAM",
+        "Health plan (service) được chọn tồn tại",
+        "Performing doctor được chọn available=true"
+      ],
+      "postconditions": [
+        "Lab order được tạo với code XN{timestamp}, status=CHO_THUC_HIEN",
+        "Medical Record status chuyển sang CHO_XET_NGHIEM",
+        "Lab order được liên kết với medical record"
+      ],
+      "main_flow": [
+        "Tìm kiếm dịch vụ theo keyword",
+        "Chọn dịch vụ (healthPlanId), bác sĩ thực hiện, nhập chẩn đoán",
+        "POST /api/lab-orders → tạo lab order",
+        "Nếu medical record đang DANG_KHAM → tự động chuyển sang CHO_XET_NGHIEM"
+      ],
+      "alt_flows": [
+        "Nếu medical record đã HOAN_THANH hoặc HUY → không cho phép thêm chỉ định"
+      ],
+      "non_functional": {
+        "rate_limit": null,
+        "ttl_cache": null,
+        "pagination": null
+      }
+    },
+    {
+      "id": "UC007",
+      "intent": "Tạo đơn thuốc",
+      "preconditions": [
+        "User có role BAC_SI",
+        "Medical Record status=DANG_KHAM",
+        "Có danh sách thuốc trong hệ thống"
+      ],
+      "postconditions": [
+        "Prescription được tạo với code DT{timestamp}",
+        "PrescriptionDetails chứa danh sách thuốc, liều lượng, hướng dẫn",
+        "Prescription được liên kết với medical record"
+      ],
+      "main_flow": [
+        "Tạo prescription container: POST /api/prescriptions với medicalRecordId, generalInstructions",
+        "Tìm kiếm thuốc: GET /api/medicines?keyword={keyword}",
+        "Thêm từng thuốc: POST /api/prescriptions/details với prescriptionId, medicineId, quantity, usageInstructions",
+        "Có thể cập nhật hoặc xoá: PUT /api/prescriptions/details, DELETE /api/prescriptions/details/{id}"
+      ],
+      "alt_flows": [
+        "Nếu prescription đã tồn tại → cập nhật prescription hiện có"
+      ],
+      "non_functional": {
+        "rate_limit": null,
+        "ttl_cache": null,
+        "pagination": null
+      }
+    },
+    {
+      "id": "UC008",
+      "intent": "Thực hiện xét nghiệm và nhập kết quả",
+      "preconditions": [
+        "User có role BAC_SI hoặc KY_THUAT_VIEN",
+        "Lab order status=CHO_THUC_HIEN hoặc DANG_THUC_HIEN",
+        "Lab order đã được thanh toán (statusPayment=DA_THANH_TOAN)"
+      ],
+      "postconditions": [
+        "Lab order status chuyển sang HOAN_THANH",
+        "Lab result được tạo với resultDetails, note, explanation",
+        "Bác sĩ chỉ định được thông báo (optional)"
+      ],
+      "main_flow": [
+        "Cập nhật status=DANG_THUC_HIEN: PUT /api/lab-orders/status",
+        "Nhập kết quả: POST /api/lab-results",
+        "Cập nhật status=HOAN_THANH: PUT /api/lab-orders/status"
+      ],
+      "alt_flows": [
+        "Nếu huỷ xét nghiệm → status=HUY_BO"
+      ],
+      "non_functional": {
+        "rate_limit": null,
+        "ttl_cache": null,
+        "pagination": null
+      }
+    },
+    {
+      "id": "UC009",
+      "intent": "Xem lịch sử khám bệnh",
+      "preconditions": [
+        "User có role BAC_SI hoặc LE_TAN",
+        "PatientId hợp lệ"
+      ],
+      "postconditions": [
+        "Hiển thị danh sách medical records của bệnh nhân",
+        "Highlight phiếu khám đang thực hiện (status=DANG_KHAM)"
+      ],
+      "main_flow": [
+        "GET /api/medical-record/patient/{patientId}",
+        "Hiển thị danh sách phiếu khám theo thời gian giảm dần",
+        "Cho phép click vào từng phiếu để xem chi tiết"
+      ],
+      "alt_flows": [],
+      "non_functional": {
+        "rate_limit": null,
+        "ttl_cache": 60000,
+        "pagination": null
+      }
+    },
+    {
+      "id": "UC010",
+      "intent": "In phiếu khám và hóa đơn",
+      "preconditions": [
+        "Medical Record tồn tại",
+        "User có quyền xem medical record"
+      ],
+      "postconditions": [
+        "HTML phiếu khám/hóa đơn được render",
+        "Có thể in hoặc download PDF"
+      ],
+      "main_flow": [
+        "GET /api/html/medical-record/{id} → nhận HTML phiếu khám",
+        "GET /api/html/invoice/{medicalRecordId} → nhận HTML hóa đơn",
+        "Mở HTML trong window mới → window.print()"
+      ],
+      "alt_flows": [],
+      "non_functional": {
+        "rate_limit": null,
+        "ttl_cache": null,
+        "pagination": null
+      }
+    }
+  ],
+  "io_contracts": {
+    "inputs": [
+      {
+        "name": "LoginRequest",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "username": { "type": "string", "format": "email" },
+            "password": { "type": "string", "minLength": 6 }
+          },
+          "required": ["username", "password"]
+        }
+      },
+      {
+        "name": "AppointmentCreateData",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "patientId": { "type": "integer", "minimum": 1 },
+            "doctorId": { "type": "integer", "minimum": 1 },
+            "departmentId": { "type": "integer", "minimum": 1 },
+            "appointmentDate": { "type": "string", "format": "date", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+            "appointmentTime": { "type": "string", "pattern": "^\\d{2}:\\d{2}$" },
+            "symptoms": { "type": "string", "maxLength": 1000 },
+            "notes": { "type": "string", "maxLength": 500 }
+          },
+          "required": ["patientId", "doctorId", "departmentId", "appointmentDate", "appointmentTime"]
+        }
+      },
+      {
+        "name": "NewPatientCreateData",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "phone": { "type": ["string", "null"], "pattern": "^0\\d{9}$" },
+            "email": { "type": ["string", "null"], "format": "email" },
+            "fullName": { "type": "string", "minLength": 1, "maxLength": 100 },
+            "address": { "type": "string", "minLength": 1, "maxLength": 255 },
+            "cccd": { "type": "string", "pattern": "^\\d{9,12}$" },
+            "birth": { "type": "string", "format": "date" },
+            "gender": { "type": "string", "enum": ["NAM", "NU"] },
+            "bloodType": { "type": "string", "enum": ["A", "B", "AB", "O"] },
+            "weight": { "type": "number", "minimum": 0, "maximum": 500 },
+            "height": { "type": "number", "minimum": 0, "maximum": 300 },
+            "profileImage": { "type": ["string", "null"], "format": "uri" },
+            "phoneLink": { "type": ["string", "null"], "pattern": "^0\\d{9}$" }
+          },
+          "required": ["fullName", "address", "cccd", "birth", "gender", "bloodType", "weight", "height"]
+        }
+      },
+      {
+        "name": "SimpleMedicalRecordCreateData",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "patientId": { "type": "integer", "minimum": 1 },
+            "doctorId": { "type": ["integer", "null"], "minimum": 1 },
+            "healthPlanId": { "type": ["integer", "null"], "minimum": 1 },
+            "symptoms": { "type": "string", "maxLength": 2000 },
+            "invoiceId": { "type": ["integer", "null"] }
+          },
+          "required": ["patientId", "symptoms"]
+        }
+      },
+      {
+        "name": "CreateLabOrderRequest",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "recordId": { "type": "integer", "minimum": 1 },
+            "healthPlanId": { "type": "integer", "minimum": 1 },
+            "performingDoctorId": { "type": "integer", "minimum": 1 },
+            "diagnosis": { "type": "string", "maxLength": 1000 }
+          },
+          "required": ["recordId", "healthPlanId", "performingDoctorId", "diagnosis"]
+        }
+      },
+      {
+        "name": "PaymentLinkRequest",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "medicalRecordId": { "type": ["integer", "null"] },
+            "labOrderIds": { "type": ["array", "null"], "items": { "type": "integer" } },
+            "healthPlanIds": { "type": ["array", "null"], "items": { "type": "integer" } },
+            "doctorId": { "type": ["integer", "null"] },
+            "totalAmount": { "type": "integer", "minimum": 0 }
+          },
+          "required": []
+        }
+      }
+    ],
+    "outputs": [
+      {
+        "name": "LoginResponse",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "accessToken": { "type": "string" },
+                "userResponse": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer" },
+                    "email": { "type": "string" },
+                    "role": { "type": "string", "enum": ["BAC_SI", "LE_TAN", "ADMIN"] },
+                    "status": { "type": "boolean" },
+                    "createdAt": { "type": "string", "format": "date-time" },
+                    "doctor": {
+                      "type": ["object", "null"],
+                      "properties": {
+                        "id": { "type": "integer" },
+                        "fullName": { "type": "string" },
+                        "phone": { "type": "string" },
+                        "position": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "message": { "type": "string" }
+          }
+        }
+      },
+      {
+        "name": "AppointmentResponse",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "fullName": { "type": "string" },
+            "phone": { "type": "string" },
+            "date": { "type": "string", "format": "date" },
+            "time": { "type": "string" },
+            "status": { "type": "string", "enum": ["CHO_XAC_NHAN", "DA_XAC_NHAN", "DA_DEN", "KHONG_DEN"] },
+            "symptoms": { "type": "string" }
+          }
+        }
+      },
+      {
+        "name": "MedicalRecordDetailResponse",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "code": { "type": "string", "pattern": "^PK\\d+$" },
+            "symptoms": { "type": "string" },
+            "clinicalExamination": { "type": ["string", "null"] },
+            "diagnosis": { "type": ["string", "null"] },
+            "treatmentPlan": { "type": ["string", "null"] },
+            "note": { "type": ["string", "null"] },
+            "status": { "type": "string", "enum": ["DANG_KHAM", "CHO_XET_NGHIEM", "HOAN_THANH", "HUY"] },
+            "total": { "type": "number" },
+            "paid": { "type": "number" },
+            "patientId": { "type": "integer" },
+            "patientName": { "type": "string" },
+            "date": { "type": "string", "format": "date-time" },
+            "invoiceDetailsResponse": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "integer" },
+                  "healthPlanId": { "type": "integer" },
+                  "healthPlanName": { "type": "string" },
+                  "healthPlanPrice": { "type": "number" },
+                  "paid": { "type": "number" },
+                  "status": { "type": "string", "enum": ["DA_THANH_TOAN", "CHUA_THANH_TOAN", "THANH_TOAN_MOT_PHAN"] },
+                  "typeService": { "type": "string", "enum": ["SINGLE", "MULTIPLE"] },
+                  "singleLab": { "type": ["object", "null"] },
+                  "multipleLab": { "type": ["array", "null"] }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "PaymentLinkResponse",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "invoiceId": { "type": "integer" },
+                "qrCode": { "type": "string" },
+                "orderCode": { "type": "integer" }
+              }
+            },
+            "message": { "type": "string" }
+          }
+        }
+      }
+    ],
+    "errors": [
+      { "code": "AUTH_001", "when": "Token JWT không hợp lệ hoặc hết hạn" },
+      { "code": "AUTH_002", "when": "Sai username hoặc password" },
+      { "code": "AUTH_003", "when": "User không có quyền truy cập resource" },
+      { "code": "VAL_001", "when": "Thiếu thông tin bắt buộc trong request body" },
+      { "code": "VAL_002", "when": "Format dữ liệu không hợp lệ (date, phone, email, cccd)" },
+      { "code": "VAL_003", "when": "Giá trị vượt quá giới hạn cho phép (weight, height, maxLength)" },
+      { "code": "BIZ_001", "when": "Bệnh nhân với CCCD đã tồn tại" },
+      { "code": "BIZ_002", "when": "Bác sĩ không khả dụng tại thời gian được chọn" },
+      { "code": "BIZ_003", "when": "Không thể thêm chỉ định cho phiếu khám đã hoàn thành/hủy" },
+      { "code": "BIZ_004", "when": "Transition trạng thái không hợp lệ theo state machine" },
+      { "code": "BIZ_005", "when": "Không thể kê đơn cho phiếu khám không ở trạng thái DANG_KHAM" },
+      { "code": "BIZ_006", "when": "Thanh toán thất bại hoặc timeout" },
+      { "code": "NOT_FOUND_001", "when": "Không tìm thấy Patient với ID được cung cấp" },
+      { "code": "NOT_FOUND_002", "when": "Không tìm thấy Appointment với ID được cung cấp" },
+      { "code": "NOT_FOUND_003", "when": "Không tìm thấy Medical Record với ID được cung cấp" },
+      { "code": "NOT_FOUND_004", "when": "Không tìm thấy Lab Order với ID được cung cấp" },
+      { "code": "NOT_FOUND_005", "when": "Không tìm thấy Prescription với ID được cung cấp" }
+    ],
+    "idempotency": {
+      "key": "X-Idempotency-Key",
+      "scope": "Áp dụng cho POST /api/appointments, POST /api/patients, POST /api/medical-record, POST /api/lab-orders",
+      "expiry_sec": 86400
+    }
+  },
+  "rules": {
+    "decision_tables": [
+      {
+        "name": "appointment_status_transition",
+        "conditions": ["current_status", "action"],
+        "actions": ["next_status", "allowed"],
+        "rows": [
+          { "when": { "current_status": "CHO_XAC_NHAN", "action": "confirm" }, "then": { "next_status": "DA_XAC_NHAN", "allowed": true } },
+          { "when": { "current_status": "CHO_XAC_NHAN", "action": "mark_no_show" }, "then": { "next_status": "KHONG_DEN", "allowed": true } },
+          { "when": { "current_status": "DA_XAC_NHAN", "action": "mark_arrived" }, "then": { "next_status": "DA_DEN", "allowed": true } },
+          { "when": { "current_status": "DA_XAC_NHAN", "action": "mark_no_show" }, "then": { "next_status": "KHONG_DEN", "allowed": true } },
+          { "when": { "current_status": "DA_DEN", "action": "any" }, "then": { "next_status": "DA_DEN", "allowed": false } },
+          { "when": { "current_status": "KHONG_DEN", "action": "any" }, "then": { "next_status": "KHONG_DEN", "allowed": false } }
+        ]
+      },
+      {
+        "name": "medical_record_status_transition",
+        "conditions": ["current_status", "action"],
+        "actions": ["next_status", "allowed"],
+        "rows": [
+          { "when": { "current_status": "DANG_KHAM", "action": "add_lab_order" }, "then": { "next_status": "CHO_XET_NGHIEM", "allowed": true } },
+          { "when": { "current_status": "DANG_KHAM", "action": "complete" }, "then": { "next_status": "HOAN_THANH", "allowed": true } },
+          { "when": { "current_status": "DANG_KHAM", "action": "cancel" }, "then": { "next_status": "HUY", "allowed": true } },
+          { "when": { "current_status": "CHO_XET_NGHIEM", "action": "complete" }, "then": { "next_status": "HOAN_THANH", "allowed": true } },
+          { "when": { "current_status": "CHO_XET_NGHIEM", "action": "cancel" }, "then": { "next_status": "HUY", "allowed": true } },
+          { "when": { "current_status": "HOAN_THANH", "action": "any" }, "then": { "next_status": "HOAN_THANH", "allowed": false } },
+          { "when": { "current_status": "HUY", "action": "any" }, "then": { "next_status": "HUY", "allowed": false } }
+        ]
+      },
+      {
+        "name": "lab_order_status_transition",
+        "conditions": ["current_status", "action"],
+        "actions": ["next_status", "allowed"],
+        "rows": [
+          { "when": { "current_status": "CHO_THUC_HIEN", "action": "start" }, "then": { "next_status": "DANG_THUC_HIEN", "allowed": true } },
+          { "when": { "current_status": "CHO_THUC_HIEN", "action": "cancel" }, "then": { "next_status": "HUY_BO", "allowed": true } },
+          { "when": { "current_status": "DANG_THUC_HIEN", "action": "complete" }, "then": { "next_status": "HOAN_THANH", "allowed": true } },
+          { "when": { "current_status": "DANG_THUC_HIEN", "action": "cancel" }, "then": { "next_status": "HUY_BO", "allowed": true } },
+          { "when": { "current_status": "HOAN_THANH", "action": "any" }, "then": { "next_status": "HOAN_THANH", "allowed": false } },
+          { "when": { "current_status": "HUY_BO", "action": "any" }, "then": { "next_status": "HUY_BO", "allowed": false } }
+        ]
+      },
+      {
+        "name": "service_cost_calculation",
+        "conditions": ["examination_type", "has_health_plan"],
+        "actions": ["cost_source"],
+        "rows": [
+          { "when": { "examination_type": "package", "has_health_plan": true }, "then": { "cost_source": "healthPlan.price" } },
+          { "when": { "examination_type": "department", "has_health_plan": false }, "then": { "cost_source": "DEPARTMENT_EXAMINATION_FEE (fixed)" } },
+          { "when": { "examination_type": "doctor", "has_health_plan": false }, "then": { "cost_source": "doctor.examinationFee" } }
+        ]
+      }
+    ],
+    "validations": [
+      {
+        "target": "phone",
+        "type": "field-level",
+        "rule": "pattern: ^0\\d{9}$ (10 digits, bắt đầu bằng 0)",
+        "message": "Số điện thoại không hợp lệ"
+      },
+      {
+        "target": "cccd",
+        "type": "field-level",
+        "rule": "pattern: ^\\d{9,12}$ (9-12 digits); unique trong hệ thống",
+        "message": "Số CCCD không hợp lệ hoặc đã tồn tại"
+      },
+      {
+        "target": "email",
+        "type": "field-level",
+        "rule": "format: email chuẩn RFC 5322",
+        "message": "Email không hợp lệ"
+      },
+      {
+        "target": "birth",
+        "type": "field-level",
+        "rule": "format: YYYY-MM-DD; birth <= today",
+        "message": "Ngày sinh không hợp lệ hoặc trong tương lai"
+      },
+      {
+        "target": "gender",
+        "type": "field-level",
+        "rule": "enum: [NAM, NU]",
+        "message": "Giới tính chỉ được là NAM hoặc NU"
+      },
+      {
+        "target": "bloodType",
+        "type": "field-level",
+        "rule": "enum: [A, B, AB, O]",
+        "message": "Nhóm máu không hợp lệ"
+      },
+      {
+        "target": "weight",
+        "type": "field-level",
+        "rule": "number; 0 < weight <= 500 (kg)",
+        "message": "Cân nặng không hợp lệ"
+      },
+      {
+        "target": "height",
+        "type": "field-level",
+        "rule": "number; 0 < height <= 300 (cm)",
+        "message": "Chiều cao không hợp lệ"
+      },
+      {
+        "target": "appointmentDate + appointmentTime",
+        "type": "cross-field",
+        "rule": "datetime(appointmentDate, appointmentTime) > now; doctor available at datetime",
+        "message": "Thời gian khám phải trong tương lai và bác sĩ phải khả dụng"
+      },
+      {
+        "target": "patientId + appointmentDate",
+        "type": "cross-field",
+        "rule": "Bệnh nhân không có lịch hẹn trùng trong cùng ngày (optional business rule)",
+        "message": "Bệnh nhân đã có lịch hẹn khác trong ngày này"
+      },
+      {
+        "target": "totalAmount in payment",
+        "type": "field-level",
+        "rule": "totalAmount > 0; totalAmount = sum(healthPlan.price)",
+        "message": "Số tiền thanh toán không hợp lệ"
+      }
+    ]
+  },
+  "state_machines": [
+    {
+      "name": "AppointmentStateMachine",
+      "states": ["CHO_XAC_NHAN", "DA_XAC_NHAN", "DA_DEN", "KHONG_DEN"],
+      "events": ["confirm", "mark_arrived", "mark_no_show"],
+      "transitions": [
+        { "from": "CHO_XAC_NHAN", "event": "confirm", "guard": "user.role == LE_TAN", "to": "DA_XAC_NHAN", "effects": ["update updatedAt timestamp", "send confirmation notification (optional)"] },
+        { "from": "CHO_XAC_NHAN", "event": "mark_no_show", "guard": "user.role == LE_TAN", "to": "KHONG_DEN", "effects": ["update updatedAt timestamp"] },
+        { "from": "DA_XAC_NHAN", "event": "mark_arrived", "guard": "user.role == LE_TAN", "to": "DA_DEN", "effects": ["update updatedAt timestamp", "navigate to medical record form", "save appointment & patient to localStorage"] },
+        { "from": "DA_XAC_NHAN", "event": "mark_no_show", "guard": "user.role == LE_TAN", "to": "KHONG_DEN", "effects": ["update updatedAt timestamp"] }
+      ]
+    },
+    {
+      "name": "MedicalRecordStateMachine",
+      "states": ["DANG_KHAM", "CHO_XET_NGHIEM", "HOAN_THANH", "HUY"],
+      "events": ["add_lab_order", "complete_examination", "cancel"],
+      "transitions": [
+        { "from": "DANG_KHAM", "event": "add_lab_order", "guard": "user.role == BAC_SI && lab order created", "to": "CHO_XET_NGHIEM", "effects": ["auto transition when first lab order created"] },
+        { "from": "DANG_KHAM", "event": "complete_examination", "guard": "user.role == BAC_SI && diagnosis is not null", "to": "HOAN_THANH", "effects": ["update updatedAt timestamp", "allow print invoice & medical record"] },
+        { "from": "DANG_KHAM", "event": "cancel", "guard": "user.role == BAC_SI || user.role == LE_TAN", "to": "HUY", "effects": ["update updatedAt timestamp"] },
+        { "from": "CHO_XET_NGHIEM", "event": "complete_examination", "guard": "user.role == BAC_SI && diagnosis is not null", "to": "HOAN_THANH", "effects": ["update updatedAt timestamp", "allow print invoice & medical record"] },
+        { "from": "CHO_XET_NGHIEM", "event": "cancel", "guard": "user.role == BAC_SI || user.role == LE_TAN", "to": "HUY", "effects": ["update updatedAt timestamp"] }
+      ]
+    },
+    {
+      "name": "LabOrderStateMachine",
+      "states": ["CHO_THUC_HIEN", "DANG_THUC_HIEN", "HOAN_THANH", "HUY_BO"],
+      "events": ["start_execution", "enter_result", "cancel"],
+      "transitions": [
+        { "from": "CHO_THUC_HIEN", "event": "start_execution", "guard": "user.role == BAC_SI && statusPayment == DA_THANH_TOAN", "to": "DANG_THUC_HIEN", "effects": ["update status"] },
+        { "from": "CHO_THUC_HIEN", "event": "cancel", "guard": "user.role == BAC_SI", "to": "HUY_BO", "effects": ["update status"] },
+        { "from": "DANG_THUC_HIEN", "event": "enter_result", "guard": "user.role == BAC_SI && labResult created", "to": "HOAN_THANH", "effects": ["create lab result", "update status", "notify ordering doctor (optional)"] },
+        { "from": "DANG_THUC_HIEN", "event": "cancel", "guard": "user.role == BAC_SI", "to": "HUY_BO", "effects": ["update status"] }
+      ]
+    },
+    {
+      "name": "PaymentStateMachine",
+      "states": ["CHUA_THANH_TOAN", "DANG_CHO_THANH_TOAN", "DA_THANH_TOAN", "THAT_BAI", "TIMEOUT"],
+      "events": ["create_qr", "payment_success", "payment_fail", "payment_timeout", "cash_payment"],
+      "transitions": [
+        { "from": "CHUA_THANH_TOAN", "event": "create_qr", "guard": "payment method == qr", "to": "DANG_CHO_THANH_TOAN", "effects": ["generate QR code", "start polling payment status", "start 5-minute countdown"] },
+        { "from": "CHUA_THANH_TOAN", "event": "cash_payment", "guard": "payment method == cash", "to": "DA_THANH_TOAN", "effects": ["create invoice immediately", "create medical record with invoiceId=undefined"] },
+        { "from": "DANG_CHO_THANH_TOAN", "event": "payment_success", "guard": "polling GET /api/payments/status/{orderCode} returns true", "to": "DA_THANH_TOAN", "effects": ["stop polling", "create medical record with invoiceId", "show success message", "close modal"] },
+        { "from": "DANG_CHO_THANH_TOAN", "event": "payment_fail", "guard": "API returns error", "to": "THAT_BAI", "effects": ["stop polling", "show error message"] },
+        { "from": "DANG_CHO_THANH_TOAN", "event": "payment_timeout", "guard": "5 minutes elapsed", "to": "TIMEOUT", "effects": ["stop polling", "show timeout message", "close modal"] }
+      ]
+    }
+  ],
+  "authz_matrix": [
+    {
+      "role": "LE_TAN",
+      "permissions": [
+        { "resource": "appointment", "action": "CREATE", "constraint": "none" },
+        { "resource": "appointment", "action": "READ", "constraint": "none" },
+        { "resource": "appointment", "action": "UPDATE_STATUS", "constraint": "status in [CHO_XAC_NHAN, DA_XAC_NHAN, DA_DEN, KHONG_DEN]" },
+        { "resource": "patient", "action": "CREATE", "constraint": "none" },
+        { "resource": "patient", "action": "READ", "constraint": "none" },
+        { "resource": "patient", "action": "UPDATE", "constraint": "none" },
+        { "resource": "medical_record", "action": "CREATE", "constraint": "only via payment flow" },
+        { "resource": "medical_record", "action": "READ", "constraint": "none" },
+        { "resource": "invoice", "action": "READ", "constraint": "none" },
+        { "resource": "payment", "action": "CREATE", "constraint": "none" },
+        { "resource": "payment", "action": "READ_STATUS", "constraint": "none" }
+      ]
+    },
+    {
+      "role": "BAC_SI",
+      "permissions": [
+        { "resource": "appointment", "action": "READ", "constraint": "none" },
+        { "resource": "patient", "action": "READ", "constraint": "none" },
+        { "resource": "medical_record", "action": "READ", "constraint": "none" },
+        { "resource": "medical_record", "action": "UPDATE", "constraint": "status in [DANG_KHAM, CHO_XET_NGHIEM]" },
+        { "resource": "medical_record", "action": "UPDATE_STATUS", "constraint": "status transition allowed by state machine" },
+        { "resource": "lab_order", "action": "CREATE", "constraint": "medical_record.status == DANG_KHAM" },
+        { "resource": "lab_order", "action": "READ", "constraint": "none" },
+        { "resource": "lab_order", "action": "UPDATE", "constraint": "status in [CHO_THUC_HIEN, DANG_THUC_HIEN]" },
+        { "resource": "lab_order", "action": "DELETE", "constraint": "status == CHO_THUC_HIEN" },
+        { "resource": "lab_order", "action": "UPDATE_STATUS", "constraint": "status transition allowed by state machine" },
+        { "resource": "lab_result", "action": "CREATE", "constraint": "lab_order.status in [CHO_THUC_HIEN, DANG_THUC_HIEN]" },
+        { "resource": "lab_result", "action": "UPDATE", "constraint": "lab_order.status == DANG_THUC_HIEN" },
+        { "resource": "prescription", "action": "CREATE", "constraint": "medical_record.status == DANG_KHAM" },
+        { "resource": "prescription", "action": "UPDATE", "constraint": "medical_record.status == DANG_KHAM" },
+        { "resource": "prescription", "action": "DELETE_DETAIL", "constraint": "medical_record.status == DANG_KHAM" },
+        { "resource": "schedule", "action": "READ", "constraint": "own schedule" },
+        { "resource": "leave", "action": "CREATE", "constraint": "none" },
+        { "resource": "leave", "action": "UPDATE", "constraint": "own leave && status == CHO_DUYET" },
+        { "resource": "leave", "action": "DELETE", "constraint": "own leave && status == CHO_DUYET" }
+      ]
+    },
+    {
+      "role": "ADMIN",
+      "permissions": [
+        { "resource": "*", "action": "*", "constraint": "none" }
+      ]
+    }
+  ],
+  "events": {
+    "domain": [
+      { "name": "AppointmentCreated", "emitted_when": "POST /api/appointments success", "payload_min": { "appointmentId": "integer", "patientId": "integer", "doctorId": "integer", "appointmentDate": "string", "appointmentTime": "string" } },
+      { "name": "AppointmentConfirmed", "emitted_when": "Appointment status changed to DA_XAC_NHAN", "payload_min": { "appointmentId": "integer", "status": "string", "updatedAt": "timestamp" } },
+      { "name": "PatientArrived", "emitted_when": "Appointment status changed to DA_DEN", "payload_min": { "appointmentId": "integer", "patientId": "integer" } },
+      { "name": "MedicalRecordCreated", "emitted_when": "POST /api/medical-record success", "payload_min": { "medicalRecordId": "string", "patientId": "integer", "doctorId": "integer", "invoiceId": "integer", "createdAt": "timestamp" } },
+      { "name": "MedicalRecordCompleted", "emitted_when": "Medical record status changed to HOAN_THANH", "payload_min": { "medicalRecordId": "string", "patientId": "integer", "diagnosis": "string", "completedAt": "timestamp" } },
+      { "name": "LabOrderCreated", "emitted_when": "POST /api/lab-orders success", "payload_min": { "labOrderId": "integer", "medicalRecordId": "string", "healthPlanId": "integer", "performingDoctorId": "integer" } },
+      { "name": "LabResultEntered", "emitted_when": "Lab order status changed to HOAN_THANH", "payload_min": { "labOrderId": "integer", "labResultId": "integer", "completedAt": "timestamp" } },
+      { "name": "PrescriptionCreated", "emitted_when": "POST /api/prescriptions success", "payload_min": { "prescriptionId": "integer", "medicalRecordId": "string", "createdAt": "timestamp" } },
+      { "name": "PaymentCompleted", "emitted_when": "Payment status == DA_THANH_TOAN", "payload_min": { "invoiceId": "integer", "orderCode": "integer", "totalAmount": "number", "paymentMethod": "string", "completedAt": "timestamp" } }
+    ],
+    "integration": [
+      { "name": "SendSMSNotification", "topic": "notification.sms", "payload_min": { "phone": "string", "message": "string", "appointmentId": "integer" } },
+      { "name": "SendEmailNotification", "topic": "notification.email", "payload_min": { "email": "string", "subject": "string", "body": "string" } },
+      { "name": "QRPaymentStatusChanged", "topic": "payment.qr.status", "payload_min": { "orderCode": "integer", "status": "string", "invoiceId": "integer" } },
+      { "name": "LabResultAvailable", "topic": "lab.result.available", "payload_min": { "labOrderId": "integer", "medicalRecordId": "string", "orderingDoctorId": "integer" } }
+    ]
+  },
+  "transactions": {
+    "boundaries": [
+      "Tạo appointment: single transaction, atomic",
+      "Tạo patient: single transaction, atomic",
+      "Tạo medical record + invoice (cash): single transaction, atomic, rollback if either fails",
+      "QR payment flow: eventual consistency - invoice created first, medical record created after payment success",
+      "Tạo lab order + cập nhật medical record status: single transaction, atomic",
+      "Tạo prescription + prescription details: multi-step, compensating transaction if detail creation fails",
+      "Xóa lab orders (batch): single transaction, atomic delete of multiple records"
+    ],
+    "retry_policy": {
+      "strategy": "exponential_backoff",
+      "max_attempts": 3,
+      "backoff_ms": 1000
+    },
+    "isolation": "READ_COMMITTED"
+  },
+  "test_vectors": [
+    {
+      "use_case_id": "UC001",
+      "given": { "patientId": 1, "doctorId": 10, "departmentId": 3, "appointmentDate": "2025-10-15", "appointmentTime": "14:00", "symptoms": "Đau đầu" },
+      "when": "POST /api/appointments",
+      "expect": { "status": 201, "data.status": "CHO_XAC_NHAN", "data.id": "integer > 0", "data.code": "match ^LH\\d+$" }
+    },
+    {
+      "use_case_id": "UC001",
+      "given": { "patientId": 1, "doctorId": 10, "departmentId": 3, "appointmentDate": "2020-01-01", "appointmentTime": "14:00" },
+      "when": "POST /api/appointments",
+      "expect": { "status": 400, "message": "contains 'ngày khám phải trong tương lai'" }
+    },
+    {
+      "use_case_id": "UC002",
+      "given": { "fullName": "Nguyễn Văn A", "cccd": "001234567890", "birth": "1990-01-01", "gender": "NAM", "bloodType": "O", "weight": 70, "height": 175, "address": "Hà Nội" },
+      "when": "POST /api/patients",
+      "expect": { "status": 201, "data.code": "match ^BN\\d+$", "data.relationship": "CHU TAI KHOAN" }
+    },
+    {
+      "use_case_id": "UC002",
+      "given": { "fullName": "Nguyễn Văn A", "cccd": "001234567890" },
+      "when": "POST /api/patients with duplicate cccd",
+      "expect": { "status": 409, "message": "contains 'CCCD đã tồn tại'" }
+    },
+    {
+      "use_case_id": "UC003",
+      "given": { "appointmentId": 101, "currentStatus": "CHO_XAC_NHAN" },
+      "when": "PUT /api/appointments/confirm with status=DA_XAC_NHAN",
+      "expect": { "status": 200, "data.status": "DA_XAC_NHAN", "data.updatedAt": "timestamp > createdAt" }
+    },
+    {
+      "use_case_id": "UC003",
+      "given": { "appointmentId": 101, "currentStatus": "DA_DEN" },
+      "when": "PUT /api/appointments/confirm with status=CHO_XAC_NHAN",
+      "expect": { "status": 400, "message": "contains 'không thể chuyển trạng thái'" }
+    },
+    {
+      "use_case_id": "UC004",
+      "given": { "patientId": 1, "healthPlanId": 5, "symptoms": "Sốt cao", "paymentMethod": "cash" },
+      "when": "POST /api/medical-record",
+      "expect": { "status": 201, "data.code": "match ^PK\\d+$", "data.status": "DANG_KHAM", "data.invoiceId": "undefined or null" }
+    },
+    {
+      "use_case_id": "UC004",
+      "given": { "patientId": 1, "healthPlanIds": [5], "totalAmount": 300000, "paymentMethod": "qr" },
+      "when": "POST /api/payments/create-link → poll /api/payments/status/{orderCode} → POST /api/medical-record",
+      "expect": { "qrCode": "string length > 0", "orderCode": "integer > 0", "paymentStatus": "true", "medicalRecord.invoiceId": "integer > 0" }
+    },
+    {
+      "use_case_id": "UC005",
+      "given": { "medicalRecordId": "111", "status": "DANG_KHAM", "diagnosis": "Viêm phổi" },
+      "when": "PUT /api/medical-record",
+      "expect": { "status": 200, "data.diagnosis": "Viêm phổi", "data.updatedAt": "timestamp > previous" }
+    },
+    {
+      "use_case_id": "UC005",
+      "given": { "medicalRecordId": "111", "status": "HOAN_THANH" },
+      "when": "PUT /api/medical-record with new diagnosis",
+      "expect": { "status": 400, "message": "contains 'không thể cập nhật phiếu đã hoàn thành'" }
+    },
+    {
+      "use_case_id": "UC006",
+      "given": { "recordId": 111, "healthPlanId": 2, "performingDoctorId": 20, "diagnosis": "Nghi ngờ viêm phổi" },
+      "when": "POST /api/lab-orders",
+      "expect": { "status": 201, "data.code": "match ^XN\\d+$", "data.status": "CHO_THUC_HIEN", "medicalRecord.status": "CHO_XET_NGHIEM" }
+    },
+    {
+      "use_case_id": "UC007",
+      "given": { "medicalRecordId": 111, "generalInstructions": "Uống sau ăn", "medicines": [{ "medicineId": 1, "quantity": 10, "usageInstructions": "2 viên/ngày" }] },
+      "when": "POST /api/prescriptions → POST /api/prescriptions/details",
+      "expect": { "status": 201, "prescription.code": "match ^DT\\d+$", "details.length": 1 }
+    },
+    {
+      "use_case_id": "UC008",
+      "given": { "labOrderId": 81, "status": "DANG_THUC_HIEN", "resultDetails": "Kết quả bình thường" },
+      "when": "POST /api/lab-results → PUT /api/lab-orders/status",
+      "expect": { "status": 200, "labOrder.status": "HOAN_THANH", "labResult.id": "integer > 0" }
+    },
+    {
+      "use_case_id": "UC009",
+      "given": { "patientId": 51 },
+      "when": "GET /api/medical-record/patient/51",
+      "expect": { "status": 200, "data": "array", "data.length": ">= 0", "data[0].patientId": 51 }
+    },
+    {
+      "use_case_id": "UC010",
+      "given": { "medicalRecordId": 111 },
+      "when": "GET /api/html/medical-record/111",
+      "expect": { "status": 200, "contentType": "text/html", "body": "contains '<html>'" }
+    }
+  ],
+  "questions": [
+    "Có cần idempotency key cho tất cả POST operations hay chỉ critical ones?",
+    "Rate limiting cho API: cần áp dụng global hay per-user?",
+    "Có cần audit log cho tất cả write operations (CREATE/UPDATE/DELETE)?",
+    "QR payment timeout 5 minutes có phù hợp không? Có cần configurable?",
+    "Lab result có cần approval workflow từ bác sĩ chỉ định trước khi public?",
+    "Prescription có cần e-signature từ bác sĩ theo quy định pháp luật?",
+    "Medical record có cần version control để track history changes?",
+    "Có cần soft delete cho patient/appointment hay hard delete?",
+    "Concurrency control: nếu 2 bác sĩ cùng cập nhật 1 medical record → LAST_WRITE_WINS hay OPTIMISTIC_LOCKING?",
+    "Payment refund: có support không? Luồng xử lý ra sao?",
+    "Appointment có thể reschedule không? Nếu có thì rule ra sao (số lần, thời gian tối thiểu trước giờ khám)?",
+    "Timezone handling: hệ thống có support multiple timezones không hay fixed UTC+7?",
+    "Decimal precision cho money: lưu integer (VND không có decimal) hay decimal(19,2)?",
+    "File upload (profileImage, lab result images): storage strategy (S3, local) và size limit?",
+    "Notification delivery guarantee: at-least-once hay exactly-once?"
+  ]
+}
