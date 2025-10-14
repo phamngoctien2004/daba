@@ -111,12 +111,12 @@ export function AppointmentsManagement() {
     })
 
   const handleDateChange = useCallback(
-    (value: string) => {
-      const trimmed = value.trim()
+    (date: Date | undefined) => {
+      const dateString = date ? format(date, 'yyyy-MM-dd') : undefined
       navigate({
         search: (prev) => ({
           ...(prev as AppointmentsSearch),
-          date: trimmed ? trimmed : undefined,
+          date: dateString,
           page: undefined,
         }),
       })

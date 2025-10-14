@@ -12,23 +12,44 @@ type DatePickerProps = {
   selected: Date | undefined
   onSelect: (date: Date | undefined) => void
   placeholder?: string
+  className?: string
+  allowFuture?: boolean
+  minDate?: Date
+  maxDate?: Date
 }
 
 export function DatePicker({
   selected,
   onSelect,
   placeholder = 'Pick a date',
+  className,
+  allowFuture = false,
+  minDate = new Date('1900-01-01'),
+  maxDate,
 }: DatePickerProps) {
+  const getDisabledDate = (date: Date) => {
+    if (!allowFuture && date > new Date()) {
+      return true
+    }
+    if (maxDate && date > maxDate) {
+      return true
+    }
+    if (date < minDate) {
+      return true
+    }
+    return false
+  }
+
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
           variant='outline'
           data-empty={!selected}
-          className='data-[empty=true]:text-muted-foreground w-[240px] justify-start text-start font-normal'
+          className={`data-[empty=true]:text-muted-foreground w-[240px] justify-start text-start font-normal ${className || ''}`}
         >
           {selected ? (
-            format(selected, 'MMM d, yyyy')
+            format(selected, 'dd/MM/yyyy')
           ) : (
             <span>{placeholder}</span>
           )}
@@ -41,9 +62,7 @@ export function DatePicker({
           captionLayout='dropdown'
           selected={selected}
           onSelect={onSelect}
-          disabled={(date: Date) =>
-            date > new Date() || date < new Date('1900-01-01')
-          }
+          disabled={getDisabledDate}
         />
       </PopoverContent>
     </Popover>

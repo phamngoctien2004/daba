@@ -989,22 +989,105 @@
 **Query Parameters:**
 - `keyword` (optional): Từ khóa tìm kiếm
 - `date` (optional): Ngày khám (yyyy-MM-dd)
-- `status` (optional): Trạng thái (PENDING, IN_PROGRESS, COMPLETED, CANCELLED)
+- `status` (optional): DANG_KHAM, CHO_XET_NGHIEM ,HOAN_THANH, HUY
+- `limit`, `page(default=1)` 
 
 **Response:**
 ```json
 {
-  "data": [
-    {
-      "id": 1,
-      "recordCode": "MR001",
-      "patientName": "string",
-      "doctorName": "string",
-      "date": "2024-12-20",
-      "status": "PENDING"
-    }
-  ],
-  "message": "Get all medical record successfully"
+    "data": {
+        "content": [
+            {
+                "id": "166",
+                "code": "PK1760372403",
+                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
+                "clinicalExamination": null,
+                "diagnosis": null,
+                "treatmentPlan": null,
+                "note": null,
+                "patientId": 18,
+                "patientName": "NPham Ngoc Tien",
+                "patientPhone": null,
+                "patientAddress": "123 Đường ABC, Quận 1, TP.HN",
+                "patientGender": "NAM",
+                "date": "2025-10-13T23:20:03",
+                "status": "DANG_KHAM",
+                "healthPlanId": null,
+                "healthPlanName": null,
+                "total": 0,
+                "paid": null,
+                "invoiceDetailsResponse": null
+            },
+            {
+                "id": "165",
+                "code": "PK1760371509",
+                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
+                "clinicalExamination": null,
+                "diagnosis": null,
+                "treatmentPlan": null,
+                "note": null,
+                "patientId": 15,
+                "patientName": "NPham Ngoc Tien",
+                "patientPhone": "0000000092",
+                "patientAddress": "123 Đường ABC, Quận 1, TP.HN",
+                "patientGender": "NAM",
+                "date": "2025-10-13T23:05:09",
+                "status": "DANG_KHAM",
+                "healthPlanId": null,
+                "healthPlanName": null,
+                "total": 0,
+                "paid": null,
+                "invoiceDetailsResponse": null
+            },
+            {
+                "id": "164",
+                "code": "PK1760371334",
+                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
+                "clinicalExamination": null,
+                "diagnosis": null,
+                "treatmentPlan": null,
+                "note": null,
+                "patientId": 15,
+                "patientName": "NPham Ngoc Tien",
+                "patientPhone": "0000000092",
+                "patientAddress": "123 Đường ABC, Quận 1, TP.HN",
+                "patientGender": "NAM",
+                "date": "2025-10-13T23:02:15",
+                "status": "DANG_KHAM",
+                "healthPlanId": null,
+                "healthPlanName": null,
+                "total": 0,
+                "paid": null,
+                "invoiceDetailsResponse": null
+            }
+        ],
+        "pageable": {
+            "pageNumber": 0,
+            "pageSize": 3,
+            "sort": {
+                "sorted": false,
+                "unsorted": true,
+                "empty": true
+            },
+            "offset": 0,
+            "paged": true,
+            "unpaged": false
+        },
+        "totalPages": 22,
+        "totalElements": 66,
+        "last": false,
+        "first": true,
+        "size": 3,
+        "number": 0,
+        "sort": {
+            "sorted": false,
+            "unsorted": true,
+            "empty": true
+        },
+        "numberOfElements": 3,
+        "empty": false
+    },
+    "message": "Get all medical record successfully"
 }
 ```
 
@@ -1019,28 +1102,117 @@
 - `id`: ID của hồ sơ bệnh án
 
 **Response:**
-```json
 {
-  "data": {
-    "id": 1,
-    "recordCode": "MR001",
-    "patient": {},
-    "doctor": {},
-    "symptoms": "string",
-    "clinicalExamination": "string",
-    "diagnosis": "string",
-    "treatmentPlan": "string",
-    "prescriptions": [],
-    "labOrders": [],
-    "invoice": {},
-    "status": "PENDING"
-  },
-  "message": "Get medical record by id successfully"
+    "data": {
+        "id": "111",
+        "code": "PK1760023951",
+        "symptoms": "Không có triệu chứng",
+        "clinicalExamination": null,
+        "diagnosis": null,
+        "treatmentPlan": null,
+        "note": null,
+        "patientId": 51,
+        "patientName": "tien pro",
+        "patientPhone": "0395527777",
+        "patientAddress": "121i24j",
+        "patientGender": "NAM",
+        "date": "2025-10-09T22:32:32",
+        "status": "DANG_KHAM",
+        "healthPlanId": 10,
+        "healthPlanName": "GOI DICH VU SIEU CAP VU TRU TAI NHA TAN RANG",
+        "total": 5000,
+        "paid": 5000,
+        "invoiceDetailsResponse": [
+            {
+                "id": 256,
+                "healthPlanId": 10,
+                "healthPlanName": "GOI DICH VU SIEU CAP VU TRU TAI NHA TAN RANG",
+                "healthPlanPrice": 5000,
+                "paid": 5000,
+                "description": "GOI DICH VU SIEU CAP VU TRU TAI NHA TAN RANG",
+                "status": "DA_THANH_TOAN",
+                "multipleLab": [
+                    {
+                        "id": 211,
+                        "code": "XN1760023951841",
+                        "name": "khám bệnh",
+                        "doctorPerforming": "tien",
+                        "room": "Phòng khám Nội tổng quát - 101A",
+                        "createdAt": "2025-10-09T22:32:32",
+                        "status": "CHO_THUC_HIEN"
+                    },
+                    {
+                        "id": 212,
+                        "code": "XN1760023951849",
+                        "name": "Xét nghiệm công thức máu",
+                        "doctorPerforming": null,
+                        "room": "Phòng khám Nội tổng quát - 101A",
+                        "createdAt": "2025-10-09T22:32:32",
+                        "status": "CHO_THUC_HIEN"
+                    },
+                    {
+                        "id": 213,
+                        "code": "XN1760023951856",
+                        "name": "Nội soi dạ dày",
+                        "doctorPerforming": null,
+                        "room": "Phòng khám Ngoại chấn thương - 102A",
+                        "createdAt": "2025-10-09T22:32:32",
+                        "status": "CHO_THUC_HIEN"
+                    },
+                    {
+                        "id": 214,
+                        "code": "XN1760023951864",
+                        "name": "Chụp X-quang ngực",
+                        "doctorPerforming": null,
+                        "room": "Phòng khám Nhi khoa - 103A",
+                        "createdAt": "2025-10-09T22:32:32",
+                        "status": "CHO_THUC_HIEN"
+                    },
+                    {
+                        "id": 215,
+                        "code": "XN1760023951871",
+                        "name": "Siêu âm ổ bụng tổng quát",
+                        "doctorPerforming": null,
+                        "room": "Phòng khám Sản phụ khoa - 104A",
+                        "createdAt": "2025-10-09T22:32:32",
+                        "status": "CHO_THUC_HIEN"
+                    },
+                    {
+                        "id": 216,
+                        "code": "XN1760023951879",
+                        "name": "khám bệnh",
+                        "doctorPerforming": null,
+                        "room": "Phòng khám Nội tổng quát - 101A",
+                        "createdAt": "2025-10-09T22:32:32",
+                        "status": "CHO_THUC_HIEN"
+                    }
+                      "typeService": "MULTIPLE"
+                ],
+            },
+                        {
+                "id": 240,
+                "healthPlanId": 2,
+                "healthPlanName": "Xét nghiệm máu cơ bản",
+                "healthPlanPrice": 2000,
+                "paid": 0,
+                "description": "Xét nghiệm máu cơ bản",
+                "status": "CHUA_THANH_TOAN",
+                "multipleLab": null,
+                "singleLab": {
+                    "id": 186,
+                    "code": "XN1759928445540",
+                    "name": "Xét nghiệm máu cơ bản",
+                    "doctorPerforming": null,
+                    "room": "Phòng xét nghiệm  - 204A",
+                    "createdAt": "2025-10-08T20:00:46",
+                    "status": "CHO_THUC_HIEN"
+                },
+                "typeService": "SINGLE"
+            }
+        ]
+    },
+    "message": "Get medical record by id successfully"
 }
-```
-
----
-
 ### 7.3 Lấy hồ sơ bệnh án theo bệnh nhân
 **Endpoint:** `GET /api/medical-record/patient/{id}`
 
@@ -1632,9 +1804,11 @@
 **Request Body:**
 ```json
 {
-  "medicalRecordId": 1,
-  "amount": 500000,
-  "paymentMethod": "CASH"
+  "medicalRecordId": 102,
+  "healthPlanIds": [
+    10, 2
+  ],
+  "totalAmount": 3000
 }
 ```
 

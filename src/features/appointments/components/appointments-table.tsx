@@ -25,7 +25,7 @@ import {
   DEFAULT_APPOINTMENT_PAGE_SIZE,
 } from '../api/appointments'
 import { type AppointmentsSearch } from '../types'
-import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/date-picker'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -55,7 +55,7 @@ type AppointmentsTableProps = {
   onUpdateStatus: (id: number, status: AppointmentStatus) => void
   onOpenMedicalRecord: (id: number) => void
   dateValue: string
-  onDateChange: (value: string) => void
+  onDateChange: (date: Date | undefined) => void
   onResetFilters: () => void
   search: AppointmentsSearch
   navigate: NavigateFn
@@ -180,11 +180,11 @@ export function AppointmentsTable({
             <CalendarDays className='size-4 shrink-0 text-primary' />
             Ngày khám
           </label>
-          <Input
-            type='date'
-            value={dateValue}
-            onChange={(event) => onDateChange(event.target.value)}
-            max='2100-12-31'
+          <DatePicker
+            selected={dateValue ? new Date(dateValue) : undefined}
+            onSelect={onDateChange}
+            placeholder='Chọn ngày khám'
+            allowFuture={true}
             className='w-[200px] sm:w-[220px]'
           />
           <Button
@@ -199,7 +199,7 @@ export function AppointmentsTable({
         </div>
       </div>
 
-      <div className='flex flex-col gap-2 rounded-lg border bg-card/40 p-4'>
+      <div className='flex flex-col gap-2 rounded-lg  bg-card/40 p-4'>
         <div className='flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground'>
           <span>Tổng cộng {total} lịch khám</span>
           {isRefetching && (

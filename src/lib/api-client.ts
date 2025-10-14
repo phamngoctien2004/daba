@@ -102,7 +102,12 @@ apiClient.interceptors.response.use(
 
         case 500:
           // Server error
-          toast.error('Lỗi máy chủ. Vui lòng thử lại sau.')
+          console.error('❌ 500 Error:', {
+            url,
+            message,
+            responseData: error.response.data,
+          })
+          toast.error(`Lỗi máy chủ: ${message || 'Vui lòng thử lại sau'}`)
           break
 
         default:

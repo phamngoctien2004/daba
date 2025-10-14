@@ -1,5 +1,5 @@
 # Copilot Instructions - Shadcn Admin (Hospital Management System)
-
+- alway not create document file
 ## Project Overview
 Healthcare admin dashboard built with React 19, TanStack Router, TanStack Query, shadcn/ui, and Spring Boot backend. The system manages appointments, medical records, prescriptions, lab orders, and payments for a hospital/clinic.
 

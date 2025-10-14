@@ -43,7 +43,6 @@ import {
   type Doctor,
 } from '@/features/departments/api/departments'
 import { fetchHealthPlans, type HealthPlan } from '@/features/health-plans/api/services'
-import { payCash } from '@/features/payments/api/payments'
 
 interface CreateMedicalRecordFormProps {
   onSuccess?: (medicalRecordId?: number) => void
@@ -64,6 +63,9 @@ export function CreateMedicalRecordForm({
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null)
   const [selectedHealthPlan, setSelectedHealthPlan] = useState<HealthPlan | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
+
+  // Payment state
+  const [createdMedicalRecordId, setCreatedMedicalRecordId] = useState<number | null>(null)
 
   // Load appointment data from localStorage on mount and clear previous data
   useEffect(() => {
@@ -264,55 +266,26 @@ export function CreateMedicalRecordForm({
     }
   }
 
-  // Pay cash mutation
-  const { mutate: payCashMutation } = useMutation({
-    mutationFn: payCash,
-    onSuccess: (result) => {
-      toast.success(result.message)
-      form.reset()
-      clearAppointmentForMedicalRecord()
-      onSuccess?.()
-    },
-    onError: (error) => {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Không thể thanh toán. Vui lòng thử lại.'
-      toast.error(message)
-    },
-  })
-
   // Create medical record mutation
-  const { mutate: createMedicalRecordMutation, isPending } = useMutation({
+  const { mutate: createMedicalRecordMutation, isPending: isCreatingRecord } = useMutation({
     mutationFn: createMedicalRecord,
     onSuccess: (result) => {
       const medicalRecordId = result.medicalRecordId
+      console.log('✅ [Create Record] Medical record created:', medicalRecordId)
 
-      // Only handle payment if service/package was selected
-      if (examinationType === 'service' && selectedHealthPlan) {
-        const paymentMethod = form.getValues('paymentMethod')
+      // Save the created medical record ID
+      setCreatedMedicalRecordId(medicalRecordId)
 
-        if (paymentMethod === 'cash') {
-          // Cash payment
-          payCashMutation({
-            medicalRecordId,
-            amount: selectedHealthPlan.fee || selectedHealthPlan.price || 0,
-            paymentMethod: 'CASH',
-          })
-        } else {
-          // QR payment - TODO: implement QR flow
-          toast.info('Chức năng thanh toán QR đang được phát triển')
-          form.reset()
-          clearAppointmentForMedicalRecord()
-          onSuccess?.(medicalRecordId)
-        }
-      } else {
-        // No payment needed for doctor/department selection
-        toast.success('Tạo phiếu khám thành công')
+      // Show success message
+      toast.success('Tạo phiếu khám thành công')
+
+      // If no payment needed (doctor/department), complete immediately
+      if (examinationType !== 'service' || !selectedHealthPlan) {
         form.reset()
         clearAppointmentForMedicalRecord()
         onSuccess?.(medicalRecordId)
       }
+      // Else: Wait for user to click payment button
     },
     onError: (error) => {
       const message =
@@ -332,6 +305,22 @@ export function CreateMedicalRecordForm({
     }
 
     createMedicalRecordMutation(payload)
+  }
+
+  // Handle print invoice (medical record)
+  const handlePrintInvoice = () => {
+    if (!createdMedicalRecordId) return
+
+    // Open medical record HTML in new window
+    const medicalRecordUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'}/html/medical-record/${createdMedicalRecordId}`
+    window.open(medicalRecordUrl, '_blank')
+  }
+
+  // Handle close after payment
+  const handleCloseAfterPayment = () => {
+    form.reset()
+    clearAppointmentForMedicalRecord()
+    onSuccess?.(createdMedicalRecordId!)
   }
 
   if (!appointmentData) {
@@ -432,15 +421,18 @@ export function CreateMedicalRecordForm({
                 Loại khám <span className="text-destructive">*</span>
               </label>
               <Select
-                disabled={isPending}
+                disabled={isCreatingRecord || !!createdMedicalRecordId}
                 value={examinationType || undefined}
                 onValueChange={(value) => {
                   console.log('🔄 Examination type changed to:', value)
-                  // Prevent clearing when it's being initialized
-                  if (!value || value === examinationType) return
+                  // Prevent empty value
+                  if (!value) return
+
+                  // If same value, no need to reset
+                  if (value === examinationType) return
 
                   setExaminationType(value)
-                  // Reset dependent fields only if user manually changes
+                  // Reset dependent fields when user changes examination type
                   setSelectedDoctorOrServiceId('')
                   setSelectedThirdSelect('')
                   form.setValue('doctorId', null)
@@ -448,7 +440,6 @@ export function CreateMedicalRecordForm({
                   setSelectedHealthPlan(null)
                   setSelectedDoctor(null)
                   setDoctors([])
-                  setIsInitialized(false)
                 }}
               >
                 <SelectTrigger className="mt-2">
@@ -477,7 +468,7 @@ export function CreateMedicalRecordForm({
                     {examinationType === 'service' ? (
                       // Show services list
                       <Select
-                        disabled={isLoadingHealthPlans || isPending}
+                        disabled={isLoadingHealthPlans || isCreatingRecord || !!createdMedicalRecordId}
                         value={selectedDoctorOrServiceId}
                         onValueChange={(value) => {
                           setSelectedDoctorOrServiceId(value)
@@ -511,7 +502,7 @@ export function CreateMedicalRecordForm({
                     ) : examinationType === 'department' ? (
                       // Show departments list
                       <Select
-                        disabled={isPending || isLoadingDepartments}
+                        disabled={isCreatingRecord || isLoadingDepartments || !!createdMedicalRecordId}
                         value={selectedDoctorOrServiceId}
                         onValueChange={handleDepartmentChange}
                       >
@@ -537,7 +528,7 @@ export function CreateMedicalRecordForm({
                     ) : (
                       // Show all doctors list
                       <Select
-                        disabled={isPending || doctors.length === 0}
+                        disabled={isCreatingRecord || doctors.length === 0 || !!createdMedicalRecordId}
                         value={selectedDoctorOrServiceId}
                         onValueChange={(value) => {
                           setSelectedDoctorOrServiceId(value)
@@ -574,7 +565,7 @@ export function CreateMedicalRecordForm({
                 control={form.control}
                 name="doctorId"
                 render={() => {
-                  console.log('🟢 [Select 3 Render] doctors:', doctors.length, 'selectedThirdSelect:', selectedThirdSelect, 'disabled:', isPending || doctors.length === 0)
+                  console.log('🟢 [Select 3 Render] doctors:', doctors.length, 'selectedThirdSelect:', selectedThirdSelect, 'disabled:', isCreatingRecord || doctors.length === 0)
                   console.log('🟢 [Select 3 Render] doctors list:', doctors.map(d => ({ id: d.id, name: d.position })))
                   return (
                     <FormItem>
@@ -582,7 +573,7 @@ export function CreateMedicalRecordForm({
                         Bác sĩ <span className="text-destructive">*</span>
                       </FormLabel>
                       <Select
-                        disabled={isPending || doctors.length === 0}
+                        disabled={isCreatingRecord || doctors.length === 0 || !!createdMedicalRecordId}
                         value={selectedThirdSelect || undefined}
                         onValueChange={(value) => {
                           console.log('🟢 Select 3 value changed:', value)
@@ -648,7 +639,7 @@ export function CreateMedicalRecordForm({
                   <Textarea
                     placeholder="Mô tả triệu chứng của bệnh nhân"
                     className="min-h-[100px] resize-none"
-                    disabled={isPending}
+                    disabled={isCreatingRecord || !!createdMedicalRecordId}
                     {...field}
                   />
                 </FormControl>
@@ -657,8 +648,8 @@ export function CreateMedicalRecordForm({
             )}
           />
 
-          {/* Payment Method - Only show for service type */}
-          {examinationType === 'service' && (
+          {/* Payment Method - Show before record is created */}
+          {!createdMedicalRecordId && (
             <FormField
               control={form.control}
               name="paymentMethod"
@@ -672,7 +663,7 @@ export function CreateMedicalRecordForm({
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                       className="flex flex-col space-y-1"
-                      disabled={isPending}
+                      disabled={isCreatingRecord || !!createdMedicalRecordId}
                     >
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
@@ -695,19 +686,43 @@ export function CreateMedicalRecordForm({
           )}
 
           {/* Form Actions */}
-          <div className="flex gap-4">
-            <Button type="submit" disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {examinationType === 'service' ? 'Tạo phiếu khám & Thanh toán' : 'Tạo phiếu khám'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isPending}
-            >
-              Hủy
-            </Button>
+          <div className="flex flex-wrap gap-4">
+            {/* Show "Xác nhận thanh toán" button if record not created yet */}
+            {!createdMedicalRecordId && (
+              <>
+                <Button type="submit" disabled={isCreatingRecord}>
+                  {isCreatingRecord && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Xác nhận thanh toán
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  disabled={isCreatingRecord}
+                >
+                  Hủy
+                </Button>
+              </>
+            )}
+
+            {/* Show print invoice button after medical record is created */}
+            {createdMedicalRecordId && (
+              <>
+                <Button
+                  type="button"
+                  onClick={handlePrintInvoice}
+                  variant="outline"
+                >
+                  In phiếu khám
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleCloseAfterPayment}
+                >
+                  Hoàn tất
+                </Button>
+              </>
+            )}
           </div>
         </form>
       </Form>
