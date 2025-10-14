@@ -11,8 +11,10 @@ import { Button } from '@/components/ui/button'
 import type { NavigateFn } from '@/hooks/use-table-url-state'
 import { PatientsTable } from './components/patients-table-view'
 import { CreatePatientDialog } from './components/create-patient-dialog'
+import { EditPatientDialog } from './components/edit-patient-dialog'
+import { PatientDetailDialog } from './components/patient-detail-dialog'
 import { fetchPatients } from './api/patients'
-import type { PatientsSearch } from './types'
+import type { PatientsSearch, Patient } from './types'
 
 const patientsRoute = getRouteApi('/_authenticated/patients/')
 const patientsQueryBaseKey: QueryKey = ['patients']
@@ -30,6 +32,9 @@ export function PatientsManagement() {
   const search = patientsRoute.useSearch() as PatientsSearch
   const navigate = patientsRoute.useNavigate()
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false)
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
 
   const keywordFilter = resolveKeyword(search.keyword)
 
@@ -52,29 +57,6 @@ export function PatientsManagement() {
     staleTime: 30_000,
   })
 
-  const handleResetFilters = useCallback(() => {
-    navigate({
-      search: () => ({}),
-    })
-  }, [navigate])
-
-  const handleViewDetail = useCallback(
-    (id: number) => {
-      console.log('View patient detail:', id)
-      // TODO: Navigate to patient detail page when implemented
-      // navigate({ to: '/patients/$id', params: { id: String(id) } })
-    },
-    [navigate]
-  )
-
-  const handleEdit = useCallback(
-    (id: number) => {
-      console.log('Edit patient:', id)
-      // TODO: Open edit dialog or navigate to edit page
-    },
-    []
-  )
-
   const patients = patientsQuery.data?.patients ?? []
   const pagination = patientsQuery.data?.pagination ?? {
     page,
@@ -85,6 +67,34 @@ export function PatientsManagement() {
 
   const isLoading = patientsQuery.isPending
   const isRefetching = patientsQuery.isFetching && !patientsQuery.isPending
+
+  const handleResetFilters = useCallback(() => {
+    navigate({
+      search: () => ({}),
+    })
+  }, [navigate])
+
+  const handleViewDetail = useCallback(
+    (id: number) => {
+      const patient = patients.find((p) => p.id === id)
+      if (patient) {
+        setSelectedPatient(patient)
+        setDetailDialogOpen(true)
+      }
+    },
+    [patients]
+  )
+
+  const handleEdit = useCallback(
+    (id: number) => {
+      const patient = patients.find((p) => p.id === id)
+      if (patient) {
+        setSelectedPatient(patient)
+        setEditDialogOpen(true)
+      }
+    },
+    [patients]
+  )
 
   return (
     <>
@@ -127,6 +137,18 @@ export function PatientsManagement() {
       <CreatePatientDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+      />
+
+      <EditPatientDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        patient={selectedPatient}
+      />
+
+      <PatientDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        patientId={selectedPatient?.id ?? null}
       />
     </>
   )

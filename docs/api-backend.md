@@ -897,14 +897,29 @@
 **Response:**
 ```json
 {
-  "data": {
-    "id": 1,
-    "name": "string"
-  },
-  "message": "Update patient successfully"
+    "data": {
+        "id": 49,
+        "code": "BN1758267777182",
+        "bloodType": "O",
+        "weight": 60.5,
+        "height": 176.2,
+        "registrationDate": "2025-09-19T14:42:57",
+        "fullName": "Pham ngoc Tuan",
+        "phone": "1111111111",
+        "address": "PHU DIEN HUU HOA THANH TRI TP.HN",
+        "cccd": "001204020080",
+        "birth": "2030-08-15",
+        "gender": "NAM",
+        "profileImage": null,
+        "relationship": null,
+        "email": null,
+        "verified": false
+    },
+    "message": "Update patient successfully"
 }
 ```
-
+### Xóa bệnh nhân
+**Endpoint:** `DELETE /api/patients/{id}`
 ---
 
 ### 5.5 Lấy thông tin bệnh nhân hiện tại
@@ -2270,7 +2285,7 @@
 **Headers:**
 - `Authorization`: Bearer {token}
 
-**Response:**
+**Response:** `trường hợp nếu là bác sĩ`
 ```json
 {
   "data": {
@@ -2283,8 +2298,47 @@
   "message": "Get info successfully"
 }
 ```
-
----
+**Response:** `trường hợp nếu là lễ  tân`
+```json
+{
+    "data": {
+        "id": 39,
+        "email": "bacsi01@gmail.com",
+        "name": "",
+        "role": "BAC_SI",
+        "status": true,
+        "createdAt": "2025-09-12T13:07:40",
+        "doctor": {
+            "id": 32,
+            "fullName": "BS. LE THI CC",
+            "phone": "0900000039",
+            "address": "BẮC NINH",
+            "birth": "1993-08-20",
+            "gender": "NU",
+            "profileImage": "https://i.pravatar.cc/150?img=39",
+            "exp": 5,
+            "position": "ThS. LE THI CC",
+            "available": true
+        }
+    },
+    "message": "Get info successfully"
+}
+```
+**Response:** `trường hợp nếu là bệnh nhân`
+```json
+{
+    "data": {
+        "id": 1,
+        "email": "tienolympia2020@gmail.com",
+        "phone": "0395527082",
+        "name": "",
+        "role": "BENH_NHAN",
+        "status": true,
+        "createdAt": "2025-09-09T08:58:19"
+    },
+    "message": "Get info successfully"
+}
+```
 
 ### 16.4 Xóa người dùng
 **Endpoint:** `DELETE /api/users/{id}`

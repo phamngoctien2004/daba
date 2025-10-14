@@ -195,14 +195,18 @@ export const createPatient = async (
  */
 export interface UpdatePatientPayload {
   id: number
-  name?: string
-  phone?: string
-  email?: string
-  gender?: 'NAM' | 'NU' | 'KHAC'
-  birth?: string
-  address?: string
-  cccd?: string
-  bhyt?: string
+  fullName: string
+  phone: string | null
+  phoneLink?: string | null
+  email: string | null
+  gender: 'NAM' | 'NU'
+  birth: string // yyyy-MM-dd
+  address: string | null
+  cccd: string | null
+  bloodType?: string | null
+  weight?: number | null
+  height?: number | null
+  profileImage?: string | null
 }
 
 export const updatePatient = async (
