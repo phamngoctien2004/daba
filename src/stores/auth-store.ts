@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { queryClient } from '@/lib/query-client'
 
 import {
   clearAuthData,
@@ -55,6 +56,10 @@ export const useAuthStore = create<AuthState>()((set) => {
 
     logout: () => {
       clearAuthData()
+
+      // Clear all React Query cache to prevent stale data when switching accounts
+      queryClient.clear()
+
       set({
         user: null,
         accessToken: '',

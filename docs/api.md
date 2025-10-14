@@ -2284,21 +2284,35 @@
 
 **Headers:**
 - `Authorization`: Bearer {token}
-
-**Response:** `trường hợp nếu là bác sĩ`
+**Response:** `trường hợp nếu là ADMIN`
 ```json
 {
-  "data": {
-    "id": 1,
-    "username": "string",
-    "email": "string",
-    "role": "BAC_SI",
-    "profile": {}
-  },
-  "message": "Get info successfully"
+    "data": {
+        "id": 3,
+        "email": "admin@gmail.com",
+        "name": "Quan tỉ vine",
+        "role": "ADMIN",
+        "status": true,
+        "createdAt": "2025-09-09T14:21:07"
+    },
+    "message": "Get info successfully"
 }
 ```
-**Response:** `trường hợp nếu là lễ  tân`
+**Response:** `trường hợp nếu là lễ tân`
+```json
+{
+    "data": {
+        "id": 3,
+        "email": "letan@gmail.com",
+        "name": "anh ngoc",
+        "role": "LE_TAN",
+        "status": true,
+        "createdAt": "2025-09-09T14:21:07"
+    },
+    "message": "Get info successfully"
+}
+```
+**Response:** `trường hợp nếu là Bác sĩ`
 ```json
 {
     "data": {
