@@ -694,26 +694,45 @@
 **Request Body:**
 ```json
 {
-  "name": "string",
-  "phone": "string",
-  "email": "string",
-  "gender": "MALE",
-  "birth": "2000-01-01",
-  "address": "string",
-  "cccd": "string",
-  "bhyt": "string"
+  "phone": null,
+  "email": null,
+  "fullName": "Pham ngoc Tuan",
+  "address": "PHU DIEN HUU HOA THANH TRI TP.HN",
+  "cccd": "001204020080",
+  "birth": "2030-08-15",
+  "gender": "NAM",
+  "bloodType": "O",
+  "weight": 60.5,
+  "height": 176.2,
+  "profileImage": "https://example.com/images/patient123.jpg",
+  "phoneLink": "0395527333"
 }
+
+// phone hoặc phone link đều có thể null (nhưng bắt buộc là cả 2 không được null
 ```
 
 **Response:**
 ```json
 {
-  "data": {
-    "id": 1,
-    "name": "string",
-    "phone": "string"
-  },
-  "message": "Create patient successfully"
+    "data": {
+        "id": 61,
+        "code": "BN1760451103531",
+        "bloodType": "O",
+        "weight": 60.5,
+        "height": 176.2,
+        "registrationDate": "2025-10-14T21:11:43.540331",
+        "fullName": "Pham ngoc Tuan",
+        "phone": null,
+        "address": "PHU DIEN HUU HOA THANH TRI TP.HN",
+        "cccd": "001204020030",
+        "birth": "2030-08-15",
+        "gender": "NAM",
+        "profileImage": "https://example.com/images/patient123.jpg",
+        "relationship": null,
+        "email": null,
+        "verified": false
+    },
+    "message": "Create patient successfully"
 }
 ```
 
@@ -726,23 +745,94 @@
 
 **Query Parameters:**
 - `keyword` (optional): Từ khóa tìm kiếm (tên, số điện thoại, CCCD)
-
+- `limit, page(default = 1)`
 **Response:**
-```json
 {
-  "data": [
-    {
-      "id": 1,
-      "name": "string",
-      "phone": "string",
-      "email": "string",
-      "gender": "MALE",
-      "birth": "2000-01-01"
-    }
-  ],
-  "message": "Find patient successfully"
+    "data": {
+        "content": [
+            {
+                "id": 5,
+                "code": "BN1757508991380",
+                "bloodType": "A",
+                "weight": 65.50,
+                "height": 170.20,
+                "registrationDate": "2025-09-10T19:56:32",
+                "fullName": "Nguyen Van A",
+                "phone": "0395527082",
+                "address": "123 Đường ABC, Quận 1, TP.HCM",
+                "cccd": "012345678901",
+                "birth": "1995-08-15",
+                "gender": "NAM",
+                "profileImage": "https://example.com/images/patient123.jpg",
+                "relationship": null,
+                "email": null,
+                "verified": false
+            },
+            {
+                "id": 6,
+                "code": "BN1757509031888",
+                "bloodType": "B",
+                "weight": 60.50,
+                "height": 176.20,
+                "registrationDate": "2025-09-10T19:57:13",
+                "fullName": "Nguyen Van B",
+                "phone": null,
+                "address": "ha noi",
+                "cccd": "111204020011",
+                "birth": "1994-08-15",
+                "gender": "NU",
+                "profileImage": "https://example.com/images/patient123.jpg",
+                "relationship": null,
+                "email": null,
+                "verified": false
+            },
+            {
+                "id": 7,
+                "code": "BN1757509934308",
+                "bloodType": "O",
+                "weight": 60.50,
+                "height": 176.20,
+                "registrationDate": "2025-09-10T20:12:14",
+                "fullName": "Pham ngoc C",
+                "phone": null,
+                "address": "123 Đường ABC, Quận 1, TP.HN",
+                "cccd": "012345678901",
+                "birth": "1994-08-15",
+                "gender": "NU",
+                "profileImage": "https://example.com/images/patient123.jpg",
+                "relationship": null,
+                "email": null,
+                "verified": false
+            }
+        ],
+        "pageable": {
+            "pageNumber": 0,
+            "pageSize": 3,
+            "sort": {
+                "sorted": false,
+                "unsorted": true,
+                "empty": true
+            },
+            "offset": 0,
+            "paged": true,
+            "unpaged": false
+        },
+        "totalPages": 15,
+        "totalElements": 43,
+        "last": false,
+        "first": true,
+        "size": 3,
+        "number": 0,
+        "sort": {
+            "sorted": false,
+            "unsorted": true,
+            "empty": true
+        },
+        "numberOfElements": 3,
+        "empty": false
+    },
+    "message": "Find patient successfully"
 }
-```
 
 ---
 
@@ -757,18 +847,25 @@
 **Response:**
 ```json
 {
-  "data": {
-    "id": 1,
-    "name": "string",
-    "phone": "string",
-    "email": "string",
-    "gender": "MALE",
-    "birth": "2000-01-01",
-    "address": "string",
-    "cccd": "string",
-    "bhyt": "string"
-  },
-  "message": "Find patient successfully"
+    "data": {
+        "id": 15,
+        "code": "BN1758111539103",
+        "bloodType": null,
+        "weight": null,
+        "height": null,
+        "registrationDate": "2025-09-17T19:18:59",
+        "fullName": "NPham Ngoc Tien",
+        "phone": "0000000092",
+        "address": "123 Đường ABC, Quận 1, TP.HN",
+        "cccd": null,
+        "birth": "2000-11-20",
+        "gender": "NAM",
+        "profileImage": null,
+        "relationship": null,
+        "email": null,
+        "verified": false
+    },
+    "message": "Find patient successfully"
 }
 ```
 
@@ -782,15 +879,18 @@
 **Request Body:**
 ```json
 {
-  "id": 1,
-  "name": "string",
-  "phone": "string",
-  "email": "string",
-  "gender": "MALE",
-  "birth": "2000-01-01",
-  "address": "string",
-  "cccd": "string",
-  "bhyt": "string"
+  "id": 49,
+  "phone": 1111111111,
+  "email": "tuan@gmail.com",
+  "fullName": "Pham ngoc Tuan",
+  "address": "PHU DIEN HUU HOA THANH TRI TP.HN",
+  "cccd": "001204020080",
+  "birth": "2030-08-15",
+  "gender": "NAM",
+  "bloodType": "O",
+  "weight": 60.5,
+  "height": 176.2,
+  "profileImage": "https://example.com/images/patient123.jpg"
 }
 ```
 

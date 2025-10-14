@@ -1,14 +1,10 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-
-import {
-  createPatientSchema,
-  type CreatePatientInput,
-} from '@/lib/validations/appointment.schema'
-import { createPatient, type Patient } from '../api/patients'
-
+import { format } from 'date-fns'
+import { Loader2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -33,91 +29,125 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2 } from 'lucide-react'
+import { DatePicker } from '@/components/date-picker'
+import { patientFormSchema, type PatientFormValues } from '@/lib/validations/patient.schema'
+import { createPatient, type CreatePatientPayload } from '../api/patients'
 
 interface CreatePatientDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSuccess: (patient: Patient) => void
 }
+
+const BLOOD_TYPES = ['A', 'B', 'AB', 'O', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
 
 export function CreatePatientDialog({
   open,
   onOpenChange,
-  onSuccess,
 }: CreatePatientDialogProps) {
-  const form = useForm<CreatePatientInput>({
-    resolver: zodResolver(createPatientSchema),
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const queryClient = useQueryClient()
+
+  const form = useForm<PatientFormValues>({
+    resolver: zodResolver(patientFormSchema),
     defaultValues: {
-      name: '',
-      phone: '',
+      fullName: '',
+      phone: null,
+      phoneLink: null,
       email: '',
       gender: 'NAM',
       birth: '',
-      address: '',
-      cccd: '',
-      bhyt: '',
+      address: null,
+      cccd: null,
+      bloodType: null,
+      weight: undefined as any,
+      height: undefined as any,
+      profileImage: null,
     },
   })
 
-  const { mutate: createPatientMutation, isPending } = useMutation({
+  const createMutation = useMutation({
     mutationFn: createPatient,
-    onSuccess: (data) => {
-      if (data.patient) {
-        toast.success(data.message)
-        form.reset()
-        onSuccess(data.patient)
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] })
+      toast.success('Đã tạo bệnh nhân mới')
+      form.reset()
+      onOpenChange(false)
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi tạo bệnh nhân')
+    onError: (error: Error) => {
+      toast.error(error.message || 'Không thể tạo bệnh nhân')
+    },
+    onSettled: () => {
+      setIsSubmitting(false)
     },
   })
 
-  const onSubmit = (data: CreatePatientInput) => {
-    createPatientMutation(data)
+  const onSubmit = (values: PatientFormValues) => {
+    setIsSubmitting(true)
+
+    const payload: CreatePatientPayload = {
+      fullName: values.fullName,
+      phone: values.phone || null,
+      phoneLink: values.phoneLink || null,
+      email: values.email || null,
+      gender: values.gender,
+      birth: values.birth,
+      address: values.address || null,
+      cccd: values.cccd || null,
+      bloodType: values.bloodType || null,
+      weight: values.weight ?? null,
+      height: values.height ?? null,
+      profileImage: values.profileImage || null,
+    }
+
+    createMutation.mutate(payload)
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle>Tạo bệnh nhân mới</DialogTitle>
+          <DialogTitle>Thêm bệnh nhân mới</DialogTitle>
           <DialogDescription>
-            Nhập thông tin bệnh nhân để tạo hồ sơ mới
+            Nhập thông tin bệnh nhân. Lưu ý: Ít nhất một trong hai số điện thoại phải được nhập.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Name */}
+          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+            {/* Họ tên */}
             <FormField
               control={form.control}
-              name="name"
+              name='fullName'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Họ và tên *</FormLabel>
+                  <FormLabel>Họ và tên <span className='text-destructive'>*</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="Nguyễn Văn A" {...field} disabled={isPending} />
+                    <Input placeholder='Nhập họ và tên' {...field} disabled={isSubmitting} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Phone */}
+            {/* Phone & PhoneLink */}
+            <div className='grid grid-cols-2 gap-4'>
               <FormField
                 control={form.control}
-                name="phone"
+                name='phone'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Số điện thoại</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="0912345678"
+                        placeholder='Nhập số điện thoại'
                         {...field}
-                        disabled={isPending}
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '')
+                          field.onChange(value || null)
+                        }}
+                        disabled={isSubmitting}
+                        inputMode='numeric'
                       />
                     </FormControl>
                     <FormMessage />
@@ -125,19 +155,23 @@ export function CreatePatientDialog({
                 )}
               />
 
-              {/* Email */}
               <FormField
                 control={form.control}
-                name="email"
+                name='phoneLink'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>SĐT liên hệ</FormLabel>
                     <FormControl>
                       <Input
-                        type="email"
-                        placeholder="email@example.com"
+                        placeholder='Nhập SĐT liên hệ'
                         {...field}
-                        disabled={isPending}
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '')
+                          field.onChange(value || null)
+                        }}
+                        disabled={isSubmitting}
+                        inputMode='numeric'
                       />
                     </FormControl>
                     <FormMessage />
@@ -146,67 +180,21 @@ export function CreatePatientDialog({
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Gender */}
-              <FormField
-                control={form.control}
-                name="gender"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Giới tính *</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={isPending}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Chọn giới tính" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="NAM">Nam</SelectItem>
-                        <SelectItem value="NU">Nữ</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Birth Date */}
-              <FormField
-                control={form.control}
-                name="birth"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ngày sinh *</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                        max={new Date().toISOString().split('T')[0]}
-                        disabled={isPending}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Address */}
+            {/* Email */}
             <FormField
               control={form.control}
-              name="address"
+              name='email'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Địa chỉ</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="123 Đường ABC, Quận 1, TP.HCM"
+                      placeholder='Nhập email'
+                      type='email'
                       {...field}
-                      disabled={isPending}
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                      disabled={isSubmitting}
                     />
                   </FormControl>
                   <FormMessage />
@@ -214,19 +202,147 @@ export function CreatePatientDialog({
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* CCCD */}
+            {/* Gender & Birth */}
+            <div className='grid grid-cols-2 gap-4'>
               <FormField
                 control={form.control}
-                name="cccd"
+                name='gender'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Số CCCD</FormLabel>
+                    <FormLabel>Giới tính <span className='text-destructive'>*</span></FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Chọn giới tính' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value='NAM'>Nam</SelectItem>
+                        <SelectItem value='NU'>Nữ</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='birth'
+                render={({ field }) => (
+                  <FormItem className='flex flex-col'>
+                    <FormLabel>Ngày sinh <span className='text-destructive'>*</span></FormLabel>
+                    <FormControl>
+                      <DatePicker
+                        selected={field.value ? new Date(field.value) : undefined}
+                        onSelect={(date) => {
+                          field.onChange(date ? format(date, 'yyyy-MM-dd') : '')
+                        }}
+                        placeholder='Chọn ngày sinh'
+                        className='w-full'
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* CCCD */}
+            <FormField
+              control={form.control}
+              name='cccd'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Số CCCD</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder='Nhập số CCCD'
+                      {...field}
+                      value={field.value || ''}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '')
+                        field.onChange(value || null)
+                      }}
+                      disabled={isSubmitting}
+                      inputMode='numeric'
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Address */}
+            <FormField
+              control={form.control}
+              name='address'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Địa chỉ</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder='Nhập địa chỉ'
+                      {...field}
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Blood Type, Weight, Height */}
+            <div className='grid grid-cols-3 gap-4'>
+              <FormField
+                control={form.control}
+                name='bloodType'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nhóm máu</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || undefined}
+                      disabled={isSubmitting}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Chọn' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {BLOOD_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='weight'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cân nặng (kg) <span className='text-destructive'>*</span></FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="001234567890"
+                        type='number'
+                        step='0.1'
+                        placeholder='50'
                         {...field}
-                        disabled={isPending}
+                        value={field.value ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          field.onChange(val ? parseFloat(val) : undefined)
+                        }}
+                        disabled={isSubmitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -234,18 +350,24 @@ export function CreatePatientDialog({
                 )}
               />
 
-              {/* BHYT */}
               <FormField
                 control={form.control}
-                name="bhyt"
+                name='height'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Số BHYT</FormLabel>
+                    <FormLabel>Chiều cao (cm) <span className='text-destructive'>*</span></FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Mã số bảo hiểm y tế"
+                        type='number'
+                        step='0.1'
+                        placeholder='173'
                         {...field}
-                        disabled={isPending}
+                        value={field.value ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          field.onChange(val ? parseFloat(val) : undefined)
+                        }}
+                        disabled={isSubmitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -255,17 +377,17 @@ export function CreatePatientDialog({
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 pt-4">
+            <div className='flex justify-end gap-3 pt-4'>
               <Button
-                type="button"
-                variant="outline"
+                type='button'
+                variant='outline'
                 onClick={() => onOpenChange(false)}
-                disabled={isPending}
+                disabled={isSubmitting}
               >
                 Hủy
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type='submit' disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
                 Tạo bệnh nhân
               </Button>
             </div>
