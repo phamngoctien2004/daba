@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -12,6 +12,7 @@ import {
 import { createAppointment } from '../api/appointments'
 import { fetchDepartments, fetchDoctorsByDepartment } from '@/features/departments/api/departments'
 import { type Patient } from '@/features/patients/api/patients'
+import { } from '@/lib/appointment-storage'
 
 import { PatientSearch } from '@/features/patients/components/patient-search'
 import { CreatePatientDialog } from '@/features/patients/components/create-patient-dialog'
@@ -105,19 +106,15 @@ export function CreateAppointmentForm({
   const handlePatientSelect = (patient: Patient) => {
     setSelectedPatient(patient)
     form.setValue('patientId', patient.id)
-    form.setValue('fullName', patient.name)
+    form.setValue('fullName', patient.fullName)
     form.setValue('phone', patient.phone || '')
-    form.setValue('gender', patient.gender)
-    form.setValue('birth', patient.birth)
+    form.setValue('gender', patient.gender === 'KHAC' ? 'NAM' : patient.gender)
+    form.setValue('birth', patient.birth || '')
     form.setValue('email', patient.email || '')
     form.setValue('address', patient.address || '')
   }
 
-  const handlePatientCreated = (patient: Patient) => {
-    setIsCreatePatientOpen(false)
-    handlePatientSelect(patient)
-    toast.success('T�o b�nh nh�n th�nh c�ng')
-  }
+
 
   const handleDepartmentChange = (value: string) => {
     const deptId = parseInt(value)
@@ -169,7 +166,7 @@ export function CreateAppointmentForm({
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">H� t�n:</span>{' '}
-                  <span className="font-medium">{selectedPatient.name}</span>
+                  <span className="font-medium">{selectedPatient.fullName}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">ST:</span>{' '}
@@ -359,13 +356,6 @@ export function CreateAppointmentForm({
           </div>
         </form>
       </Form>
-
-      {/* Create Patient Dialog */}
-      <CreatePatientDialog
-        open={isCreatePatientOpen}
-        onOpenChange={setIsCreatePatientOpen}
-        onSuccess={handlePatientCreated}
-      />
     </>
   )
 }

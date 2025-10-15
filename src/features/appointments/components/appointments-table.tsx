@@ -54,6 +54,7 @@ type AppointmentsTableProps = {
   isConfirmPending: boolean
   onUpdateStatus: (id: number, status: AppointmentStatus) => void
   onOpenMedicalRecord: (id: number) => void
+  onPrintInvoice?: (id: number) => void
   dateValue: string
   onDateChange: (date: Date | undefined) => void
   onResetFilters: () => void
@@ -71,6 +72,7 @@ export function AppointmentsTable({
   isConfirmPending,
   onUpdateStatus,
   onOpenMedicalRecord,
+  onPrintInvoice,
   dateValue,
   onDateChange,
   onResetFilters,
@@ -109,12 +111,14 @@ export function AppointmentsTable({
       getAppointmentsColumns({
         onUpdateStatus,
         onOpenMedicalRecord,
+        onPrintInvoice,
         pendingAppointmentId,
         isConfirmPending,
       }),
     [
       onUpdateStatus,
       onOpenMedicalRecord,
+      onPrintInvoice,
       pendingAppointmentId,
       isConfirmPending,
     ]

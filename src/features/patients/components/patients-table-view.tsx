@@ -36,6 +36,7 @@ type PatientsTableProps = {
   isRefetching: boolean
   onViewDetail: (id: number) => void
   onEdit?: (id: number) => void
+  onCreateMedicalRecord?: (patient: Patient) => void
   onResetFilters: () => void
   search: PatientsSearch
   navigate: NavigateFn
@@ -49,6 +50,7 @@ export function PatientsTable({
   isRefetching,
   onViewDetail,
   onEdit,
+  onCreateMedicalRecord,
   onResetFilters,
   search,
   navigate,
@@ -70,8 +72,8 @@ export function PatientsTable({
   })
 
   const columns = useMemo(
-    () => getPatientsColumns({ onViewDetail, onEdit }),
-    [onViewDetail, onEdit]
+    () => getPatientsColumns({ onViewDetail, onEdit, onCreateMedicalRecord }),
+    [onViewDetail, onEdit, onCreateMedicalRecord]
   )
 
   const effectivePageCount = Math.max(pageCount, 1)

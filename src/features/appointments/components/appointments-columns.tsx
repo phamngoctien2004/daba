@@ -15,6 +15,7 @@ import {
   ClipboardPlus,
   Loader2,
   XCircle,
+  Printer,
 } from 'lucide-react'
 
 const formatDateDisplay = (value: string) => {
@@ -67,6 +68,7 @@ const renderHealthPlan = (appointment: Appointment) => {
 type GetAppointmentsColumnsOptions = {
   onUpdateStatus: (id: number, status: AppointmentStatus) => void
   onOpenMedicalRecord: (id: number) => void
+  onPrintInvoice?: (id: number) => void
   pendingAppointmentId: number | null
   isConfirmPending: boolean
 }
@@ -74,6 +76,7 @@ type GetAppointmentsColumnsOptions = {
 export const getAppointmentsColumns = ({
   onUpdateStatus,
   onOpenMedicalRecord,
+  onPrintInvoice,
   pendingAppointmentId,
   isConfirmPending,
 }: GetAppointmentsColumnsOptions): ColumnDef<Appointment>[] => [
@@ -204,33 +207,19 @@ export const getAppointmentsColumns = ({
             )}
 
             {appointment.status === 'DA_XAC_NHAN' && (
-              <>
-                <Button
-                  size='sm'
-                  onClick={() => onUpdateStatus(appointment.id, 'DA_DEN')}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <Loader2 className='me-2 size-4 animate-spin' />
-                  ) : (
-                    <CheckCircle2 className='me-2 size-4' />
-                  )}
-                  Đã đến
-                </Button>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => onUpdateStatus(appointment.id, 'KHONG_DEN')}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <Loader2 className='me-2 size-4 animate-spin' />
-                  ) : (
-                    <XCircle className='me-2 size-4' />
-                  )}
-                  Hủy
-                </Button>
-              </>
+              <Button
+                size='sm'
+                variant='outline'
+                onClick={() => onPrintInvoice?.(appointment.id)}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Loader2 className='me-2 size-4 animate-spin' />
+                ) : (
+                  <Printer className='me-2 size-4' />
+                )}
+                In hóa đơn
+              </Button>
             )}
 
             {appointment.status === 'DA_DEN' && (

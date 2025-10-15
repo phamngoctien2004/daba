@@ -175,6 +175,7 @@ export function MedicalRecordDetailPage({ id }: MedicalRecordDetailPageProps) {
     const navigate = useNavigate()
     const { data: record, isLoading, error } = useMedicalRecordDetail(id)
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qr'>('cash')
+    const [paymentSuccess, setPaymentSuccess] = useState(false)
     const { mutate: payWithCash, isPending: isPayingCash } = usePayCash()
 
     // Helper function to print invoice
@@ -351,8 +352,8 @@ export function MedicalRecordDetailPage({ id }: MedicalRecordDetailPageProps) {
                 </CardContent>
             </Card>
 
-            {/* Action Buttons - Only show if there's remaining balance */}
-            {(record.paid ?? 0) < record.total && (
+            {/* Action Buttons - Only show if there's remaining balance AND payment not yet successful */}
+            {(record.paid ?? 0) < record.total && !paymentSuccess && (
                 <Card>
                     <CardHeader>
                         <CardTitle>Thanh toán</CardTitle>
@@ -419,6 +420,9 @@ export function MedicalRecordDetailPage({ id }: MedicalRecordDetailPageProps) {
                                         // Call payment API and auto-print invoice on success
                                         payWithCash(payload, {
                                             onSuccess: () => {
+                                                // Mark payment as successful to hide buttons
+                                                setPaymentSuccess(true)
+
                                                 // Auto print invoice after successful payment
                                                 setTimeout(() => {
                                                     handlePrintInvoice(record.id)

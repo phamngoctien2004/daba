@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Eye, Edit } from 'lucide-react'
+import { MoreHorizontal, Eye, Edit, ClipboardPlus } from 'lucide-react'
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import type { Patient } from '../api/patients'
@@ -15,11 +15,13 @@ import type { Patient } from '../api/patients'
 type ColumnsOptions = {
   onViewDetail: (id: number) => void
   onEdit?: (id: number) => void
+  onCreateMedicalRecord?: (patient: Patient) => void
 }
 
 export const getPatientsColumns = ({
   onViewDetail,
   onEdit,
+  onCreateMedicalRecord,
 }: ColumnsOptions): ColumnDef<Patient>[] => [
   {
     accessorKey: 'code',
@@ -136,6 +138,12 @@ export const getPatientsColumns = ({
               <DropdownMenuItem onClick={() => onEdit(patient.id)}>
                 <Edit className='mr-2 h-4 w-4' />
                 Chỉnh sửa
+              </DropdownMenuItem>
+            )}
+            {onCreateMedicalRecord && (
+              <DropdownMenuItem onClick={() => onCreateMedicalRecord(patient)}>
+                <ClipboardPlus className='mr-2 h-4 w-4' />
+                Tạo phiếu khám
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>

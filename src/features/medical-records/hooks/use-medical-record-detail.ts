@@ -73,10 +73,11 @@ export const usePayCash = () => {
 
     return useMutation({
         mutationFn: (payload: PayCashPayload) => payCash(payload),
-        onSuccess: (data) => {
+        onSuccess: (data, variables) => {
             toast.success(data.message)
             // Invalidate queries to refetch updated payment status
-            queryClient.invalidateQueries({ queryKey: ['medical-record'] })
+            // Use specific medical record ID for better cache invalidation
+            queryClient.invalidateQueries({ queryKey: ['medical-record', String(variables.medicalRecordId)] })
             queryClient.invalidateQueries({ queryKey: ['medical-records'] })
         },
         onError: (error: Error) => {

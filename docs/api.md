@@ -1205,9 +1205,113 @@
     "message": "Get all medical record successfully"
 }
 ```
+### Lấy tất cả hồ sơ bệnh án của bác sĩ
+**Endpoint:** `GET /api/medical-record/doctor`
+**Mô tả:** Lấy danh sách hồ sơ bệnh án với bộ lọc
 
----
-
+**Query Parameters:**
+- `keyword` (optional): Từ khóa tìm kiếm
+- `date` (optional): Ngày khám (yyyy-MM-dd)
+- `status` (optional): DANG_KHAM, CHO_XET_NGHIEM ,HOAN_THANH, HUY
+- `limit`, `page(default=1)` 
+**Response:**
+```json
+{
+    "data": {
+        "content": [
+            {
+                "id": "166",
+                "code": "PK1760372403",
+                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
+                "clinicalExamination": null,
+                "diagnosis": null,
+                "treatmentPlan": null,
+                "note": null,
+                "patientId": 18,
+                "patientName": "NPham Ngoc Tien",
+                "patientPhone": null,
+                "patientAddress": "123 Đường ABC, Quận 1, TP.HN",
+                "patientGender": "NAM",
+                "date": "2025-10-13T23:20:03",
+                "status": "DANG_KHAM",
+                "healthPlanId": null,
+                "healthPlanName": null,
+                "total": 0,
+                "paid": null,
+                "invoiceDetailsResponse": null
+            },
+            {
+                "id": "165",
+                "code": "PK1760371509",
+                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
+                "clinicalExamination": null,
+                "diagnosis": null,
+                "treatmentPlan": null,
+                "note": null,
+                "patientId": 15,
+                "patientName": "NPham Ngoc Tien",
+                "patientPhone": "0000000092",
+                "patientAddress": "123 Đường ABC, Quận 1, TP.HN",
+                "patientGender": "NAM",
+                "date": "2025-10-13T23:05:09",
+                "status": "DANG_KHAM",
+                "healthPlanId": null,
+                "healthPlanName": null,
+                "total": 0,
+                "paid": null,
+                "invoiceDetailsResponse": null
+            },
+            {
+                "id": "164",
+                "code": "PK1760371334",
+                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
+                "clinicalExamination": null,
+                "diagnosis": null,
+                "treatmentPlan": null,
+                "note": null,
+                "patientId": 15,
+                "patientName": "NPham Ngoc Tien",
+                "patientPhone": "0000000092",
+                "patientAddress": "123 Đường ABC, Quận 1, TP.HN",
+                "patientGender": "NAM",
+                "date": "2025-10-13T23:02:15",
+                "status": "DANG_KHAM",
+                "healthPlanId": null,
+                "healthPlanName": null,
+                "total": 0,
+                "paid": null,
+                "invoiceDetailsResponse": null
+            }
+        ],
+        "pageable": {
+            "pageNumber": 0,
+            "pageSize": 3,
+            "sort": {
+                "sorted": false,
+                "unsorted": true,
+                "empty": true
+            },
+            "offset": 0,
+            "paged": true,
+            "unpaged": false
+        },
+        "totalPages": 22,
+        "totalElements": 66,
+        "last": false,
+        "first": true,
+        "size": 3,
+        "number": 0,
+        "sort": {
+            "sorted": false,
+            "unsorted": true,
+            "empty": true
+        },
+        "numberOfElements": 3,
+        "empty": false
+    },
+    "message": "Get all medical record successfully"
+}
+```
 ### 7.2 Lấy chi tiết hồ sơ bệnh án
 **Endpoint:** `GET /api/medical-record/{id}`
 

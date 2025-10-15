@@ -30,6 +30,7 @@ import {
 } from '@/lib/appointment-storage'
 import {
   createMedicalRecord,
+  exportInvoiceHtml,
   type CreateMedicalRecordPayload,
 } from '../api/medical-records'
 import {
@@ -66,6 +67,7 @@ export function CreateMedicalRecordForm({
 
   // Payment state
   const [createdMedicalRecordId, setCreatedMedicalRecordId] = useState<number | null>(null)
+  const [paymentCompleted, setPaymentCompleted] = useState(false)
 
   // Load appointment data from localStorage on mount and clear previous data
   useEffect(() => {
@@ -269,23 +271,48 @@ export function CreateMedicalRecordForm({
   // Create medical record mutation
   const { mutate: createMedicalRecordMutation, isPending: isCreatingRecord } = useMutation({
     mutationFn: createMedicalRecord,
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       const medicalRecordId = result.medicalRecordId
       console.log('✅ [Create Record] Medical record created:', medicalRecordId)
 
       // Save the created medical record ID
       setCreatedMedicalRecordId(medicalRecordId)
+      setPaymentCompleted(true)
 
       // Show success message
-      toast.success('Tạo phiếu khám thành công')
+      toast.success('Tạo phiếu khám và thanh toán thành công')
 
-      // If no payment needed (doctor/department), complete immediately
-      if (examinationType !== 'service' || !selectedHealthPlan) {
-        form.reset()
-        clearAppointmentForMedicalRecord()
-        onSuccess?.(medicalRecordId)
+      // Auto-print invoice immediately after payment success
+      try {
+        const htmlContent = await exportInvoiceHtml(medicalRecordId)
+
+        // Create a new window to display the HTML content
+        const printWindow = window.open('', '_blank')
+        if (printWindow) {
+          printWindow.document.write(htmlContent)
+          printWindow.document.close()
+
+          // Wait for content to load then trigger print
+          printWindow.onload = () => {
+            printWindow.focus()
+            printWindow.print()
+          }
+        } else {
+          toast.error('Không thể mở cửa sổ in. Vui lòng kiểm tra trình chặn popup.')
+        }
+      } catch (error) {
+        console.error('Print invoice error:', error)
+        toast.error('Lỗi khi in hóa đơn', {
+          description: error instanceof Error ? error.message : 'Vui lòng thử lại',
+        })
       }
-      // Else: Wait for user to click payment button
+
+      // Clear form and localStorage
+      form.reset()
+      clearAppointmentForMedicalRecord()
+
+      // DO NOT call onSuccess to prevent navigation
+      // onSuccess is only called if user explicitly wants to close
     },
     onError: (error) => {
       const message =
@@ -305,22 +332,6 @@ export function CreateMedicalRecordForm({
     }
 
     createMedicalRecordMutation(payload)
-  }
-
-  // Handle print invoice (medical record)
-  const handlePrintInvoice = () => {
-    if (!createdMedicalRecordId) return
-
-    // Open medical record HTML in new window
-    const medicalRecordUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'}/html/medical-record/${createdMedicalRecordId}`
-    window.open(medicalRecordUrl, '_blank')
-  }
-
-  // Handle close after payment
-  const handleCloseAfterPayment = () => {
-    form.reset()
-    clearAppointmentForMedicalRecord()
-    onSuccess?.(createdMedicalRecordId!)
   }
 
   if (!appointmentData) {
@@ -687,8 +698,8 @@ export function CreateMedicalRecordForm({
 
           {/* Form Actions */}
           <div className="flex flex-wrap gap-4">
-            {/* Show "Xác nhận thanh toán" button if record not created yet */}
-            {!createdMedicalRecordId && (
+            {/* Only show buttons if payment not completed */}
+            {!paymentCompleted && (
               <>
                 <Button type="submit" disabled={isCreatingRecord}>
                   {isCreatingRecord && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -705,23 +716,14 @@ export function CreateMedicalRecordForm({
               </>
             )}
 
-            {/* Show print invoice button after medical record is created */}
-            {createdMedicalRecordId && (
-              <>
-                <Button
-                  type="button"
-                  onClick={handlePrintInvoice}
-                  variant="outline"
-                >
-                  In phiếu khám
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleCloseAfterPayment}
-                >
-                  Hoàn tất
-                </Button>
-              </>
+            {/* Show success message after payment */}
+            {paymentCompleted && (
+              <div className="w-full rounded-lg border bg-green-50 p-4 text-green-900 dark:bg-green-900/20 dark:text-green-100">
+                <p className="font-semibold">Thanh toán thành công!</p>
+                <p className="text-sm mt-1">
+                  Hóa đơn đã được in tự động. Bạn có thể tiếp tục tạo phiếu khám mới hoặc quay lại danh sách.
+                </p>
+              </div>
             )}
           </div>
         </form>

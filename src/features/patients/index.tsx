@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { getRouteApi } from '@tanstack/react-router'
+import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { useQuery, type QueryKey } from '@tanstack/react-query'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -31,6 +31,7 @@ const resolveKeyword = (value?: string | null) => {
 export function PatientsManagement() {
   const search = patientsRoute.useSearch() as PatientsSearch
   const navigate = patientsRoute.useNavigate()
+  const globalNavigate = useNavigate()
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
@@ -96,6 +97,52 @@ export function PatientsManagement() {
     [patients]
   )
 
+  const handleCreateMedicalRecord = useCallback(
+    (patient: Patient) => {
+      console.log('🔵 [handleCreateMedicalRecord] Patient selected:', patient)
+
+      // Save patient data to localStorage for medical record creation
+      import('@/lib/appointment-storage').then(
+        ({ clearAppointmentForMedicalRecord, saveAppointmentForMedicalRecord }) => {
+          // Clear previous data
+          clearAppointmentForMedicalRecord()
+          console.log('🗑️ [handleCreateMedicalRecord] Cleared old appointment data')
+
+          // Prepare appointment data from patient info
+          const appointmentData = {
+            appointmentId: null, // No appointment, creating directly from patient
+            patientId: patient.id,
+            patientName: patient.fullName,
+            patientPhone: patient.phone,
+            patientEmail: patient.email,
+            patientGender: patient.gender,
+            patientBirth: patient.birth,
+            patientAddress: patient.address,
+            doctorId: null,
+            doctorName: null,
+            departmentId: null,
+            departmentName: null,
+            healthPlanId: null,
+            healthPlanName: null,
+            symptoms: null,
+            appointmentDate: null,
+            appointmentTime: null,
+          }
+
+          console.log('💾 [handleCreateMedicalRecord] Saving patient data:', appointmentData)
+          // Save data to localStorage
+          saveAppointmentForMedicalRecord(appointmentData)
+
+          // Navigate to medical record creation page
+          globalNavigate({
+            to: '/appointments/record/create',
+          })
+        }
+      )
+    },
+    [globalNavigate]
+  )
+
   return (
     <>
       <Header fixed>
@@ -128,6 +175,7 @@ export function PatientsManagement() {
           isRefetching={isRefetching}
           onViewDetail={handleViewDetail}
           onEdit={handleEdit}
+          onCreateMedicalRecord={handleCreateMedicalRecord}
           onResetFilters={handleResetFilters}
           search={search}
           navigate={navigate as NavigateFn}
