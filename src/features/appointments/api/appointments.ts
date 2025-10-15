@@ -1,10 +1,9 @@
 import { get, post, put } from '@/lib/api-client'
 
 export type AppointmentStatus =
-  | 'CHO_XAC_NHAN'
   | 'DA_XAC_NHAN'
-  | 'DA_DEN'
   | 'KHONG_DEN'
+  | 'DANG_KHAM'
 
 export interface AppointmentHealthPlan {
   id: number

@@ -223,7 +223,7 @@
 **Query Parameters:**
 - `phone` (optional): Số điện thoại để tìm kiếm
 - `date` (optional): Ngày khám (format: yyyy-MM-dd)
-- `status` (optional): Trạng thái (PENDING, CONFIRMED, CANCELLED, COMPLETED)
+- `status` (optional): Trạng thái (DA_XAC_NHAN, KHONG_DEN, DANG_KHAM)
 - `limit`
 - `page`
 **Response:**
@@ -488,7 +488,7 @@
 ```json
 {
   "id": 1,
-  "status": "CONFIRMED" // PENDING, CONFIRMED, CANCELLED, COMPLETED
+  "status": "DA_XAC_NHAN" // DA_XAC_NHAN, KHONG_DEN, DANG_KHAM
 }
 ```
 
@@ -2536,50 +2536,33 @@ Authorization: Bearer {token}
 - DateTime: `yyyy-MM-dd'T'HH:mm:ss` (VD: 2024-12-20T09:30:00)
 
 ### Enums
-
+#### Trạng thái
 #### Gender
-- `MALE`: Nam
-- `FEMALE`: Nữ
-- `OTHER`: Khác
+NAM,NU
 
 #### Appointment Status
-- `PENDING`: Chờ xác nhận
-- `CONFIRMED`: Đã xác nhận
-- `CANCELLED`: Đã hủy
-- `COMPLETED`: Hoàn thành
+DA_XAC_NHAN, KHONG_DEN, DANG_KHAM
 
 #### Medical Record Status
-- `PENDING`: Chờ khám
-- `IN_PROGRESS`: Đang khám
-- `COMPLETED`: Hoàn thành
-- `CANCELLED`: Đã hủy
+DANG_KHAM, CHO_XET_NGHIEM, HOAN_THANH, HUY
 
 #### Lab Order Status
-- `PENDING`: Chờ thực hiện
-- `IN_PROGRESS`: Đang thực hiện
-- `COMPLETED`: Hoàn thành
+CHO_THUC_HIEN, DANG_THUC_HIEN, HOAN_THANH, HUY_BO
 
 #### Leave Status
-- `PENDING`: Chờ duyệt
-- `APPROVED`: Đã duyệt
-- `REJECTED`: Từ chối
+CHO_DUYET, DA_DUYET, TU_CHOI
 
 #### Shift
-- `MORNING`: Sáng
-- `AFTERNOON`: Chiều
-- `EVENING`: Tối
-
+SANG, CHIEU, TOI
 #### User Roles
 - `BENH_NHAN`: Bệnh nhân
 - `BAC_SI`: Bác sĩ
 - `LE_TAN`: Lễ tân
-- `QUAN_TRI`: Quản trị viên
+- `ADMIN`: Quản trị viên
 
 ---
 
 ## Ghi chú
 - Tài liệu này mô tả tất cả API endpoints của hệ thống quản lý phòng khám
 - Một số endpoint có thể yêu cầu quyền đặc biệt tùy theo role của user
-- Để test API, có thể sử dụng Postman hoặc các công cụ tương tự
-- Base URL mặc định: `http://localhost:8080` (development)
 

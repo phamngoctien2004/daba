@@ -205,26 +205,9 @@ export function AppointmentsManagement() {
     [globalNavigate, appointments]
   )
 
-  const handlePrintInvoice = useCallback(
-    (appointmentId: number) => {
-      const appointment = appointments.find((apt) => apt.id === appointmentId)
-
-      if (appointment) {
-        console.log('🖨️ [handlePrintInvoice] Printing invoice for appointment:', appointment)
-
-        // TODO: Implement invoice printing logic
-        // For now, show a toast notification
-        toast.info('Tính năng in hóa đơn đang được phát triển')
-
-        // You can implement the actual printing logic here
-        // For example, open a print dialog or navigate to an invoice page
-      } else {
-        console.warn('⚠️ [handlePrintInvoice] Appointment not found:', appointmentId)
-        toast.error('Không tìm thấy thông tin lịch khám')
-      }
-    },
-    [appointments]
-  )
+  // Note: handlePrintInvoice removed - no longer needed with 3-status system
+  // Old 4-status system had: CHO_XAC_NHAN -> DA_XAC_NHAN -> DA_DEN -> KHONG_DEN
+  // New 3-status system: DA_XAC_NHAN -> DANG_KHAM or KHONG_DEN
 
   const isLoading = appointmentsQuery.isPending
   const isRefetching =
@@ -261,7 +244,6 @@ export function AppointmentsManagement() {
           isConfirmPending={isConfirmPending}
           onUpdateStatus={handleUpdateStatus}
           onOpenMedicalRecord={handleOpenMedicalRecord}
-          onPrintInvoice={handlePrintInvoice}
           dateValue={resolvedDate}
           onDateChange={handleDateChange}
           onResetFilters={handleResetFilters}

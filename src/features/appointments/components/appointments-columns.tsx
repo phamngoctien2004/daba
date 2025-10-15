@@ -11,11 +11,9 @@ import {
   type AppointmentStatus,
 } from '../api/appointments'
 import {
-  CheckCircle2,
   ClipboardPlus,
   Loader2,
   XCircle,
-  Printer,
 } from 'lucide-react'
 
 const formatDateDisplay = (value: string) => {
@@ -35,7 +33,7 @@ const formatTimeDisplay = (value: string | null) =>
 
 const renderDoctor = (appointment: Appointment) => {
   if (!appointment.doctorResponse) {
-    return <span className='text-muted-foreground text-sm'>Chưa chỉ định</span>
+    return <span className='text-muted-foreground text-sm'>Chưa có dữ liệu</span>
   }
 
   return (
@@ -59,7 +57,7 @@ const renderHealthPlan = (appointment: Appointment) => {
       <div className='text-muted-foreground text-xs'>
         {appointment.healthPlanResponse.price > 0
           ? `${appointment.healthPlanResponse.price.toLocaleString('vi-VN')} đ`
-          : 'Miễn phí'}
+          : ''}
       </div>
     </div>
   )
@@ -68,7 +66,6 @@ const renderHealthPlan = (appointment: Appointment) => {
 type GetAppointmentsColumnsOptions = {
   onUpdateStatus: (id: number, status: AppointmentStatus) => void
   onOpenMedicalRecord: (id: number) => void
-  onPrintInvoice?: (id: number) => void
   pendingAppointmentId: number | null
   isConfirmPending: boolean
 }
@@ -76,7 +73,6 @@ type GetAppointmentsColumnsOptions = {
 export const getAppointmentsColumns = ({
   onUpdateStatus,
   onOpenMedicalRecord,
-  onPrintInvoice,
   pendingAppointmentId,
   isConfirmPending,
 }: GetAppointmentsColumnsOptions): ColumnDef<Appointment>[] => [
@@ -176,19 +172,14 @@ export const getAppointmentsColumns = ({
 
         return (
           <div className='flex flex-wrap items-center justify-end gap-2'>
-            {appointment.status === 'CHO_XAC_NHAN' && (
+            {appointment.status === 'DA_XAC_NHAN' && (
               <>
                 <Button
                   size='sm'
-                  onClick={() => onUpdateStatus(appointment.id, 'DA_XAC_NHAN')}
-                  disabled={isLoading}
+                  onClick={() => onOpenMedicalRecord(appointment.id)}
                 >
-                  {isLoading ? (
-                    <Loader2 className='me-2 size-4 animate-spin' />
-                  ) : (
-                    <CheckCircle2 className='me-2 size-4' />
-                  )}
-                  Xác nhận
+                  <ClipboardPlus className='me-2 size-4' />
+                  Tạo phiếu khám
                 </Button>
                 <Button
                   size='sm'
@@ -201,36 +192,22 @@ export const getAppointmentsColumns = ({
                   ) : (
                     <XCircle className='me-2 size-4' />
                   )}
-                  Hủy
+                  Không đến
                 </Button>
               </>
             )}
 
-            {appointment.status === 'DA_XAC_NHAN' && (
+            {appointment.status === 'DANG_KHAM' && (
               <Button
                 size='sm'
                 variant='outline'
-                onClick={() => onPrintInvoice?.(appointment.id)}
-                disabled={isLoading}
+                disabled
               >
-                {isLoading ? (
-                  <Loader2 className='me-2 size-4 animate-spin' />
-                ) : (
-                  <Printer className='me-2 size-4' />
-                )}
-                In hóa đơn
+                Đang khám bệnh
               </Button>
             )}
 
-            {appointment.status === 'DA_DEN' && (
-              <Button
-                size='sm'
-                onClick={() => onOpenMedicalRecord(appointment.id)}
-              >
-                <ClipboardPlus className='me-2 size-4' />
-                Tạo phiếu khám
-              </Button>
-            )}
+            {/* KHONG_DEN - no actions */}
           </div>
         )
       },

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -33,6 +33,7 @@ import {
   exportInvoiceHtml,
   type CreateMedicalRecordPayload,
 } from '../api/medical-records'
+import { confirmAppointment } from '@/features/appointments/api/appointments'
 import {
   createMedicalRecordSchema,
   type CreateMedicalRecordInput,
@@ -54,6 +55,8 @@ export function CreateMedicalRecordForm({
   onSuccess,
   onCancel,
 }: CreateMedicalRecordFormProps) {
+  const queryClient = useQueryClient()
+
   const [appointmentData, setAppointmentData] =
     useState<AppointmentDataForMedicalRecord | null>(null)
   // Examination type: 'doctor' (default), 'department', 'service'
@@ -279,6 +282,21 @@ export function CreateMedicalRecordForm({
       setCreatedMedicalRecordId(medicalRecordId)
       setPaymentCompleted(true)
 
+      // Update appointment status to DANG_KHAM
+      if (appointmentData?.appointmentId) {
+        try {
+          console.log('🔄 [Update Appointment] Updating appointment status to DANG_KHAM:', appointmentData.appointmentId)
+          await confirmAppointment({
+            id: appointmentData.appointmentId,
+            status: 'DANG_KHAM',
+          })
+          console.log('✅ [Update Appointment] Appointment status updated successfully')
+        } catch (error) {
+          console.error('❌ [Update Appointment] Failed to update appointment status:', error)
+          // Don't show error to user - this is a secondary action
+        }
+      }
+
       // Show success message
       toast.success('Tạo phiếu khám và thanh toán thành công')
 
@@ -292,11 +310,11 @@ export function CreateMedicalRecordForm({
           printWindow.document.write(htmlContent)
           printWindow.document.close()
 
-          // Wait for content to load then trigger print
-          printWindow.onload = () => {
-            printWindow.focus()
-            printWindow.print()
-          }
+          // // Wait for content to load then trigger print
+          // printWindow.onload = () => {
+          //   printWindow.focus()
+          //   printWindow.print()
+          // }
         } else {
           toast.error('Không thể mở cửa sổ in. Vui lòng kiểm tra trình chặn popup.')
         }
@@ -311,8 +329,12 @@ export function CreateMedicalRecordForm({
       form.reset()
       clearAppointmentForMedicalRecord()
 
-      // DO NOT call onSuccess to prevent navigation
-      // onSuccess is only called if user explicitly wants to close
+      // Invalidate appointments queries to force refetch
+      void queryClient.invalidateQueries({ queryKey: ['appointments'] })
+      console.log('🔄 [Invalidate Queries] Appointments queries invalidated')
+
+      // Call onSuccess to navigate back to appointments list
+      // onSuccess?.(medicalRecordId)
     },
     onError: (error) => {
       const message =

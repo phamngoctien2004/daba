@@ -3,10 +3,9 @@ import { createFileRoute } from '@tanstack/react-router'
 import { AppointmentsManagement } from '@/features/appointments'
 
 const statusEnum = z.enum([
-  'CHO_XAC_NHAN',
   'DA_XAC_NHAN',
-  'DA_DEN',
   'KHONG_DEN',
+  'DANG_KHAM',
 ])
 
 const appointmentsSearchSchema = z.object({
