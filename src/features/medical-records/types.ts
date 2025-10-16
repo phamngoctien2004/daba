@@ -1,4 +1,4 @@
-export type MedicalRecordStatus = 'DANG_KHAM' | 'CHO_XET_NGHIEM' | 'HOAN_THANH' | 'HUY'
+export type MedicalRecordStatus = 'CHO_KHAM' | 'DANG_KHAM' | 'CHO_XET_NGHIEM' | 'HOAN_THANH' | 'HUY'
 export type InvoiceDetailStatus = 'DA_THANH_TOAN' | 'THANH_TOAN_MOT_PHAN' | 'CHUA_THANH_TOAN'
 export type LabOrderStatus = 'CHO_THUC_HIEN' | 'DANG_THUC_HIEN' | 'HOAN_THANH' | 'HUY'
 

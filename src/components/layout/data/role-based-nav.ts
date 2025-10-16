@@ -67,7 +67,7 @@ export const bacSiNavGroups: NavGroup[] = [
         items: [
             {
                 title: 'Khám bệnh',
-                url: '/examinations',
+                url: '/doctor-medical-records',
                 icon: Stethoscope,
             },
             {

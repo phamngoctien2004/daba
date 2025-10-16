@@ -5,7 +5,7 @@ import type {
   MedicalRecordStatus
 } from '../types'
 
-export type { MedicalRecordStatus, MedicalRecord } from '../types'
+export type { MedicalRecordStatus, MedicalRecord, MedicalRecordDetail } from '../types'
 
 interface MedicalRecordApiResponse {
   data?: unknown
@@ -28,6 +28,19 @@ export interface FetchMedicalRecordsInput {
   keyword?: string
   date?: string // yyyy-MM-dd
   status?: MedicalRecordStatus
+  limit?: number
+  page?: number
+}
+
+/**
+ * Fetch medical records for doctor with filters
+ * GET /api/medical-record/doctor
+ */
+export interface FetchDoctorMedicalRecordsInput {
+  keyword?: string
+  date?: string // yyyy-MM-dd
+  status?: MedicalRecordStatus
+  isAllDepartment?: boolean // true = phiếu khám chung, false = phiếu khám của tôi
   limit?: number
   page?: number
 }
@@ -122,6 +135,98 @@ export const fetchMedicalRecords = async (
     return { medicalRecords, pagination }
   } catch (error) {
     console.error('❌ [fetchMedicalRecords] Error:', error)
+    // Return empty result instead of throwing to prevent 500 error
+    return {
+      medicalRecords: [],
+      pagination: {
+        page: input.page || 1,
+        pageSize: input.limit || 10,
+        total: 0,
+        totalPages: 0,
+      },
+    }
+  }
+}
+
+/**
+ * Fetch medical records for doctor with filters
+ * GET /api/medical-record/doctor
+ */
+export const fetchDoctorMedicalRecords = async (
+  input: FetchDoctorMedicalRecordsInput = {}
+): Promise<{
+  medicalRecords: MedicalRecord[]
+  pagination: MedicalRecordsPagination
+}> => {
+  try {
+    const params: Record<string, string> = {}
+
+    if (input.keyword) params.keyword = input.keyword
+    if (input.date) params.date = input.date
+    if (input.status) params.status = input.status
+    if (typeof input.isAllDepartment === 'boolean') {
+      params.isAllDepartment = String(input.isAllDepartment)
+    }
+    if (input.limit) params.limit = String(input.limit)
+    if (input.page) params.page = String(input.page)
+
+    const queryString = new URLSearchParams(params).toString()
+    const url = queryString ? `/medical-record/doctor?${queryString}` : '/medical-record/doctor'
+
+    console.log('🔵 [fetchDoctorMedicalRecords] Requesting URL:', url)
+
+    const { data } = await get<MedicalRecordsListApiResponse>(url)
+
+    console.log('🔵 [fetchDoctorMedicalRecords] Raw response:', data)
+
+    const response = data ?? {}
+    let medicalRecords: MedicalRecord[] = []
+    let pagination: MedicalRecordsPagination = {
+      page: input.page || 1,
+      pageSize: input.limit || 10,
+      total: 0,
+      totalPages: 0,
+    }
+
+    // Check if response has Spring Boot pagination structure
+    if (isRecord(response) && isRecord(response.data)) {
+      const responseData = response.data
+
+      console.log('🔵 [fetchDoctorMedicalRecords] Response data type:', typeof responseData)
+      console.log('🔵 [fetchDoctorMedicalRecords] Has content?', Array.isArray(responseData.content))
+
+      // Extract content array
+      if (Array.isArray(responseData.content)) {
+        medicalRecords = responseData.content.filter(isMedicalRecord)
+        console.log('🔵 [fetchDoctorMedicalRecords] Filtered records:', medicalRecords.length)
+      }
+
+      // Extract pagination info
+      if (typeof responseData.totalElements === 'number') {
+        pagination.total = responseData.totalElements
+      }
+      if (typeof responseData.totalPages === 'number') {
+        pagination.totalPages = responseData.totalPages
+      }
+      if (typeof responseData.number === 'number') {
+        pagination.page = responseData.number + 1 // Convert back to 1-indexed
+      }
+      if (typeof responseData.size === 'number') {
+        pagination.pageSize = responseData.size
+      }
+    } else if (isRecord(response) && Array.isArray(response.data)) {
+      // Fallback: if response.data is just an array
+      console.log('🔵 [fetchDoctorMedicalRecords] Response is array format')
+      medicalRecords = response.data.filter(isMedicalRecord)
+      pagination.total = medicalRecords.length
+      pagination.totalPages = Math.ceil(medicalRecords.length / pagination.pageSize)
+    }
+
+    console.log('🔵 [fetchDoctorMedicalRecords] Final result - Records:', medicalRecords.length, 'Pagination:', pagination)
+
+    return { medicalRecords, pagination }
+  } catch (error) {
+    console.error('❌ [fetchDoctorMedicalRecords] Error:', error)
     // Return empty result instead of throwing to prevent 500 error
     return {
       medicalRecords: [],

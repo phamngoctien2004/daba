@@ -30,6 +30,7 @@ const DEFAULT_PAGE = 1
 const DEFAULT_PAGE_SIZE = 10
 
 const STATUS_FILTER_OPTIONS = [
+    { label: 'Chờ khám', value: 'CHO_KHAM' },
     { label: 'Đang khám', value: 'DANG_KHAM' },
     { label: 'Chờ xét nghiệm', value: 'CHO_XET_NGHIEM' },
     { label: 'Hoàn thành', value: 'HOAN_THANH' },
@@ -55,6 +56,7 @@ type MedicalRecordsTableProps = {
     isLoading: boolean
     isRefetching: boolean
     onViewDetail: (id: string) => void
+    onExamine?: (id: string) => void
     dateValue: string
     onDateChange: (date: Date | undefined) => void
     onResetFilters: () => void
@@ -69,6 +71,7 @@ export function MedicalRecordsTable({
     isLoading,
     isRefetching,
     onViewDetail,
+    onExamine,
     dateValue,
     onDateChange,
     onResetFilters,
@@ -103,8 +106,8 @@ export function MedicalRecordsTable({
     })
 
     const columns = useMemo(
-        () => getMedicalRecordsColumns({ onViewDetail }),
-        [onViewDetail]
+        () => getMedicalRecordsColumns({ onViewDetail, onExamine }),
+        [onViewDetail, onExamine]
     )
 
     const effectivePageCount = Math.max(pageCount, 1)
@@ -191,8 +194,8 @@ export function MedicalRecordsTable({
                     <span>Tổng cộng {total} phiếu khám</span>
                     {isRefetching && (
                         <span className='flex items-center gap-2 text-primary'>
-                            <Loader2 className='size-4 animate-spin' />
-                            Đang đồng bộ dữ liệu...
+                            {/* <Loader2 className='size-4 animate-spin' />
+                            Đang đồng bộ dữ liệu... */}
                         </span>
                     )}
                 </div>

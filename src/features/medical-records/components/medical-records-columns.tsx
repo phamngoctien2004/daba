@@ -16,6 +16,7 @@ const statusConfig: Record<
   MedicalRecordStatus,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
+  CHO_KHAM: { label: 'Chờ khám', variant: 'secondary' },
   DANG_KHAM: { label: 'Đang khám', variant: 'default' },
   CHO_XET_NGHIEM: { label: 'Chờ xét nghiệm', variant: 'secondary' },
   HOAN_THANH: { label: 'Hoàn thành', variant: 'outline' },
@@ -24,10 +25,12 @@ const statusConfig: Record<
 
 type ColumnsOptions = {
   onViewDetail: (id: string) => void
+  onExamine?: (id: string) => void
 }
 
 export const getMedicalRecordsColumns = ({
   onViewDetail,
+  onExamine,
 }: ColumnsOptions): ColumnDef<MedicalRecord>[] => [
     {
       accessorKey: 'code',
@@ -105,7 +108,24 @@ export const getMedicalRecordsColumns = ({
       header: 'Thao tác',
       cell: ({ row }) => {
         const record = row.original
+        const isCompleted = record.status === 'HOAN_THANH'
 
+        // Nếu có callback onExamine (tức là đang ở trang bác sĩ)
+        if (onExamine) {
+          return (
+            <Button
+              size='sm'
+              onClick={() => onExamine(record.id)}
+              className='gap-2'
+              variant={isCompleted ? 'outline' : 'default'}
+            >
+              <Eye className='h-4 w-4' />
+              {isCompleted ? 'Xem hồ sơ' : 'Khám bệnh'}
+            </Button>
+          )
+        }
+
+        // Nếu không có onExamine (trang admin), hiển thị menu dropdown
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

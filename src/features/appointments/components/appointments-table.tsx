@@ -204,8 +204,8 @@ export function AppointmentsTable({
           <span>Tổng cộng {total} lịch khám</span>
           {isRefetching && (
             <span className='flex items-center gap-2 text-primary'>
-              <Loader2 className='size-4 animate-spin' />
-              Đang đồng bộ dữ liệu...
+              {/* <Loader2 className='size-4 animate-spin' />
+              Đang đồng bộ dữ liệu... */}
             </span>
           )}
         </div>

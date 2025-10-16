@@ -1096,7 +1096,7 @@
 
 ## 7. Medical Record API
 
-### Base URL: `/api/medical-record`
+### Base URL: `/api/medical-record`/medi
 
 ### 7.1 Lấy danh sách hồ sơ bệnh án
 **Endpoint:** `GET /api/medical-record`
@@ -1215,6 +1215,7 @@
 - `keyword` (optional): Từ khóa tìm kiếm
 - `date` (optional): Ngày khám (yyyy-MM-dd)
 - `status` (optional): DANG_KHAM, CHO_XET_NGHIEM ,HOAN_THANH, HUY
+- `isAllDepartment` (optional): true(lấy danh sách phiếu khám chỉ định cụ thể), false(chỉ định chung cho khoa)
 - `limit`, `page(default=1)` 
 **Response:**
 ```json
@@ -1579,7 +1580,7 @@
 ```json
 {
   "id": 1,
-  "status": "COMPLETED" // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  "status": "DANG_KHAM" // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
 }
 ```
 
@@ -1608,24 +1609,15 @@
 **Response:**
 ```json
 {
-  "data": [
-    {
-      "id": 1,
-      "note": "string",
-      "createdDate": "2024-12-20",
-      "details": [
-        {
-          "id": 1,
-          "medicineName": "string",
-          "quantity": 10,
-          "dosage": "1 viên/lần",
-          "frequency": "2 lần/ngày",
-          "duration": "7 ngày"
-        }
-      ]
-    }
-  ],
-  "message": "Fetch prescriptions successfully"
+    "data": {
+        "id": 14,
+        "code": "DT1760607145",
+        "generalInstructions": null,
+        "doctorCreated": "tien",
+        "prescriptionDate": "2025-10-16T16:32:26",
+        "detailResponses": []
+    },
+    "message": "Fetch prescriptions successfully"
 }
 ```
 
@@ -1690,23 +1682,30 @@
 **Request Body:**
 ```json
 {
-  "prescriptionId": 1,
-  "medicineId": 1,
-  "quantity": 10,
-  "dosage": "1 viên/lần",
-  "frequency": "2 lần/ngày",
-  "duration": "7 ngày",
-  "note": "string"
+	"prescriptionId": 1,
+    "medicineId": 2,
+    "usageInstructions": "Uống 2 viên sau ăn",
+    "quantity": 2
 }
 ```
 
 **Response:**
 ```json
 {
-  "data": {
-    "id": 1
-  },
-  "message": "Create prescription detail successfully"
+    "data": {
+        "id": 42,
+        "medicineResponse": {
+            "id": 10,
+            "name": null,
+            "concentration": null,
+            "dosageForm": null,
+            "description": null,
+            "unit": null
+        },
+        "usageInstructions": "Uống 2 viên sau ăn",
+        "quantity": 2
+    },
+    "message": "Create prescription detail successfully"
 }
 ```
 
@@ -1720,22 +1719,30 @@
 **Request Body:**
 ```json
 {
-  "id": 1,
-  "quantity": 10,
-  "dosage": "1 viên/lần",
-  "frequency": "2 lần/ngày",
-  "duration": "7 ngày",
-  "note": "string"
+    "id": 1,
+    "medicineId": 3,
+    "usageInstructions": "Uống 2 viên2 sau ăn",
+    "quantity": 10
 }
 ```
 
 **Response:**
 ```json
 {
-  "data": {
-    "id": 1
-  },
-  "message": "Update prescription detail successfully"
+    "data": {
+        "id": 1,
+        "medicineResponse": {
+            "id": 3,
+            "name": "Cefuroxime",
+            "concentration": "250mg",
+            "dosageForm": "Viên nén",
+            "description": "",
+            "unit": "Vỉ"
+        },
+        "usageInstructions": "Uống 2 viên2 sau ăn",
+        "quantity": 10
+    },
+    "message": "Update prescription detail successfully"
 }
 ```
 
@@ -1765,21 +1772,65 @@
 
 **Query Parameters:**
 - `keyword` (optional): Từ khóa tìm kiếm tên thuốc
-
+- `page (default=1)`
+- `limit (default=10)`
 **Response:**
 ```json
 {
-  "data": [
-    {
-      "id": 1,
-      "name": "Paracetamol",
-      "unit": "Viên",
-      "price": 5000,
-      "stock": 1000,
-      "description": "string"
-    }
-  ],
-  "message": "Fetch medicines successfully"
+    "data": {
+        "content": [
+            {
+                "id": 1,
+                "name": "Paracetamol",
+                "concentration": "500mg",
+                "dosageForm": "Viên nén",
+                "description": "",
+                "unit": "Vỉ"
+            },
+            {
+                "id": 2,
+                "name": "Amoxicillin",
+                "concentration": "500mg",
+                "dosageForm": "Viên nang",
+                "description": "",
+                "unit": "Vỉ"
+            },
+            {
+                "id": 3,
+                "name": "Cefuroxime",
+                "concentration": "250mg",
+                "dosageForm": "Viên nén",
+                "description": "",
+                "unit": "Vỉ"
+            }
+        ],
+        "pageable": {
+            "pageNumber": 0,
+            "pageSize": 3,
+            "sort": {
+                "sorted": false,
+                "unsorted": true,
+                "empty": true
+            },
+            "offset": 0,
+            "paged": true,
+            "unpaged": false
+        },
+        "totalPages": 10,
+        "totalElements": 30,
+        "last": false,
+        "first": true,
+        "size": 3,
+        "number": 0,
+        "sort": {
+            "sorted": false,
+            "unsorted": true,
+            "empty": true
+        },
+        "numberOfElements": 3,
+        "empty": false
+    },
+    "message": "Fetch medicines successfully"
 }
 ```
 
@@ -1825,15 +1876,26 @@
 **Response:**
 ```json
 {
-  "data": {
-    "id": 1,
-    "testName": "string",
-    "status": "PENDING",
-    "orderDate": "2024-12-20",
-    "result": {},
-    "doctorPerforming": {}
-  },
-  "message": "Get lab order by id successfully"
+    "data": {
+        "id": 446,
+        "code": "XN1760593761675",
+        "recordId": 209,
+        "healthPlanId": 1,
+        "healthPlanName": "khám bệnh",
+        "room": "Phòng khám Nội tổng quát - 101A",
+        "doctorPerformed": null,
+        "doctorPerformedId": null,
+        "doctorOrdered": null,
+        "status": "HOAN_THANH",
+        "statusPayment": null,
+        "price": 0.00,
+        "orderDate": "2025-10-16T12:49:22",
+        "diagnosis": null,
+        "expectedResultDate": "2025-10-16T12:49:22",
+        "serviceParent": null,
+        "labResultResponse": null
+    },
+    "message": "Get lab order by id successfully"
 }
 ```
 
@@ -1900,10 +1962,10 @@
 **Request Body:**
 ```json
 {
-  "medicalRecordId": 1,
-  "testId": 1,
-  "doctorPerformingId": 1,
-  "note": "string"
+	"recordId": 69,
+    "healthPlanId": 11,
+    "performingDoctor": 20,
+    "diagnosis": "abcdxyzt"
 }
 ```
 
@@ -1949,9 +2011,9 @@
 ```json
 {
   "id": 1,
-  "doctorPerformingId": 1,
-  "note": "string"
+  "doctorPerformingId": null, 
 }
+// có thể không chọn bác sĩ chỉ định
 ```
 
 **Response:**
@@ -1965,16 +2027,10 @@
 ---
 
 ### 10.8 Xóa phiếu xét nghiệm
-**Endpoint:** `DELETE /api/lab-orders`
+**Endpoint:** `DELETE /api/lab-orders/{id}`
 
 **Mô tả:** Xóa một hoặc nhiều phiếu xét nghiệm
 
-**Request Body:**
-```json
-{
-  "ids": [1, 2, 3]
-}
-```
 
 **Response:**
 - Status: 204 No Content
@@ -2546,7 +2602,7 @@ NAM,NU
 DA_XAC_NHAN, KHONG_DEN, DANG_KHAM
 
 #### Medical Record Status
-DANG_KHAM, CHO_XET_NGHIEM, HOAN_THANH, HUY
+CHO_KHAM, DANG_KHAM, CHO_XET_NGHIEM, HOAN_THANH, HUY
 
 #### Lab Order Status
 CHO_THUC_HIEN, DANG_THUC_HIEN, HOAN_THANH, HUY_BO
