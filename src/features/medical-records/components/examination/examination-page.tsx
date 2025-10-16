@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card } from '@/components/ui/card'
@@ -9,22 +9,43 @@ import { useToast } from '@/hooks/use-toast'
 import {
   fetchMedicalRecordDetail,
   updateMedicalRecordStatus,
-  type MedicalRecordDetail,
 } from '../../api/medical-records'
-import { fetchPatient, type Patient } from '@/features/patients/api/patients'
+import { fetchPatient } from '@/features/patients/api/patients'
 import { PatientInfo } from './patient-info'
 import { ExaminationForm } from './examination-form'
 import { LabOrders } from './lab-orders'
 import { PrescriptionTab } from './prescription'
+import { MedicalHistory } from './medical-history'
 
 type ExaminationPageProps = {
   id: string
+  fromRecordId?: string
 }
 
-export function ExaminationPage({ id }: ExaminationPageProps) {
+export function ExaminationPage({ id, fromRecordId }: ExaminationPageProps) {
   const { toast } = useToast()
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState('patient-info')
+  const navigate = useNavigate()
+
+  // Check if viewing history (has fromRecordId)
+  const isViewingHistory = !!fromRecordId
+
+  // Debug: Log to check if fromRecordId is being passed correctly
+  console.log('🔍 [ExaminationPage] fromRecordId:', fromRecordId, 'isViewingHistory:', isViewingHistory)
+
+  // Set default tab based on mode
+  // - When viewing history (from medical history): Default to 'examination'
+  // - When normal examination: Default to 'patient-info'
+  const [activeTab, setActiveTab] = useState(
+    isViewingHistory ? 'examination' : 'patient-info'
+  )
+
+  // Update tab when isViewingHistory changes (e.g., when navigating from history)
+  useEffect(() => {
+    if (isViewingHistory) {
+      setActiveTab('examination')
+    }
+  }, [isViewingHistory, id])
 
   // Fetch medical record detail
   const { data: medicalRecord, isLoading: isLoadingRecord } = useQuery({
@@ -97,18 +118,35 @@ export function ExaminationPage({ id }: ExaminationPageProps) {
     )
   }
 
+  const handleBackToOriginalRecord = () => {
+    if (fromRecordId) {
+      navigate({
+        to: '/doctor-medical-records/examine/$id',
+        params: { id: fromRecordId },
+      })
+    }
+  }
+
   return (
     <div className='flex flex-col gap-6'>
       {/* Header */}
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-4'>
-          <Link to='/doctor-medical-records'>
-            <Button variant='outline' size='icon'>
+          {isViewingHistory ? (
+            <Button variant='outline' size='icon' onClick={handleBackToOriginalRecord}>
               <ArrowLeft className='h-4 w-4' />
             </Button>
-          </Link>
+          ) : (
+            <Link to='/doctor-medical-records'>
+              <Button variant='outline' size='icon'>
+                <ArrowLeft className='h-4 w-4' />
+              </Button>
+            </Link>
+          )}
           <div>
-            <h1 className='text-2xl font-bold'>Khám bệnh</h1>
+            <h1 className='text-2xl font-bold'>
+              {isViewingHistory ? 'Lịch sử khám bệnh' : 'Khám bệnh'}
+            </h1>
             <p className='text-sm text-muted-foreground'>
               Mã phiếu: {medicalRecord.code} | Bệnh nhân: {medicalRecord.patientName}
             </p>
@@ -119,12 +157,12 @@ export function ExaminationPage({ id }: ExaminationPageProps) {
       {/* Tabs */}
       <Card className='p-6'>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className='grid w-full grid-cols-5'>
+          <TabsList className={`grid w-full ${isViewingHistory ? 'grid-cols-4' : 'grid-cols-5'}`}>
             <TabsTrigger value='patient-info'>Thông tin BN</TabsTrigger>
             <TabsTrigger value='examination'>Khám bệnh</TabsTrigger>
             <TabsTrigger value='lab-orders'>Chỉ định</TabsTrigger>
             <TabsTrigger value='prescription'>Đơn thuốc</TabsTrigger>
-            <TabsTrigger value='history'>Lịch sử</TabsTrigger>
+            {!isViewingHistory && <TabsTrigger value='history'>Lịch sử</TabsTrigger>}
           </TabsList>
 
           <TabsContent value='patient-info' className='mt-6'>
@@ -132,22 +170,31 @@ export function ExaminationPage({ id }: ExaminationPageProps) {
           </TabsContent>
 
           <TabsContent value='examination' className='mt-6'>
-            <ExaminationForm medicalRecord={medicalRecord} />
+            <ExaminationForm medicalRecord={medicalRecord} readOnly={isViewingHistory} />
           </TabsContent>
 
           <TabsContent value='lab-orders' className='mt-6'>
-            <LabOrders medicalRecord={medicalRecord} />
+            <LabOrders medicalRecord={medicalRecord} readOnly={isViewingHistory} />
           </TabsContent>
 
           <TabsContent value='prescription' className='mt-6'>
-            <PrescriptionTab medicalRecord={medicalRecord} />
+            <PrescriptionTab medicalRecord={medicalRecord} readOnly={isViewingHistory} />
           </TabsContent>
 
-          <TabsContent value='history' className='mt-6'>
-            <div className='text-center py-8 text-muted-foreground'>
-              Lịch sử khám bệnh (Sẽ làm sau)
-            </div>
-          </TabsContent>
+          {!isViewingHistory && (
+            <TabsContent value='history' className='mt-6'>
+              {medicalRecord.patientId ? (
+                <MedicalHistory
+                  patientId={medicalRecord.patientId}
+                  currentRecordId={medicalRecord.id}
+                />
+              ) : (
+                <div className='text-center py-8 text-muted-foreground'>
+                  Không có thông tin bệnh nhân
+                </div>
+              )}
+            </TabsContent>
+          )}
         </Tabs>
       </Card>
     </div>

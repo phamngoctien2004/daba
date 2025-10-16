@@ -14,13 +14,15 @@ import {
 
 type ExaminationFormProps = {
   medicalRecord: MedicalRecordDetail
+  readOnly?: boolean
 }
 
-export function ExaminationForm({ medicalRecord }: ExaminationFormProps) {
+export function ExaminationForm({ medicalRecord, readOnly = false }: ExaminationFormProps) {
   const queryClient = useQueryClient()
 
-  // Check if medical record is completed (read-only mode)
+  // Check if medical record is completed or in read-only mode
   const isCompleted = medicalRecord.status === 'HOAN_THANH'
+  const isReadOnly = isCompleted || readOnly
 
   const [formData, setFormData] = useState({
     symptoms: medicalRecord.symptoms || '',
@@ -152,7 +154,7 @@ export function ExaminationForm({ medicalRecord }: ExaminationFormProps) {
               }
               placeholder='Nhập triệu chứng...'
               rows={3}
-              disabled={isCompleted}
+              disabled={isReadOnly}
             />
           </div>
 
@@ -168,7 +170,7 @@ export function ExaminationForm({ medicalRecord }: ExaminationFormProps) {
               }
               placeholder='Nhập kết quả khám lâm sàng...'
               rows={4}
-              disabled={isCompleted}
+              disabled={isReadOnly}
             />
           </div>
 
@@ -184,7 +186,7 @@ export function ExaminationForm({ medicalRecord }: ExaminationFormProps) {
               }
               placeholder='Nhập chẩn đoán...'
               rows={3}
-              disabled={isCompleted}
+              disabled={isReadOnly}
             />
           </div>
 
@@ -200,7 +202,7 @@ export function ExaminationForm({ medicalRecord }: ExaminationFormProps) {
               }
               placeholder='Nhập kế hoạch điều trị...'
               rows={4}
-              disabled={isCompleted}
+              disabled={isReadOnly}
             />
           </div>
 
@@ -212,14 +214,14 @@ export function ExaminationForm({ medicalRecord }: ExaminationFormProps) {
               onChange={(e) => setFormData({ ...formData, note: e.target.value })}
               placeholder='Nhập ghi chú (nếu có)...'
               rows={3}
-              disabled={isCompleted}
+              disabled={isReadOnly}
             />
           </div>
         </CardContent>
       </Card>
 
       {/* Action Buttons */}
-      {!isCompleted && (
+      {!isReadOnly && (
         <Card>
           <CardContent className='pt-6'>
             <div className='flex flex-col gap-3 sm:flex-row sm:justify-end'>
@@ -270,12 +272,16 @@ export function ExaminationForm({ medicalRecord }: ExaminationFormProps) {
       )}
 
       {/* Read-only indicator */}
-      {isCompleted && (
+      {isReadOnly && (
         <Card>
           <CardContent className='pt-6'>
             <div className='flex items-center gap-2 text-sm text-muted-foreground'>
               <CheckCircle2 className='h-5 w-5 text-green-600' />
-              <span>Phiếu khám này đã hoàn thành và không thể chỉnh sửa.</span>
+              <span>
+                {readOnly
+                  ? 'Đang xem lịch sử khám bệnh - Không thể chỉnh sửa.'
+                  : 'Phiếu khám này đã hoàn thành và không thể chỉnh sửa.'}
+              </span>
             </div>
           </CardContent>
         </Card>

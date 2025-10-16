@@ -1446,17 +1446,137 @@
 **Response:**
 ```json
 {
-  "data": [
-    {
-      "id": 1,
-      "recordCode": "MR001",
-      "date": "2024-12-20",
-      "doctorName": "string",
-      "diagnosis": "string"
-    }
-  ],
-  "message": "Get medical record by id successfully"
+    "data": [
+        {
+            "id": "210",
+            "code": "PK1760608163",
+            "symptoms": "Khó chịu",
+            "clinicalExamination": "",
+            "diagnosis": "",
+            "treatmentPlan": "",
+            "note": "",
+            "patientId": 5,
+            "patientName": "Nguyen Van A",
+            "patientPhone": "0395527082",
+            "patientAddress": "123 Đường ABC, Quận 1, TP.HCM",
+            "patientGender": "NAM",
+            "date": "2025-10-16T16:49:23",
+            "status": "CHO_XET_NGHIEM",
+            "healthPlanId": 1,
+            "healthPlanName": "khám bệnh",
+            "doctorName": "tien",
+            "total": 6000,
+            "paid": 6000,
+            "invoiceDetailsResponse": [
+                {
+                    "id": 390,
+                    "healthPlanId": 1,
+                    "healthPlanName": "khám bệnh",
+                    "healthPlanPrice": 6000,
+                    "paid": 6000,
+                    "paymentMethod": null,
+                    "description": "Phí khám bệnh",
+                    "status": "DA_THANH_TOAN",
+                    "multipleLab": null,
+                    "singleLab": {
+                        "id": 457,
+                        "code": "XN1760608163053",
+                        "name": "khám bệnh",
+                        "doctorPerforming": "tien",
+                        "room": "Phòng khám Ngoại chấn thương - 102A",
+                        "createdAt": "2025-10-16T16:49:23",
+                        "status": "HOAN_THANH"
+                    },
+                    "typeService": "SINGLE"
+                }
+            ]
+        },
+        {
+            "id": "211",
+            "code": "PK1760608174",
+            "symptoms": "c",
+            "clinicalExamination": null,
+            "diagnosis": null,
+            "treatmentPlan": null,
+            "note": null,
+            "patientId": 5,
+            "patientName": "Nguyen Van A",
+            "patientPhone": "0395527082",
+            "patientAddress": "123 Đường ABC, Quận 1, TP.HCM",
+            "patientGender": "NAM",
+            "date": "2025-10-16T16:49:34",
+            "status": "DANG_KHAM",
+            "healthPlanId": 10,
+            "healthPlanName": "GOI DICH VU SIEU CAP VU TRU TAI NHA TAN RANG",
+            "doctorName": null,
+            "total": 5000,
+            "paid": 5000,
+            "invoiceDetailsResponse": [
+                {
+                    "id": 391,
+                    "healthPlanId": 10,
+                    "healthPlanName": "GOI DICH VU SIEU CAP VU TRU TAI NHA TAN RANG",
+                    "healthPlanPrice": 5000,
+                    "paid": 5000,
+                    "paymentMethod": null,
+                    "description": "GOI DICH VU SIEU CAP VU TRU TAI NHA TAN RANG",
+                    "status": "DA_THANH_TOAN",
+                    "multipleLab": [
+                        {
+                            "id": 458,
+                            "code": "XN1760608174439",
+                            "name": "Xét nghiệm công thức máu",
+                            "doctorPerforming": null,
+                            "room": "Phòng khám Nội tổng quát - 101A",
+                            "createdAt": "2025-10-16T16:49:34",
+                            "status": "CHO_THUC_HIEN"
+                        },
+                        {
+                            "id": 459,
+                            "code": "XN1760608174445",
+                            "name": "Nội soi dạ dày",
+                            "doctorPerforming": null,
+                            "room": "Phòng khám Ngoại chấn thương - 102A",
+                            "createdAt": "2025-10-16T16:49:34",
+                            "status": "CHO_THUC_HIEN"
+                        },
+                        {
+                            "id": 460,
+                            "code": "XN1760608174451",
+                            "name": "Chụp X-quang ngực",
+                            "doctorPerforming": null,
+                            "room": "Phòng khám Nhi khoa - 103A",
+                            "createdAt": "2025-10-16T16:49:34",
+                            "status": "CHO_THUC_HIEN"
+                        },
+                        {
+                            "id": 461,
+                            "code": "XN1760608174456",
+                            "name": "Siêu âm ổ bụng tổng quát",
+                            "doctorPerforming": null,
+                            "room": "Phòng khám Sản phụ khoa - 104A",
+                            "createdAt": "2025-10-16T16:49:34",
+                            "status": "CHO_THUC_HIEN"
+                        },
+                        {
+                            "id": 462,
+                            "code": "XN1760608174463",
+                            "name": "khám bệnh",
+                            "doctorPerforming": null,
+                            "room": "Phòng khám Nội tổng quát - 101A",
+                            "createdAt": "2025-10-16T16:49:34",
+                            "status": "HOAN_THANH"
+                        }
+                    ],
+                    "singleLab": null,
+                    "typeService": "MULTIPLE"
+                }
+            ]
+        }
+    ],
+    "message": "Get medical record by id successfully"
 }
+
 ```
 
 ---

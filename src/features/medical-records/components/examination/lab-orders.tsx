@@ -44,6 +44,7 @@ import {
 
 type LabOrdersProps = {
   medicalRecord: MedicalRecordDetail
+  readOnly?: boolean
 }
 
 const statusConfig = {
@@ -53,11 +54,12 @@ const statusConfig = {
   HUY: { label: 'Hủy', variant: 'destructive' as const },
 }
 
-export function LabOrders({ medicalRecord }: LabOrdersProps) {
+export function LabOrders({ medicalRecord, readOnly = false }: LabOrdersProps) {
   const queryClient = useQueryClient()
 
-  // Check if medical record is completed (read-only mode)
+  // Check if medical record is completed or in read-only mode
   const isCompleted = medicalRecord.status === 'HOAN_THANH'
+  const isReadOnly = isCompleted || readOnly
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
@@ -167,7 +169,7 @@ export function LabOrders({ medicalRecord }: LabOrdersProps) {
         <CardHeader>
           <div className='flex items-center justify-between'>
             <CardTitle>Danh sách chỉ định</CardTitle>
-            {!isCompleted && (
+            {!isReadOnly && (
               <Button onClick={() => setIsCreateDialogOpen(true)} size='sm' className='gap-2'>
                 <Plus className='h-4 w-4' />
                 Thêm chỉ định
@@ -216,7 +218,7 @@ export function LabOrders({ medicalRecord }: LabOrdersProps) {
                             >
                               <Eye className='h-4 w-4' />
                             </Button>
-                            {!isCompleted && (
+                            {!isReadOnly && (
                               <Button
                                 variant='ghost'
                                 size='sm'

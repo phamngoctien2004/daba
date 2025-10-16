@@ -7,14 +7,24 @@ import { Search as GlobalSearch } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { ExaminationPage } from '@/features/medical-records/components/examination/examination-page'
 
+type ExamineSearchParams = {
+  from?: string
+}
+
 export const Route = createFileRoute(
   '/_authenticated/doctor-medical-records/examine/$id'
 )({
   component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>): ExamineSearchParams => {
+    return {
+      from: typeof search.from === 'string' ? search.from : undefined,
+    }
+  },
 })
 
 function RouteComponent() {
   const { id } = Route.useParams()
+  const { from } = Route.useSearch()
 
   return (
     <>
@@ -28,7 +38,7 @@ function RouteComponent() {
       </Header>
 
       <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
-        <ExaminationPage id={id} />
+        <ExaminationPage id={id} fromRecordId={from} />
       </Main>
     </>
   )

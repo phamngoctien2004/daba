@@ -48,7 +48,8 @@ export interface MedicalRecord {
 }
 
 export interface MedicalRecordDetail extends MedicalRecord {
-    // Detail page có đầy đủ thông tin
+    // Detail page có đầy đủ thông tin, bao gồm tên bác sĩ
+    doctorName?: string | null
 }
 
 export interface MedicalRecordsResponse {

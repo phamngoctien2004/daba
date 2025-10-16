@@ -46,13 +46,15 @@ import {
 
 type PrescriptionProps = {
   medicalRecord: MedicalRecordDetail
+  readOnly?: boolean
 }
 
-export function PrescriptionTab({ medicalRecord }: PrescriptionProps) {
+export function PrescriptionTab({ medicalRecord, readOnly = false }: PrescriptionProps) {
   const queryClient = useQueryClient()
 
-  // Check if medical record is completed (read-only mode)
+  // Check if medical record is completed or in read-only mode
   const isCompleted = medicalRecord.status === 'HOAN_THANH'
+  const isReadOnly = isCompleted || readOnly
 
   const [hasPrescription, setHasPrescription] = useState(false)
   const [currentPrescription, setCurrentPrescription] = useState<Prescription | null>(null)
@@ -313,12 +315,12 @@ export function PrescriptionTab({ medicalRecord }: PrescriptionProps) {
               <p className='text-sm text-muted-foreground'>
                 {createMutation.isPending
                   ? 'Vui lòng đợi trong giây lát'
-                  : isCompleted
+                  : isReadOnly
                     ? 'Phiếu khám này không có đơn thuốc'
                     : 'Tạo đơn thuốc cho bệnh nhân'}
               </p>
             </div>
-            {!isCompleted && (
+            {!isReadOnly && (
               <Button
                 onClick={handleCreatePrescription}
                 disabled={createMutation.isPending}
@@ -348,10 +350,10 @@ export function PrescriptionTab({ medicalRecord }: PrescriptionProps) {
               onChange={(e) => setGeneralNote(e.target.value)}
               placeholder='Nhập hướng dẫn chung cho bệnh nhân...'
               rows={4}
-              disabled={isCompleted}
+              disabled={isReadOnly}
             />
           </div>
-          {!isCompleted && (
+          {!isReadOnly && (
             <Button
               onClick={handleUpdateGeneralNote}
               disabled={updatePrescriptionMutation.isPending}
@@ -368,7 +370,7 @@ export function PrescriptionTab({ medicalRecord }: PrescriptionProps) {
         <CardHeader>
           <div className='flex items-center justify-between'>
             <CardTitle>Danh sách thuốc</CardTitle>
-            {!isCompleted && (
+            {!isReadOnly && (
               <Button
                 onClick={handleOpenAddDialog}
                 size='sm'
@@ -416,7 +418,7 @@ export function PrescriptionTab({ medicalRecord }: PrescriptionProps) {
                           {detail.usageInstructions}
                         </TableCell>
                         <TableCell className='text-right'>
-                          {!isCompleted && (
+                          {!isReadOnly && (
                             <div className='flex justify-end gap-2'>
                               <Button
                                 variant='ghost'

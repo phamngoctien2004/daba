@@ -394,6 +394,28 @@ export const payCash = async (
 }
 
 /**
+ * Get medical records by patient ID
+ * GET /api/medical-record/patient/{id}
+ */
+export const fetchMedicalRecordsByPatient = async (patientId: number): Promise<MedicalRecordDetail[]> => {
+  try {
+    const { data } = await get<MedicalRecordApiResponse>(`/medical-record/patient/${patientId}`)
+
+    const response = data ?? {}
+
+    // Response should be an array of medical records
+    if (isRecord(response) && Array.isArray(response.data)) {
+      return response.data as unknown as MedicalRecordDetail[]
+    }
+
+    return []
+  } catch (error) {
+    console.error('❌ [fetchMedicalRecordsByPatient] Error:', error)
+    return []
+  }
+}
+
+/**
  * Export invoice as HTML
  * GET /api/html/invoice/{medicalRecordId}
  */
