@@ -1,10 +1,13 @@
 import { get } from '@/lib/api-client'
 
+export type HealthPlanType = 'DICH_VU' | 'XET_NGHIEM' | 'CHUYEN_KHOA' | string
+
 export interface HealthPlan {
   id: number
   code?: string
   name: string
   price: number // API returns 'price'
+  type?: HealthPlanType
   description?: string
   duration?: number
   roomNumber?: string

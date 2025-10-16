@@ -39,8 +39,6 @@ import {
   type CreateMedicalRecordInput,
 } from '@/lib/validations/medical-record.schema'
 import {
-  fetchDepartments,
-  fetchDoctorsByDepartment,
   fetchAllDoctors,
   type Doctor,
 } from '@/features/departments/api/departments'
@@ -52,14 +50,14 @@ interface CreateMedicalRecordFormProps {
 }
 
 export function CreateMedicalRecordForm({
-  onSuccess,
+  onSuccess: _onSuccess,
   onCancel,
 }: CreateMedicalRecordFormProps) {
   const queryClient = useQueryClient()
 
   const [appointmentData, setAppointmentData] =
     useState<AppointmentDataForMedicalRecord | null>(null)
-  // Examination type: 'doctor' (default), 'department', 'service'
+  // Examination type: 'doctor', 'DICH_VU', 'XET_NGHIEM', 'CHUYEN_KHOA', 'KHAC'
   const [examinationType, setExaminationType] = useState<string>('')
   const [selectedDoctorOrServiceId, setSelectedDoctorOrServiceId] = useState<string>('') // For Select 2
   const [selectedThirdSelect, setSelectedThirdSelect] = useState<string>('') // For Select 3
@@ -91,22 +89,32 @@ export function CreateMedicalRecordForm({
     }
   }, [])
 
-  // 1. Fetch departments & services on mount
-  const { data: departments = [], isLoading: isLoadingDepartments, error: departmentsError } = useQuery({
-    queryKey: ['departments'],
-    queryFn: fetchDepartments,
-  })
-
+  // 1. Fetch health plans (services) on mount
   const { data: healthPlans = [], isLoading: isLoadingHealthPlans, error: healthPlansError } = useQuery({
     queryKey: ['health-plans'],
     queryFn: fetchHealthPlans,
   })
 
   // Debug: Log data and errors
-  if (departmentsError) console.error('Departments Error:', departmentsError)
   if (healthPlansError) console.error('Health Plans Error:', healthPlansError)
-  console.log('Departments loaded:', departments.length, departments)
   console.log('Health Plans loaded:', healthPlans.length, healthPlans)
+
+  // Filter health plans by type based on examination type
+  const filteredHealthPlans = healthPlans.filter((plan) => {
+    if (!examinationType || examinationType === 'doctor') return false
+
+    if (examinationType === 'DICH_VU') {
+      return plan.type === 'DICH_VU'
+    } else if (examinationType === 'XET_NGHIEM') {
+      return plan.type === 'XET_NGHIEM'
+    } else if (examinationType === 'CHUYEN_KHOA') {
+      return plan.type === 'CHUYEN_KHOA'
+    } else if (examinationType === 'KHAC') {
+      // Các type khác ngoài 3 type trên
+      return plan.type !== 'DICH_VU' && plan.type !== 'XET_NGHIEM' && plan.type !== 'CHUYEN_KHOA'
+    }
+    return false
+  })
 
   // Form setup
   const form = useForm<CreateMedicalRecordInput>({
@@ -135,59 +143,29 @@ export function CreateMedicalRecordForm({
       console.log('🟢 [Auto-fill] Detected health plan:', appointmentData.healthPlanId)
       // Service examination - wait for health plans to load
       if (healthPlans.length > 0) {
-        setExaminationType('service')
-        const healthPlanIdStr = String(appointmentData.healthPlanId)
-        setSelectedDoctorOrServiceId(healthPlanIdStr)
-        setSelectedThirdSelect(healthPlanIdStr)
-        form.setValue('healthPlanId', appointmentData.healthPlanId)
-
-        // Find and set selected health plan
         const healthPlan = healthPlans.find((hp) => hp.id === appointmentData.healthPlanId)
         if (healthPlan) {
-          console.log('✅ [Auto-fill] Found health plan:', healthPlan.name)
+          console.log('✅ [Auto-fill] Found health plan:', healthPlan.name, 'type:', healthPlan.type)
+
+          // Auto-detect examination type based on health plan type
+          if (healthPlan.type === 'DICH_VU') {
+            setExaminationType('DICH_VU')
+          } else if (healthPlan.type === 'XET_NGHIEM') {
+            setExaminationType('XET_NGHIEM')
+          } else if (healthPlan.type === 'CHUYEN_KHOA') {
+            setExaminationType('CHUYEN_KHOA')
+          } else {
+            setExaminationType('KHAC')
+          }
+
+          const healthPlanIdStr = String(appointmentData.healthPlanId)
+          setSelectedDoctorOrServiceId(healthPlanIdStr)
+          setSelectedThirdSelect(healthPlanIdStr)
+          form.setValue('healthPlanId', appointmentData.healthPlanId)
           setSelectedHealthPlan(healthPlan)
           setIsInitialized(true)
         }
       }
-    } else if (appointmentData.departmentId) {
-      console.log('🟢 [Auto-fill] Detected department:', appointmentData.departmentId, 'with doctorId:', appointmentData.doctorId)
-      // Department examination
-      setExaminationType('department')
-      const departmentIdStr = String(appointmentData.departmentId)
-      setSelectedDoctorOrServiceId(departmentIdStr)
-
-      // Load doctors for the department first, then set selected doctor
-      const loadDepartmentDoctors = async () => {
-        try {
-          console.log('🔄 [Auto-fill] Loading doctors for department:', appointmentData.departmentId)
-          const departmentDoctors = await fetchDoctorsByDepartment(appointmentData.departmentId!)
-          console.log('✅ [Auto-fill] Loaded department doctors:', departmentDoctors.length, departmentDoctors)
-          setDoctors(departmentDoctors)
-
-          // IMPORTANT: Wait a bit for state to update, then set selected doctor
-          setTimeout(() => {
-            if (appointmentData.doctorId) {
-              const doctorIdStr = String(appointmentData.doctorId)
-              console.log('🔵 [Auto-fill] Setting doctor select to:', doctorIdStr)
-              setSelectedThirdSelect(doctorIdStr)
-              form.setValue('doctorId', appointmentData.doctorId)
-
-              const doctor = departmentDoctors.find(d => d.id === appointmentData.doctorId)
-              if (doctor) {
-                console.log('✅ [Auto-fill] Found and set doctor:', doctor.position)
-                setSelectedDoctor(doctor)
-              } else {
-                console.warn('⚠️ [Auto-fill] Doctor not found in department doctors')
-              }
-            }
-            setIsInitialized(true)
-          }, 100)
-        } catch (error) {
-          console.error('❌ [Auto-fill] Failed to load doctors for department:', error)
-          setIsInitialized(true)
-        }
-      }
-      loadDepartmentDoctors()
     } else if (appointmentData.doctorId) {
       console.log('🟢 [Auto-fill] Detected doctor:', appointmentData.doctorId)
       // Doctor examination (default) - will be handled when doctors load
@@ -205,13 +183,9 @@ export function CreateMedicalRecordForm({
     if (!examinationType) return
 
     const loadData = async () => {
-      if (examinationType === 'service') {
-        // Clear doctors for service type
-        setDoctors([])
-        return
-      }
-
+      // Clear doctors for non-doctor examination types
       if (examinationType !== 'doctor') {
+        setDoctors([])
         return
       }
 
@@ -243,33 +217,6 @@ export function CreateMedicalRecordForm({
 
     loadData()
   }, [examinationType, appointmentData, selectedDoctorOrServiceId])
-
-  // 4. Load doctors when department is selected
-  const handleDepartmentChange = async (departmentId: string) => {
-    console.log('🔵 handleDepartmentChange called with departmentId:', departmentId)
-    // Set department ID to Select 2
-    setSelectedDoctorOrServiceId(departmentId)
-    // Reset Select 3 and selected doctor
-    setSelectedThirdSelect('')
-    setSelectedDoctor(null)
-    form.setValue('doctorId', null)
-
-    if (!departmentId) {
-      console.log('⚠️ No departmentId, clearing doctors')
-      setDoctors([])
-      return
-    }
-
-    try {
-      console.log('🔄 Fetching doctors for department:', departmentId)
-      const departmentDoctors = await fetchDoctorsByDepartment(Number(departmentId))
-      console.log('✅ Doctors fetched:', departmentDoctors.length, departmentDoctors)
-      setDoctors(departmentDoctors)
-    } catch (error) {
-      console.error('❌ Failed to load doctors for department:', error)
-      setDoctors([])
-    }
-  }
 
   // Create medical record mutation
   const { mutate: createMedicalRecordMutation, isPending: isCreatingRecord } = useMutation({
@@ -373,7 +320,7 @@ export function CreateMedicalRecordForm({
     selectedThirdSelect,
     doctorsCount: doctors.length,
     healthPlansCount: healthPlans.length,
-    departmentsCount: departments.length,
+    filteredHealthPlansCount: filteredHealthPlans.length,
     selectedDoctor: selectedDoctor?.position,
     selectedHealthPlan: selectedHealthPlan?.name,
     isInitialized,
@@ -383,10 +330,6 @@ export function CreateMedicalRecordForm({
       departmentId: appointmentData.departmentId,
     } : null,
   })
-
-  if (examinationType === 'department') {
-    console.log('🔍 [Render] Department mode - doctors available:', doctors.map(d => ({ id: d.id, name: d.position || d.name })))
-  }
 
   return (
     <div className="space-y-6">
@@ -480,8 +423,10 @@ export function CreateMedicalRecordForm({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="doctor">Bác sĩ</SelectItem>
-                  <SelectItem value="department">Chuyên khoa</SelectItem>
-                  <SelectItem value="service">Gói khám</SelectItem>
+                  <SelectItem value="DICH_VU">Gói khám</SelectItem>
+                  <SelectItem value="XET_NGHIEM">Xét nghiệm</SelectItem>
+                  <SelectItem value="CHUYEN_KHOA">Chuyên khoa</SelectItem>
+                  <SelectItem value="KHAC">Khác</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -494,12 +439,14 @@ export function CreateMedicalRecordForm({
                 render={() => (
                   <FormItem>
                     <FormLabel>
-                      {examinationType === 'service' ? 'Dịch vụ' :
-                        examinationType === 'department' ? 'Chuyên khoa' : 'Bác sĩ'}{' '}
+                      {examinationType === 'DICH_VU' ? 'Gói khám' :
+                        examinationType === 'XET_NGHIEM' ? 'Xét nghiệm' :
+                          examinationType === 'CHUYEN_KHOA' ? 'Chuyên khoa' :
+                            examinationType === 'KHAC' ? 'Dịch vụ khác' : 'Bác sĩ'}{' '}
                       <span className="text-destructive">*</span>
                     </FormLabel>
-                    {examinationType === 'service' ? (
-                      // Show services list
+                    {examinationType !== 'doctor' && examinationType !== 'department' ? (
+                      // Show filtered services list (DICH_VU, XET_NGHIEM, CHUYEN_KHOA, KHAC)
                       <Select
                         disabled={isLoadingHealthPlans || isCreatingRecord || !!createdMedicalRecordId}
                         value={selectedDoctorOrServiceId}
@@ -507,7 +454,7 @@ export function CreateMedicalRecordForm({
                           setSelectedDoctorOrServiceId(value)
                           const healthPlanId = Number(value)
                           form.setValue('healthPlanId', healthPlanId)
-                          const healthPlan = healthPlans.find((hp) => hp.id === healthPlanId)
+                          const healthPlan = filteredHealthPlans.find((hp) => hp.id === healthPlanId)
                           setSelectedHealthPlan(healthPlan || null)
                           // Also set third select value to show selected service
                           setSelectedThirdSelect(value)
@@ -519,12 +466,12 @@ export function CreateMedicalRecordForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {healthPlans.length === 0 ? (
+                          {filteredHealthPlans.length === 0 ? (
                             <div className="py-2 px-3 text-sm text-muted-foreground">
                               {isLoadingHealthPlans ? 'Đang tải...' : 'Không có dịch vụ nào'}
                             </div>
                           ) : (
-                            healthPlans.map((plan) => (
+                            filteredHealthPlans.map((plan) => (
                               <SelectItem key={plan.id} value={plan.id.toString()}>
                                 {plan.name}
                               </SelectItem>
@@ -532,34 +479,8 @@ export function CreateMedicalRecordForm({
                           )}
                         </SelectContent>
                       </Select>
-                    ) : examinationType === 'department' ? (
-                      // Show departments list
-                      <Select
-                        disabled={isCreatingRecord || isLoadingDepartments || !!createdMedicalRecordId}
-                        value={selectedDoctorOrServiceId}
-                        onValueChange={handleDepartmentChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={isLoadingDepartments ? "Đang tải..." : "Chọn chuyên khoa"} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {departments.length === 0 ? (
-                            <div className="py-2 px-3 text-sm text-muted-foreground">
-                              {isLoadingDepartments ? 'Đang tải...' : 'Không có chuyên khoa nào'}
-                            </div>
-                          ) : (
-                            departments.map((dept) => (
-                              <SelectItem key={dept.id} value={dept.id.toString()}>
-                                {dept.name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
                     ) : (
-                      // Show all doctors list
+                      // Show all doctors list (for 'doctor' examination type)
                       <Select
                         disabled={isCreatingRecord || doctors.length === 0 || !!createdMedicalRecordId}
                         value={selectedDoctorOrServiceId}
@@ -591,57 +512,6 @@ export function CreateMedicalRecordForm({
               />
             )}
 
-            {/* Select 3: Only for department - show doctor selection */}
-            {examinationType === 'department' && (
-              <FormField
-                key={`doctor-select-${doctors.length}-${selectedThirdSelect}`}
-                control={form.control}
-                name="doctorId"
-                render={() => {
-                  console.log('🟢 [Select 3 Render] doctors:', doctors.length, 'selectedThirdSelect:', selectedThirdSelect, 'disabled:', isCreatingRecord || doctors.length === 0)
-                  console.log('🟢 [Select 3 Render] doctors list:', doctors.map(d => ({ id: d.id, name: d.position })))
-                  return (
-                    <FormItem>
-                      <FormLabel>
-                        Bác sĩ <span className="text-destructive">*</span>
-                      </FormLabel>
-                      <Select
-                        disabled={isCreatingRecord || doctors.length === 0 || !!createdMedicalRecordId}
-                        value={selectedThirdSelect || undefined}
-                        onValueChange={(value) => {
-                          console.log('🟢 Select 3 value changed:', value)
-                          setSelectedThirdSelect(value)
-                          form.setValue('doctorId', value ? Number(value) : null)
-                          // Find and save selected doctor
-                          const doctor = doctors.find(d => d.id === Number(value))
-                          setSelectedDoctor(doctor || null)
-                        }}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={doctors.length === 0 ? "Chọn chuyên khoa trước" : "Chọn bác sĩ"} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {doctors.length === 0 ? (
-                            <div className="py-2 px-3 text-sm text-muted-foreground">
-                              Chọn chuyên khoa để xem danh sách bác sĩ
-                            </div>
-                          ) : (
-                            doctors.map((doctor) => (
-                              <SelectItem key={doctor.id} value={doctor.id.toString()}>
-                                {doctor.position || doctor.fullName || doctor.name || 'N/A'}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )
-                }}
-              />
-            )}
           </div>
 
           {/* Calculated Fee Display */}

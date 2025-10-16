@@ -1045,22 +1045,24 @@
 ```json
 [
     {
-        "id": 2,
-        "code": "DV-XN-MAU",
-        "name": "Xét nghiệm máu cơ bản",
-        "price": 2000.0,
-        "description": "Xét nghiệm máu cơ bản",
-        "roomNumber": "204A",
-        "roomName": "Phòng xét nghiệm "
-    },
-    {
         "id": 11,
         "code": "DV-XN-CBC",
         "name": "Xét nghiệm công thức máu",
         "price": 5000.0,
         "description": "CBC, lấy máu tĩnh mạch",
         "roomNumber": "101A",
-        "roomName": "Phòng khám Nội tổng quát"
+        "roomName": "Phòng khám Nội tổng quát",
+        "type": "XET_NGHIEM"
+    },
+    {
+        "id": 2,
+        "code": "DV-XN-MAU",
+        "name": "Xét nghiệm máu cơ bản",
+        "price": 2000.0,
+        "description": "Xét nghiệm máu cơ bản",
+        "roomNumber": "204A",
+        "roomName": "Phòng xét nghiệm ",
+        "type": "XET_NGHIEM"
     }
 ]
 ```
