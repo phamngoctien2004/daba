@@ -1984,6 +1984,169 @@
 ```
 
 ---
+### Thực hiện xét nghiệm và đánh dấu
+**Endpoint:** `GET /api/lab-orders/processing/{id}`
+**response**
+```json
+{
+    "data": {
+        "id": 478,
+        "code": "XN1760685100338",
+        "recordId": 217,
+        "healthPlanId": 16,
+        "healthPlanName": "Xét nghiệm máu tổng quát",
+        "room": "Phòng khám khoa xét nghiệm  - 204A",
+        "doctorPerformed": "TS. NGUYEN VAN A",
+        "doctorPerformedId": null,
+        "doctorOrdered": null,
+        "status": "CHO_KET_QUA",
+        "statusPayment": null,
+        "price": 2000.00,
+        "orderDate": "2025-10-17T19:34:30",
+        "diagnosis": null,
+        "expectedResultDate": "2025-10-17T20:34:30",
+        "serviceParent": null,
+        "labResultResponse": {
+            "id": 35,
+            "date": "2025-10-17T20:28:33",
+            "resultDetails": null,
+            "note": null,
+            "explanation": null,
+            "paramResults": [
+                {
+                    "id": 1,
+                    "name": "Hồng cầu (RBC)",
+                    "value": null,
+                    "unit": "T/L",
+                    "range": "3.6-5.4",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 2,
+                    "name": "Bạch cầu (WBC)",
+                    "value": null,
+                    "unit": "G/L",
+                    "range": "4.0-10.0",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 3,
+                    "name": "Tiểu cầu (PLT)",
+                    "value": null,
+                    "unit": "G/L",
+                    "range": "150-400",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 4,
+                    "name": "Huyết sắc tố (Hb)",
+                    "value": null,
+                    "unit": "g/L",
+                    "range": "120-170",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 5,
+                    "name": "Hematocrit (Hct)",
+                    "value": null,
+                    "unit": "%",
+                    "range": "36-50",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 6,
+                    "name": "Đường huyết (Glucose)",
+                    "value": null,
+                    "unit": "mmol/L",
+                    "range": "3.9-6.4",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 7,
+                    "name": "Cholesterol toàn phần",
+                    "value": null,
+                    "unit": "mmol/L",
+                    "range": "0-5.2",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 8,
+                    "name": "Triglyceride",
+                    "value": null,
+                    "unit": "mmol/L",
+                    "range": "0-1.7",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 9,
+                    "name": "HDL – Cholesterol",
+                    "value": null,
+                    "unit": "mmol/L",
+                    "range": "1.0-3.0",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 10,
+                    "name": "LDL – Cholesterol",
+                    "value": null,
+                    "unit": "mmol/L",
+                    "range": "0-3.4",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 11,
+                    "name": "AST (GOT)",
+                    "value": null,
+                    "unit": "U/L",
+                    "range": "0-40",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 12,
+                    "name": "ALT (GPT)",
+                    "value": null,
+                    "unit": "U/L",
+                    "range": "0-40",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 13,
+                    "name": "GGT",
+                    "value": null,
+                    "unit": "U/L",
+                    "range": "0-55",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 14,
+                    "name": "Ure",
+                    "value": null,
+                    "unit": "mmol/L",
+                    "range": "2.5-7.5",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 15,
+                    "name": "Creatinin",
+                    "value": null,
+                    "unit": "µmol/L",
+                    "range": "53-115",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 16,
+                    "name": "Acid uric",
+                    "value": null,
+                    "unit": "µmol/L",
+                    "range": "155-428",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                }
+            ]
+        }
+    },
+    "message": "Get lab order successfully"
+}
+```
 
 ### 10.2 Lấy chi tiết phiếu xét nghiệm
 **Endpoint:** `GET /api/lab-orders/{id}`
@@ -2043,32 +2206,91 @@
 
 ---
 
-### 10.4 Lấy phiếu xét nghiệm của bác sĩ
-**Endpoint:** `GET /api/lab-orders/doctor/me`
+### 10.4 Lấy phiếu xét nghiệm của phòng thuộc bác sĩ
+**Endpoint:** `GET /api/lab-orders/doctor`
 
 **Mô tả:** Lấy các phiếu xét nghiệm được phân cho bác sĩ đang đăng nhập
 
 **Query Parameters:**
 - `keyword` (optional): Từ khóa tìm kiếm
-- `status` (optional): Trạng thái (PENDING, IN_PROGRESS, COMPLETED)
+- `status` (optional): CHO_THUC_HIEN, DANG_THUC_HIEN, HOAN_THANH, HUY_BO, CHO_KET_QUA
 - `date` (optional): Ngày (yyyy-MM-dd)
-
+- `limit` default=10
+- `page` default=1
 **Headers:**
 - `Authorization`: Bearer {token}
 
 **Response:**
 ```json
 {
-  "data": [
-    {
-      "id": 1,
-      "testName": "string",
-      "patientName": "string",
-      "status": "PENDING",
-      "orderDate": "2024-12-20"
-    }
-  ],
-  "message": "Get all lab orders of doctor successfully"
+    "data": {
+        "content": [
+            {
+                "id": 459,
+                "code": "XN1760608174445",
+                "recordId": 211,
+                "healthPlanId": 12,
+                "healthPlanName": "Nội soi dạ dày",
+                "room": "Phòng khám Ngoại chấn thương - 102A",
+                "doctorPerformed": null,
+                "doctorPerformedId": null,
+                "doctorOrdered": null,
+                "status": "CHO_THUC_HIEN",
+                "statusPayment": null,
+                "price": 0.00,
+                "orderDate": "2025-10-16T16:49:34",
+                "diagnosis": null,
+                "expectedResultDate": null,
+                "serviceParent": null,
+                "labResultResponse": null
+            },
+            {
+                "id": 468,
+                "code": "XN1760608367155",
+                "recordId": 214,
+                "healthPlanId": 12,
+                "healthPlanName": "Nội soi dạ dày",
+                "room": "Phòng khám Ngoại chấn thương - 102A",
+                "doctorPerformed": null,
+                "doctorPerformedId": null,
+                "doctorOrdered": null,
+                "status": "CHO_THUC_HIEN",
+                "statusPayment": null,
+                "price": 0.00,
+                "orderDate": "2025-10-16T16:52:47",
+                "diagnosis": null,
+                "expectedResultDate": null,
+                "serviceParent": null,
+                "labResultResponse": null
+            }
+        ],
+        "pageable": {
+            "pageNumber": 0,
+            "pageSize": 10,
+            "sort": {
+                "sorted": false,
+                "unsorted": true,
+                "empty": true
+            },
+            "offset": 0,
+            "paged": true,
+            "unpaged": false
+        },
+        "totalPages": 1,
+        "totalElements": 2,
+        "last": true,
+        "first": true,
+        "size": 10,
+        "number": 0,
+        "sort": {
+            "sorted": false,
+            "unsorted": true,
+            "empty": true
+        },
+        "numberOfElements": 2,
+        "empty": false
+    },
+    "message": "Get all lab orders of doctor successfully"
 }
 ```
 
@@ -2156,37 +2378,154 @@
 - Status: 204 No Content
 
 ---
-
-## 11. Lab Result API
-
-### Base URL: `/api/lab-results`
-
-### 11.1 Tạo kết quả xét nghiệm
-**Endpoint:** `POST /api/lab-results`
-
-**Mô tả:** Tạo/cập nhật kết quả xét nghiệm
-
-**Request Body:**
-```json
-{
-  "labOrderId": 1,
-  "result": "string",
-  "note": "string",
-  "conclusion": "string"
-}
-```
+### 10.9 Lấy thông số của xét nghiệm 
+**Endpoint:** `GET /api/lab-orders/{id}/params`
 
 **Response:**
 ```json
 {
-  "data": {
-    "id": 1,
-    "labOrderId": 1
-  },
-  "message": "Create lab result successfully"
+    "data": [
+        {
+            "id": 21,
+            "name": "Hồng cầu (RBC)",
+            "unit": "T/L",
+            "range": "3.6-5.4"
+        },
+        {
+            "id": 22,
+            "name": "Bạch cầu (WBC)",
+            "unit": "G/L",
+            "range": "4.0-10.0"
+        },
+        {
+            "id": 23,
+            "name": "Tiểu cầu (PLT)",
+            "unit": "G/L",
+            "range": "150-400"
+        }
+    ],
+    "message": "Get lab order params by lab order id successfully"
 }
 ```
 
+---
+## 11. Lab Result API
+
+### Base URL: `/api/lab-results`
+
+### 11.1 Tạo kết quả xét nghiệm 
+**Endpoint:** `POST /api/lab-results` 
+
+**Mô tả:** Tạo kết quả xét nghiệm
+
+**Request Body:**
+```json
+{
+	"labOrderId": 2,
+    "resultDetails":"Ket qua binh thuong",
+    "note": "khong tim thay bat thuong",
+    "summary": "Tong quat co the binh thuong",
+    "explanation": "Khong co",
+}
+```
+**Response:**
+```json
+{
+    "data": {
+        "id": 22,
+        "date": "2025-10-16T21:01:42.094219",
+        "status": "CHO_KET_QUA",
+        "resultDetails": "Ket qua binh thuong",
+        "note": "khong tim thay bat thuong",
+        "explanation": "Khong co",
+        "isDone": false
+    },
+    "message": "Create lab result successfully"
+}
+```
+### 11.1 Cập nhật kết quả xét nghiệm 
+**Endpoint:** `PUT /api/lab-results` 
+
+**Request Body:**
+```json
+{
+	"labOrderId": 2,
+    "resultDetails":"Ket qua binh thuong",
+    "note": "khong tim thay bat thuong",
+    "summary": "Tong quat co the binh thuong",
+    "explanation": "Khong co",
+    "isDone": true
+}
+**Response:**
+```json
+{
+    "data": {
+        "id": 22,
+        "date": "2025-10-16T21:01:42.094219",
+        "status": "CHO_KET_QUA",
+        "resultDetails": "Ket qua binh thuong",
+        "note": "khong tim thay bat thuong",
+        "explanation": "Khong co"
+    },
+    "message": "Create lab result successfully"
+}
+```
+### 11.2 Xem chỉ số xét nghiệm (chi tiết lab result)
+**Endpoint:** `GET /api/lab-results/{id}/details`
+- Trạng thái: CAO, THAP, TRUNG_BINH
+**Response:**
+```json
+
+// xem chỉ số 
+{
+    "data": [
+        {
+            "id": 1,
+            "name": "acid",
+            "value": "1.5",
+            "unit": "ml",
+            "range": "1.1-2.5",
+            "rangeStatus": "TRUNG_BINH"
+        },
+      {
+            "id": 1,
+            "name": "acid",
+            "value": "1.5",
+            "unit": "ml",
+            "range": "1.1-2.5",
+            "rangeStatus": "TRUNG_BINH"
+        }
+    ],
+    "message" : "success"
+}
+```
+### 11.3 Tạo chỉ số xét nghiệm (chi tiết lab result)
+**Endpoint:** `POST /api/lab-results/details`
+**Request:**
+```json
+{
+    "labResultId": 123,
+    "paramDetails": [
+        {
+            "paramId": 1,
+            "value": "1.5"
+        },
+          {
+            "paramId": 2,
+            "value": "1.5"
+        }
+    ]
+}
+```
+### 11.3 cập nhật chỉ số xét nghiệm (chi tiết lab result)
+**Endpoint:** `POST /api/lab-results/details`
+**Request:**
+```json
+{
+    "id": 123,
+    "value": "2.5"
+}
+```
 ---
 
 ## 12. Invoice API
@@ -2722,7 +3061,7 @@ NAM,NU
 DA_XAC_NHAN, KHONG_DEN, DANG_KHAM
 
 #### Medical Record Status
-CHO_KHAM, DANG_KHAM, CHO_XET_NGHIEM, HOAN_THANH, HUY
+CHO_KHAM, DANG_KHAM, CHO_XET_NGHIEM, HOAN_THANH, HUY, CHO_KET_QUA
 
 #### Lab Order Status
 CHO_THUC_HIEN, DANG_THUC_HIEN, HOAN_THANH, HUY_BO

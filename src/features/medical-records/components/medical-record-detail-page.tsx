@@ -20,6 +20,7 @@ interface MedicalRecordDetailPageProps {
 }
 
 const statusMap: Record<MedicalRecordStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+    CHO_KHAM: { label: 'Chờ khám', variant: 'secondary' },
     DANG_KHAM: { label: 'Đang khám', variant: 'default' },
     CHO_XET_NGHIEM: { label: 'Chờ xét nghiệm', variant: 'secondary' },
     HOAN_THANH: { label: 'Hoàn thành', variant: 'outline' },

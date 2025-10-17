@@ -1,0 +1,5 @@
+export { LabOrdersManagement } from './components/lab-orders-management'
+export { LabOrderDetail } from './components/lab-order-detail'
+export { useDoctorLabOrders } from './hooks/use-lab-order-medical-records'
+export * from './types'
+export * from './api/lab-orders'

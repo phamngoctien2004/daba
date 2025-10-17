@@ -30,6 +30,7 @@ import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedPatientsIndexRouteImport } from './routes/_authenticated/patients/index'
 import { Route as AuthenticatedMedicalRecordsIndexRouteImport } from './routes/_authenticated/medical-records/index'
+import { Route as AuthenticatedLabOrdersIndexRouteImport } from './routes/_authenticated/lab-orders/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
 import { Route as AuthenticatedDoctorMedicalRecordsIndexRouteImport } from './routes/_authenticated/doctor-medical-records/index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
@@ -43,6 +44,7 @@ import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_auth
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedMedicalRecordsIdRouteImport } from './routes/_authenticated/medical-records/$id'
+import { Route as AuthenticatedLabOrdersIdRouteImport } from './routes/_authenticated/lab-orders/$id'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedDoctorMedicalRecordsIdRouteImport } from './routes/_authenticated/doctor-medical-records/$id'
 import { Route as AuthenticatedAppointmentsCreateRouteImport } from './routes/_authenticated/appointments/create'
@@ -155,6 +157,12 @@ const AuthenticatedMedicalRecordsIndexRoute =
     path: '/medical-records/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedLabOrdersIndexRoute =
+  AuthenticatedLabOrdersIndexRouteImport.update({
+    id: '/lab-orders/',
+    path: '/lab-orders/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHelpCenterIndexRoute =
   AuthenticatedHelpCenterIndexRouteImport.update({
     id: '/help-center/',
@@ -229,6 +237,12 @@ const AuthenticatedMedicalRecordsIdRoute =
     path: '/medical-records/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedLabOrdersIdRoute =
+  AuthenticatedLabOrdersIdRouteImport.update({
+    id: '/lab-orders/$id',
+    path: '/lab-orders/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedErrorsErrorRoute =
   AuthenticatedErrorsErrorRouteImport.update({
     id: '/errors/$error',
@@ -278,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/appointments/create': typeof AuthenticatedAppointmentsCreateRoute
   '/doctor-medical-records/$id': typeof AuthenticatedDoctorMedicalRecordsIdRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/lab-orders/$id': typeof AuthenticatedLabOrdersIdRoute
   '/medical-records/$id': typeof AuthenticatedMedicalRecordsIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -291,6 +306,7 @@ export interface FileRoutesByFullPath {
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/doctor-medical-records': typeof AuthenticatedDoctorMedicalRecordsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
+  '/lab-orders': typeof AuthenticatedLabOrdersIndexRoute
   '/medical-records': typeof AuthenticatedMedicalRecordsIndexRoute
   '/patients': typeof AuthenticatedPatientsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -315,6 +331,7 @@ export interface FileRoutesByTo {
   '/appointments/create': typeof AuthenticatedAppointmentsCreateRoute
   '/doctor-medical-records/$id': typeof AuthenticatedDoctorMedicalRecordsIdRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/lab-orders/$id': typeof AuthenticatedLabOrdersIdRoute
   '/medical-records/$id': typeof AuthenticatedMedicalRecordsIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -328,6 +345,7 @@ export interface FileRoutesByTo {
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/doctor-medical-records': typeof AuthenticatedDoctorMedicalRecordsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
+  '/lab-orders': typeof AuthenticatedLabOrdersIndexRoute
   '/medical-records': typeof AuthenticatedMedicalRecordsIndexRoute
   '/patients': typeof AuthenticatedPatientsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
@@ -357,6 +375,7 @@ export interface FileRoutesById {
   '/_authenticated/appointments/create': typeof AuthenticatedAppointmentsCreateRoute
   '/_authenticated/doctor-medical-records/$id': typeof AuthenticatedDoctorMedicalRecordsIdRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/_authenticated/lab-orders/$id': typeof AuthenticatedLabOrdersIdRoute
   '/_authenticated/medical-records/$id': typeof AuthenticatedMedicalRecordsIdRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -370,6 +389,7 @@ export interface FileRoutesById {
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/doctor-medical-records/': typeof AuthenticatedDoctorMedicalRecordsIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
+  '/_authenticated/lab-orders/': typeof AuthenticatedLabOrdersIndexRoute
   '/_authenticated/medical-records/': typeof AuthenticatedMedicalRecordsIndexRoute
   '/_authenticated/patients/': typeof AuthenticatedPatientsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -398,6 +418,7 @@ export interface FileRouteTypes {
     | '/appointments/create'
     | '/doctor-medical-records/$id'
     | '/errors/$error'
+    | '/lab-orders/$id'
     | '/medical-records/$id'
     | '/settings/account'
     | '/settings/appearance'
@@ -411,6 +432,7 @@ export interface FileRouteTypes {
     | '/chats'
     | '/doctor-medical-records'
     | '/help-center'
+    | '/lab-orders'
     | '/medical-records'
     | '/patients'
     | '/settings/'
@@ -435,6 +457,7 @@ export interface FileRouteTypes {
     | '/appointments/create'
     | '/doctor-medical-records/$id'
     | '/errors/$error'
+    | '/lab-orders/$id'
     | '/medical-records/$id'
     | '/settings/account'
     | '/settings/appearance'
@@ -448,6 +471,7 @@ export interface FileRouteTypes {
     | '/chats'
     | '/doctor-medical-records'
     | '/help-center'
+    | '/lab-orders'
     | '/medical-records'
     | '/patients'
     | '/settings'
@@ -476,6 +500,7 @@ export interface FileRouteTypes {
     | '/_authenticated/appointments/create'
     | '/_authenticated/doctor-medical-records/$id'
     | '/_authenticated/errors/$error'
+    | '/_authenticated/lab-orders/$id'
     | '/_authenticated/medical-records/$id'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
@@ -489,6 +514,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chats/'
     | '/_authenticated/doctor-medical-records/'
     | '/_authenticated/help-center/'
+    | '/_authenticated/lab-orders/'
     | '/_authenticated/medical-records/'
     | '/_authenticated/patients/'
     | '/_authenticated/settings/'
@@ -662,6 +688,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMedicalRecordsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/lab-orders/': {
+      id: '/_authenticated/lab-orders/'
+      path: '/lab-orders'
+      fullPath: '/lab-orders'
+      preLoaderRoute: typeof AuthenticatedLabOrdersIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/help-center/': {
       id: '/_authenticated/help-center/'
       path: '/help-center'
@@ -753,6 +786,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMedicalRecordsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/lab-orders/$id': {
+      id: '/_authenticated/lab-orders/$id'
+      path: '/lab-orders/$id'
+      fullPath: '/lab-orders/$id'
+      preLoaderRoute: typeof AuthenticatedLabOrdersIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/errors/$error': {
       id: '/_authenticated/errors/$error'
       path: '/errors/$error'
@@ -820,12 +860,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppointmentsCreateRoute: typeof AuthenticatedAppointmentsCreateRoute
   AuthenticatedDoctorMedicalRecordsIdRoute: typeof AuthenticatedDoctorMedicalRecordsIdRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
+  AuthenticatedLabOrdersIdRoute: typeof AuthenticatedLabOrdersIdRoute
   AuthenticatedMedicalRecordsIdRoute: typeof AuthenticatedMedicalRecordsIdRoute
   AuthenticatedAppointmentsIndexRoute: typeof AuthenticatedAppointmentsIndexRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedDoctorMedicalRecordsIndexRoute: typeof AuthenticatedDoctorMedicalRecordsIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
+  AuthenticatedLabOrdersIndexRoute: typeof AuthenticatedLabOrdersIndexRoute
   AuthenticatedMedicalRecordsIndexRoute: typeof AuthenticatedMedicalRecordsIndexRoute
   AuthenticatedPatientsIndexRoute: typeof AuthenticatedPatientsIndexRoute
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
@@ -841,6 +883,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDoctorMedicalRecordsIdRoute:
     AuthenticatedDoctorMedicalRecordsIdRoute,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
+  AuthenticatedLabOrdersIdRoute: AuthenticatedLabOrdersIdRoute,
   AuthenticatedMedicalRecordsIdRoute: AuthenticatedMedicalRecordsIdRoute,
   AuthenticatedAppointmentsIndexRoute: AuthenticatedAppointmentsIndexRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
@@ -848,6 +891,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDoctorMedicalRecordsIndexRoute:
     AuthenticatedDoctorMedicalRecordsIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
+  AuthenticatedLabOrdersIndexRoute: AuthenticatedLabOrdersIndexRoute,
   AuthenticatedMedicalRecordsIndexRoute: AuthenticatedMedicalRecordsIndexRoute,
   AuthenticatedPatientsIndexRoute: AuthenticatedPatientsIndexRoute,
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
