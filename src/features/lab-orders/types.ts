@@ -34,8 +34,10 @@ export interface LabResult {
   date: string
   status: string
   resultDetails: string | null
+  summary: string | null
   note: string | null
   explanation: string | null
+  urls?: string[] | null  // URLs của ảnh kết quả xét nghiệm
   isDone?: boolean
   paramResults?: ParamResult[]
 }

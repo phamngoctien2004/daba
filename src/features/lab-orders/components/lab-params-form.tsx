@@ -29,13 +29,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from '@/hooks/use-toast'
-import { createLabResultDetails, updateLabOrderStatus, createLabResult, updateLabResult } from '../api/lab-orders'
-import { LabResultImageUploadDialog } from './lab-result-image-upload-dialog'
+import { completeLabOrder } from '../api/lab-orders'
+import { LabResultImageUploadDialog, getImageUrlsFromStorage, clearImageUrlsFromStorage } from './lab-result-image-upload-dialog'
 import type { ParamResult, LabResult } from '../types'
 
 interface LabParamsFormProps {
     labOrderId: number
-    labResultId: number
     paramResults: ParamResult[]
     labResult?: LabResult | null
     onSuccess?: () => void
@@ -48,15 +47,15 @@ const statusConfig = {
     CHUA_XAC_DINH: { label: 'Chưa xác định', variant: 'default' as const },
 }
 
-export function LabParamsForm({ labOrderId, labResultId, paramResults, labResult, onSuccess }: LabParamsFormProps) {
+export function LabParamsForm({ labOrderId, paramResults, labResult, onSuccess }: LabParamsFormProps) {
     const { toast } = useToast()
     const queryClient = useQueryClient()
-    const [images, setImages] = useState<File[]>([])
     const [showCompleteDialog, setShowCompleteDialog] = useState(false)
 
     // Create dynamic schema based on paramResults + lab result fields
     const schemaFields: Record<string, z.ZodString | z.ZodOptional<z.ZodString>> = {
         resultDetails: z.string().min(1, 'Kết quả chi tiết là bắt buộc'),
+        summary: z.string().min(1, 'Kết luận là bắt buộc'),
         note: z.string().optional(),
         explanation: z.string().optional(),
     }
@@ -70,6 +69,7 @@ export function LabParamsForm({ labOrderId, labResultId, paramResults, labResult
     // Initialize form with default values
     const defaultValues: Record<string, string> = {
         resultDetails: labResult?.resultDetails || '',
+        summary: labResult?.summary || '',
         note: labResult?.note || '',
         explanation: labResult?.explanation || '',
     }
@@ -82,97 +82,44 @@ export function LabParamsForm({ labOrderId, labResultId, paramResults, labResult
         defaultValues,
     })
 
-    const saveParamsMutation = useMutation({
-        mutationFn: async (values: FormValues) => {
-            // Step 1: Save/update lab result (resultDetails, note, explanation)
-            if (labResult) {
-                await updateLabResult({
-                    labOrderId,
-                    resultDetails: values.resultDetails || '',
-                    note: values.note,
-                    explanation: values.explanation,
-                    isDone: false,
-                })
-            } else {
-                await createLabResult({
-                    labOrderId,
-                    resultDetails: values.resultDetails || '',
-                    note: values.note,
-                    explanation: values.explanation,
-                })
-            }
-
-            // Step 2: Save param details
-            const paramDetails = paramResults.map((param) => ({
-                paramId: param.id,
-                value: values[`param_${param.id}`] || '',
-            }))
-
-            await createLabResultDetails({
-                labResultId,
-                paramDetails,
-            })
-        },
-        onSuccess: () => {
-            toast({
-                title: 'Thành công',
-                description: 'Đã lưu kết quả xét nghiệm',
-            })
-            queryClient.invalidateQueries({ queryKey: ['lab-orders', labOrderId] })
-            onSuccess?.()
-        },
-        onError: (error: Error) => {
-            toast({
-                title: 'Lỗi',
-                description: error.message || 'Không thể lưu kết quả. Vui lòng thử lại.',
-                variant: 'destructive',
-            })
-        },
-    })
-
     const completeParamsMutation = useMutation({
         mutationFn: async (values: FormValues) => {
-            // Step 1: Save/update lab result
-            if (labResult) {
-                await updateLabResult({
-                    labOrderId,
-                    resultDetails: values.resultDetails || '',
-                    note: values.note,
-                    explanation: values.explanation,
-                    isDone: true,
-                })
-            } else {
-                await createLabResult({
-                    labOrderId,
-                    resultDetails: values.resultDetails || '',
-                    note: values.note,
-                    explanation: values.explanation,
-                })
-            }
+            // Lấy URLs ảnh từ localStorage
+            const imageUrls = getImageUrlsFromStorage(labOrderId)
 
-            // Step 2: Save param details
+            // Gọi API hoàn thành xét nghiệm với tất cả thông tin cùng lúc
             const paramDetails = paramResults.map((param) => ({
                 paramId: param.id,
                 value: values[`param_${param.id}`] || '',
             }))
 
-            await createLabResultDetails({
-                labResultId,
+            await completeLabOrder({
+                labOrderId,
+                resultDetails: values.resultDetails || '',
+                summary: values.summary,
+                note: values.note,
+                explaination: values.explanation, // Backend uses 'explaination' (typo)
+                urls: imageUrls.length > 0 ? imageUrls : undefined,
                 paramDetails,
             })
 
-            // Step 3: Update status to HOAN_THANH
-            await updateLabOrderStatus({
-                id: labOrderId,
-                status: 'HOAN_THANH',
-            })
+            // Xóa URLs khỏi localStorage sau khi hoàn thành
+            clearImageUrlsFromStorage(labOrderId)
         },
         onSuccess: () => {
             toast({
                 title: 'Thành công',
                 description: 'Đã hoàn thành phiếu xét nghiệm',
             })
+            // Invalidate and refetch to get updated data from backend
             queryClient.invalidateQueries({ queryKey: ['lab-orders', labOrderId] })
+            queryClient.invalidateQueries({ queryKey: ['lab-orders'] })
+
+            // Force refetch after a short delay to ensure backend has processed the data
+            setTimeout(() => {
+                queryClient.refetchQueries({ queryKey: ['lab-orders', labOrderId] })
+            }, 500)
+
             onSuccess?.()
         },
         onError: (error: Error) => {
@@ -183,10 +130,6 @@ export function LabParamsForm({ labOrderId, labResultId, paramResults, labResult
             })
         },
     })
-
-    const onSave = (values: FormValues) => {
-        saveParamsMutation.mutate(values)
-    }
 
     const handleCompleteClick = () => {
         // Validate form first
@@ -202,37 +145,60 @@ export function LabParamsForm({ labOrderId, labResultId, paramResults, labResult
         setShowCompleteDialog(false)
     }
 
-    const isPending = saveParamsMutation.isPending || completeParamsMutation.isPending
+    const isPending = completeParamsMutation.isPending
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSave)} className='space-y-6'>
+            <form onSubmit={(e) => e.preventDefault()} className='space-y-6'>
                 {/* Lab Result Fields */}
                 <div className='space-y-4'>
                     <div>
                         <h3 className='text-lg font-semibold mb-4'>Kết quả xét nghiệm</h3>
 
                         <div className='space-y-4'>
-                            <FormField
-                                control={form.control}
-                                name='resultDetails'
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Kết quả chi tiết *</FormLabel>
-                                        <FormControl>
-                                            <Textarea
-                                                placeholder='Nhập kết quả xét nghiệm chi tiết...'
-                                                className='min-h-[100px]'
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormDescription>
-                                            Mô tả chi tiết kết quả xét nghiệm
-                                        </FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                                <FormField
+                                    control={form.control}
+                                    name='resultDetails'
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Kết quả chi tiết *</FormLabel>
+                                            <FormControl>
+                                                <Textarea
+                                                    placeholder='Nhập kết quả xét nghiệm chi tiết...'
+                                                    className='min-h-[100px]'
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormDescription>
+                                                Mô tả chi tiết kết quả xét nghiệm
+                                            </FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name='summary'
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Kết luận *</FormLabel>
+                                            <FormControl>
+                                                <Textarea
+                                                    placeholder='Nhập kết luận...'
+                                                    className='min-h-[100px]'
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormDescription>
+                                                Kết luận tổng quan về kết quả xét nghiệm
+                                            </FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
 
                             <FormField
                                 control={form.control}
@@ -275,20 +241,18 @@ export function LabParamsForm({ labOrderId, labResultId, paramResults, labResult
                                     </FormItem>
                                 )}
                             />
-
-                            <div>
-                                <FormLabel>Ảnh kết quả xét nghiệm</FormLabel>
-                                <div className='mt-2'>
-                                    <LabResultImageUploadDialog
-                                        currentImages={images}
-                                        onImagesChange={setImages}
-                                    />
-                                </div>
-                                <p className='text-sm text-muted-foreground mt-2'>
-                                    Tải lên ảnh kết quả xét nghiệm (tối đa 10 ảnh)
-                                </p>
-                            </div>
                         </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Lab Result Images Upload */}
+                    <div>
+                        <h3 className='text-lg font-semibold mb-2'>Ảnh kết quả xét nghiệm</h3>
+                        <p className='text-sm text-muted-foreground mb-4'>
+                            Tải lên ảnh kết quả xét nghiệm (tùy chọn)
+                        </p>
+                        <LabResultImageUploadDialog labOrderId={labOrderId} />
                     </div>
 
                     <Separator />
@@ -347,14 +311,6 @@ export function LabParamsForm({ labOrderId, labResultId, paramResults, labResult
                 </div>
 
                 <div className='flex items-center justify-end gap-3'>
-                    <Button
-                        type='submit'
-                        variant='outline'
-                        disabled={isPending}
-                    >
-                        {saveParamsMutation.isPending && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
-                        Lưu kết quả
-                    </Button>
                     <Button
                         type='button'
                         onClick={handleCompleteClick}

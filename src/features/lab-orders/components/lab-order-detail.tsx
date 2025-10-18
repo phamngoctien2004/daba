@@ -263,7 +263,6 @@ export function LabOrderDetail({ id }: LabOrderDetailProps) {
                         {labOrder.status === 'CHO_KET_QUA' && hasLabResult && labOrder.labResultResponse?.paramResults && (
                             <LabParamsForm
                                 labOrderId={id}
-                                labResultId={labOrder.labResultResponse.id}
                                 paramResults={labOrder.labResultResponse.paramResults}
                                 labResult={labOrder.labResultResponse}
                                 onSuccess={() => {
@@ -288,16 +287,29 @@ export function LabOrderDetail({ id }: LabOrderDetailProps) {
                                         </p>
                                     </div>
 
-                                    {labOrder.labResultResponse!.resultDetails && (
-                                        <div>
-                                            <p className='text-sm font-medium mb-2'>Kết quả chi tiết</p>
-                                            <div className='rounded-lg bg-muted/50 p-4'>
-                                                <p className='text-sm whitespace-pre-wrap'>
-                                                    {labOrder.labResultResponse!.resultDetails}
-                                                </p>
+                                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                                        {labOrder.labResultResponse!.resultDetails && (
+                                            <div>
+                                                <p className='text-sm font-medium mb-2'>Kết quả chi tiết</p>
+                                                <div className='rounded-lg bg-muted/50 p-4'>
+                                                    <p className='text-sm whitespace-pre-wrap'>
+                                                        {labOrder.labResultResponse!.resultDetails}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
+
+                                        {labOrder.labResultResponse!.summary && (
+                                            <div>
+                                                <p className='text-sm font-medium mb-2'>Kết luận</p>
+                                                <div className='rounded-lg bg-muted/50 p-4'>
+                                                    <p className='text-sm whitespace-pre-wrap'>
+                                                        {labOrder.labResultResponse!.summary}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
 
                                     {labOrder.labResultResponse!.note && (
                                         <div>
@@ -317,6 +329,31 @@ export function LabOrderDetail({ id }: LabOrderDetailProps) {
                                                 <p className='text-sm whitespace-pre-wrap'>
                                                     {labOrder.labResultResponse!.explanation}
                                                 </p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Lab Result Images */}
+                                    {labOrder.labResultResponse!.urls && labOrder.labResultResponse!.urls.length > 0 && (
+                                        <div>
+                                            <p className='text-sm font-medium mb-2'>Ảnh kết quả xét nghiệm</p>
+                                            <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
+                                                {labOrder.labResultResponse!.urls.map((url, index) => (
+                                                    <a
+                                                        key={index}
+                                                        href={url}
+                                                        target='_blank'
+                                                        rel='noopener noreferrer'
+                                                        className='group relative aspect-square rounded-lg overflow-hidden border border-border hover:border-primary transition-colors'
+                                                    >
+                                                        <img
+                                                            src={url}
+                                                            alt={`Ảnh kết quả ${index + 1}`}
+                                                            className='w-full h-full object-cover group-hover:scale-105 transition-transform'
+                                                        />
+                                                        <div className='absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors' />
+                                                    </a>
+                                                ))}
                                             </div>
                                         </div>
                                     )}

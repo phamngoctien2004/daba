@@ -391,3 +391,69 @@ export const fetchLabResultDetails = async (labResultId: number): Promise<LabRes
   }
 }
 
+/**
+ * Complete lab order (hoàn thành xét nghiệm)
+ * PUT /api/lab-orders/complete
+ */
+export interface CompleteLabOrderPayload {
+  labOrderId: number
+  resultDetails: string
+  note?: string
+  explaination?: string  // Backend uses 'explaination' (typo in API)
+  summary?: string
+  urls?: string[]  // URLs của ảnh kết quả xét nghiệm
+  paramDetails: LabResultDetailParam[]
+}
+
+export const completeLabOrder = async (
+  payload: CompleteLabOrderPayload
+): Promise<{ message: string }> => {
+  const { data } = await put<LabOrdersApiResponse>('/lab-orders/complete', payload)
+
+  const response = data ?? {}
+
+  return {
+    message:
+      isRecord(response) && typeof response.message === 'string'
+        ? response.message
+        : 'Hoàn thành xét nghiệm thành công',
+  }
+}
+
+/**
+ * Upload multiple images for lab result
+ * POST /api/files/multiple
+ */
+export interface UploadImagesResponse {
+  data: string[]  // Array of image URLs
+  message: string
+}
+
+export const uploadLabResultImages = async (files: File[]): Promise<string[]> => {
+  try {
+    const formData = new FormData()
+
+    files.forEach((file) => {
+      formData.append('files', file)
+    })
+    formData.append('type', 'xn')  // Type for lab result images
+
+    console.log('📤 [uploadLabResultImages] Uploading', files.length, 'files')
+
+    const { data } = await post<UploadImagesResponse>('/files/multiple', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+
+    console.log('📤 [uploadLabResultImages] Response:', data)
+
+    const response = data ?? {}
+    const urls = isRecord(response) && Array.isArray(response.data) ? response.data : []
+
+    return urls
+  } catch (error) {
+    console.error('❌ [uploadLabResultImages] Error:', error)
+    throw new Error('Không thể tải ảnh lên. Vui lòng thử lại.')
+  }
+}

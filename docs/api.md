@@ -2012,6 +2012,7 @@
             "resultDetails": null,
             "note": null,
             "explanation": null,
+            "urls": ["url1", "url2"],
             "paramResults": [
                 {
                     "id": 1,
@@ -2408,6 +2409,33 @@
 }
 ```
 
+### 10.10 Hoàn thành xét nghiệm
+**Endpoint:** `PUT /api/lab-orders/complete`
+
+**Mô tả:** Cập nhật thông tin phiếu xét nghiệm
+
+**Request Body:**
+```json
+{
+  "labOrderId": 1,
+  "resultDetails": "ok",
+  "note": "adkjf",
+  "explaination":"oki",
+  "summary": "dà",
+  "paramDetails":[
+    {
+        "paramId": 1,
+        "value":"2.5"
+    },
+    {
+        "paramId": 1,
+        "value":"2.5"
+    }
+  ] ,
+  "urls":["http://gdsf", "http://dslfjsad"]
+}
+// có thể không chọn bác sĩ chỉ định
+```
 ---
 ## 11. Lab Result API
 
@@ -3020,6 +3048,24 @@
 
 ---
 
+
+## 18. upload image api
+**Endpoint:** ``/api/files/multiple ``
+**mô tả** upload nhiều ảnh
+
+body dạng form data
+files, type (xn,avatars)
+
+**response**
+```
+{
+    "data": [
+        "https://files.tienpndev.id.vn/phongkham/xn/xn/af3a6cd8-0015-4836-ae5e-6621f2644d9f.png",
+        "https://files.tienpndev.id.vn/phongkham/xn/xn/1ecd5ac9-676a-4b06-bc13-6e2d60723dab.jpeg"
+    ],
+    "message": "Upload files successfully"
+}
+```
 ## Thông tin chung
 
 ### Authentication
