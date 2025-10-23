@@ -28,7 +28,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
@@ -68,7 +67,6 @@ export function LabOrders({ medicalRecord, readOnly = false }: LabOrdersProps) {
   // Form state for creating lab order
   const [createForm, setCreateForm] = useState({
     healthPlanId: '',
-    performingDoctor: '',
     diagnosis: '',
   })
 
@@ -100,6 +98,15 @@ export function LabOrders({ medicalRecord, readOnly = false }: LabOrdersProps) {
     enabled: isCreateDialogOpen,
   })
 
+  // Filter lab services - exclude CHUYEN_KHOA, DICH_VU, KHAM_BENH types and KB001 code
+  const labServices = services.filter(
+    (service) =>
+      service.type !== 'CHUYEN_KHOA' &&
+      service.type !== 'DICH_VU' &&
+      service.type !== 'KHAM_BENH' &&
+      service.code !== 'KB001'
+  )
+
   // Create mutation
   const createMutation = useMutation({
     mutationFn: createLabOrder,
@@ -109,7 +116,7 @@ export function LabOrders({ medicalRecord, readOnly = false }: LabOrdersProps) {
       })
       toast.success('Thêm chỉ định thành công')
       setIsCreateDialogOpen(false)
-      setCreateForm({ healthPlanId: '', performingDoctor: '', diagnosis: '' })
+      setCreateForm({ healthPlanId: '', diagnosis: '' })
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Không thể thêm chỉ định')
@@ -139,7 +146,6 @@ export function LabOrders({ medicalRecord, readOnly = false }: LabOrdersProps) {
     createMutation.mutate({
       recordId: Number(medicalRecord.id),
       healthPlanId: Number(createForm.healthPlanId),
-      performingDoctor: createForm.performingDoctor ? Number(createForm.performingDoctor) : null,
       diagnosis: createForm.diagnosis || null,
     })
   }
@@ -246,7 +252,7 @@ export function LabOrders({ medicalRecord, readOnly = false }: LabOrdersProps) {
           <DialogHeader>
             <DialogTitle>Thêm chỉ định xét nghiệm</DialogTitle>
             <DialogDescription>
-              Chọn dịch vụ xét nghiệm và thông tin bác sĩ thực hiện
+              Chọn dịch vụ xét nghiệm cho bệnh nhân
             </DialogDescription>
           </DialogHeader>
           <div className='space-y-4 py-4'>
@@ -264,25 +270,13 @@ export function LabOrders({ medicalRecord, readOnly = false }: LabOrdersProps) {
                   <SelectValue placeholder='Chọn dịch vụ xét nghiệm' />
                 </SelectTrigger>
                 <SelectContent>
-                  {services.map((service) => (
+                  {labServices.map((service) => (
                     <SelectItem key={service.id} value={String(service.id)}>
                       {service.name} - {service.roomName}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='performingDoctor'>Bác sĩ thực hiện (ID)</Label>
-              <Input
-                id='performingDoctor'
-                type='number'
-                value={createForm.performingDoctor}
-                onChange={(e) =>
-                  setCreateForm({ ...createForm, performingDoctor: e.target.value })
-                }
-                placeholder='Nhập ID bác sĩ thực hiện (nếu có)...'
-              />
             </div>
             <div className='space-y-2'>
               <Label htmlFor='diagnosis'>Chẩn đoán</Label>

@@ -81,14 +81,14 @@ export function ExaminationPage({ id, fromRecordId }: ExaminationPageProps) {
   })
 
   // Auto update status when page loads
-  useState(() => {
-    if (medicalRecord?.status === 'CHO_KHAM') {
+  useEffect(() => {
+    if (medicalRecord?.status === 'CHO_KHAM' && !isViewingHistory) {
       updateStatusMutation.mutate({
         id: medicalRecord.id,
         status: 'DANG_KHAM',
       })
     }
-  })
+  }, [medicalRecord?.status, medicalRecord?.id, isViewingHistory])
 
   if (isLoadingRecord || isLoadingPatient) {
     return (

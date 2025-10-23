@@ -42,40 +42,24 @@
 **Response:**
 ```json
 {
-  "data": {
-    "token": "string",
-    "userInfo": {}
-  },
-  "message": "Login successful"
+    "data": {
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiaXNzIjoiVElFTi1ERVYtSkFWQSIsImF1ZCI6ImxvY2FsaG9zdDo4MDgwIiwiaWF0IjoxNzYxMDMwNzkyLCJleHAiOjE3NjEwMzQzOTIsInJvbGUiOiJCRU5IX05IQU4ifQ.jrBwyXvox3TIgIrwZMqvlY5XSvEMrPWUCRp_X2KekVw",
+        "userResponse": {
+            "id": 1,
+            "email": "tienolympia2020@gmail.com",
+            "phone": "0395527082",
+            "name": "Nguyen Van A",
+            "role": "BENH_NHAN",
+            "status": true,
+            "createdAt": "2025-09-09T08:58:19",
+            "createdPassword": false
+        }
+    },
+    "message": "Login successful"
 }
 ```
 
 ---
-
-### 1.2 Đăng nhập Dashboard
-**Endpoint:** `POST /api/auth/dashboard/login`
-
-**Mô tả:** Đăng nhập cho nhân viên y tế (bác sĩ, lễ tân, v.v.)
-
-**Request Body:**
-```json
-{
-  "username": "string",
-  "password": "string",
-  "type": "PASSWORD"
-}
-```
-
-**Response:**
-```json
-{
-  "data": {
-    "token": "string",
-    "userInfo": {}
-  },
-  "message": "Login successful"
-}
-```
 
 ---
 
@@ -87,15 +71,15 @@
 **Request Body:**
 ```json
 {
-  "phone": "string"
+    "to": "0395527082"
 }
 ```
 
 **Response:**
 ```json
 {
-  "data": "",
-  "message": "Send OTP successful"
+    "data": "",
+    "message": "Send OTP successful"
 }
 ```
 
@@ -109,16 +93,17 @@
 **Request Body:**
 ```json
 {
-  "phone": "string"
+    "to": "0000000092"
 }
 ```
 
 **Response:**
 ```json
 {
-  "data": "",
-  "message": "Send OTP successful"
+    "data": "",
+    "message": "Send OTP successful"
 }
+
 ```
 
 ---
@@ -131,16 +116,16 @@
 **Request Body:**
 ```json
 {
-  "phone": "string",
-  "otp": "string"
+    "phone": "0000000092",
+    "otp": "469300"
 }
 ```
 
 **Response:**
 ```json
 {
-  "data": true,
-  "message": "Verify OTP successful"
+    "data": true,
+    "message": "Verify OTP successful"
 }
 ```
 
@@ -149,29 +134,38 @@
 ### 1.6 Đăng ký tài khoản
 **Endpoint:** `POST /api/auth/register`
 
-**Mô tả:** Đăng ký tài khoản bệnh nhân mới
+**Mô tả:** Đăng ký tài khoản 
 
 **Request Body:**
 ```json
 {
-  "phone": "string (required)",
-  "email": "string (email format)",
-  "name": "string (required)",
-  "birth": "2000-01-01",
-  "gender": "MALE", // MALE, FEMALE, OTHER
-  "password": "string (min 6 chars)",
-  "confirmPassword": "string"
+    "phone": "0868224097",
+    "email": "adsfsadf@gmail.com",
+    "name": "Tien dep trai",
+    "birth": "2025-02-01",
+    "gender": "NAM",
+    "password": "1234567",
+    "confirmPassword": "1234567"
 }
 ```
 
 **Response:**
 ```json
 {
-  "data": {
-    "token": "string",
-    "userInfo": {}
-  },
-  "message": "Register successful"
+    "data": {
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDUiLCJpc3MiOiJUSUVOLURFVi1KQVZBIiwiYXVkIjoibG9jYWxob3N0OjgwODAiLCJpYXQiOjE3NjEwMzEwMDYsImV4cCI6MTc2MTA2NzAwNiwicm9sZSI6IkJFTkhfTkhBTiJ9.Ho7koLvh-HWbSFEbp9tr3V0KWpmTh2d8aPga-QfA59Q",
+        "userResponse": {
+            "id": 105,
+            "email": "dddd@gmail.com",
+            "phone": "0868224097",
+            "name": "Tien dep trai",
+            "role": "BENH_NHAN",
+            "status": true,
+            "createdAt": "2025-10-21T14:16:46.505991",
+            "createdPassword": false
+        }
+    },
+    "message": "Register successful"
 }
 ```
 
@@ -189,16 +183,9 @@
 **Request Body:**
 ```json
 {
-  "healthPlanId": 1,
+  "healthPlanId": null,
   "doctorId": 1,
-  "departmentId": 1,
   "patientId": 1,
-  "fullName": "string",
-  "phone": "string",
-  "gender": "MALE",
-  "birth": "2000-01-01",
-  "email": "string",
-  "address": "string",
   "date": "2024-12-20",
   "time": "09:00:00",
   "symptoms": "string"
@@ -631,7 +618,7 @@
 **Response:**
 ```json
 {
-  "data": [
+  "data": [/api/services
         {
             "id": 3,
             "fullName": "BS. PHAM VAN TIEN",
@@ -2728,17 +2715,36 @@
 **Response:**
 ```json
 {
-  "data": [
-    {
-      "id": 1,
-      "doctorName": "string",
-      "date": "2024-12-20",
-      "shift": "MORNING",
-      "availableSlots": 15,
-      "maxPatients": 20
-    }
-  ],
-  "message": "get available slots success"
+    "data": [
+        {
+            "date": "2025-10-20",
+            "dateName": "MONDAY",
+            "totalSlot": 2,
+            "doctors": [
+                {
+                    "id": 1,
+                    "fullName": "tien",
+                    "position": "PGS. Phạm Tiến",
+                    "available": true,
+                    "invalidTimes": [
+                        "09:00:00"
+                    ],
+                    "shift": "SANG"
+                },
+                {
+                    "id": 1,
+                    "fullName": "tien",
+                    "position": "PGS. Phạm Tiến",
+                    "available": true,
+                    "invalidTimes": [
+                        "15:00:00"
+                    ],
+                    "shift": "CHIEU"
+                }
+            ]
+        }
+    ],
+    "message": "get available slots success"
 }
 ```
 
