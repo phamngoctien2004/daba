@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { format } from 'date-fns'
 import { getRouteApi } from '@tanstack/react-router'
-import { useQuery, type QueryKey } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ConfigDrawer } from '@/components/config-drawer'
@@ -11,8 +11,9 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { NavigateFn } from '@/hooks/use-table-url-state'
 import { MedicalRecordsTable } from './components/medical-records-table-view'
-import { fetchDoctorMedicalRecords, type MedicalRecordStatus } from './api/medical-records'
+import { fetchDoctorMedicalRecords, updateMedicalRecordStatus, type MedicalRecordStatus } from './api/medical-records'
 import type { MedicalRecordsSearch } from './types'
+import { toast } from 'sonner'
 
 const doctorMedicalRecordsRoute = getRouteApi('/_authenticated/doctor-medical-records/')
 const doctorMedicalRecordsQueryBaseKey: QueryKey = ['doctor-medical-records']
@@ -39,6 +40,7 @@ const resolveStatus = (value?: MedicalRecordStatus[] | null) => {
 export function DoctorMedicalRecordsManagement() {
   const search = doctorMedicalRecordsRoute.useSearch() as MedicalRecordsSearch
   const navigate = doctorMedicalRecordsRoute.useNavigate()
+  const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<'my' | 'all'>('my')
 
   const todayIso = useMemo(() => createTodayIso(), [])
@@ -137,11 +139,58 @@ export function DoctorMedicalRecordsManagement() {
     [navigate]
   )
 
+  // Mutation để cập nhật trạng thái
+  const updateStatusMutation = useMutation({
+    mutationFn: updateMedicalRecordStatus,
+    onSuccess: (_, variables) => {
+      console.log('✅ [handleExamine] Status updated successfully to DANG_KHAM for ID:', variables.id)
+      // Invalidate queries để refresh data
+      queryClient.invalidateQueries({ queryKey: doctorMedicalRecordsQueryBaseKey })
+      toast.success('Đã bắt đầu khám bệnh')
+
+      // Navigate sau khi cập nhật thành công
+      navigate({ to: '/doctor-medical-records/examine/$id', params: { id: variables.id } })
+    },
+    onError: (error: Error, variables) => {
+      console.error('❌ [handleExamine] Error updating status:', error)
+      toast.error('Không thể cập nhật trạng thái', {
+        description: error.message,
+      })
+
+      // Vẫn navigate nếu có lỗi (để useEffect backup xử lý)
+      navigate({ to: '/doctor-medical-records/examine/$id', params: { id: variables.id } })
+    },
+  })
+
   const handleExamine = useCallback(
     (id: string) => {
-      navigate({ to: '/doctor-medical-records/examine/$id', params: { id } })
+      console.log('🔵 [handleExamine] Button clicked for ID:', id)
+
+      // Lấy danh sách records hiện tại
+      const currentRecords = activeTab === 'my'
+        ? myMedicalRecordsQuery.data?.medicalRecords
+        : allMedicalRecordsQuery.data?.medicalRecords
+
+      const record = currentRecords?.find(r => r.id === id)
+
+      console.log('🔍 [handleExamine] Found record:', record)
+      console.log('🔍 [handleExamine] Record status:', record?.status)
+
+      // Nếu status là CHO_KHAM, gọi API cập nhật
+      if (record?.status === 'CHO_KHAM') {
+        console.log('⚡ [handleExamine] Calling API to update status to DANG_KHAM')
+        updateStatusMutation.mutate({
+          id: id,
+          status: 'DANG_KHAM',
+        })
+        // Không navigate ở đây - để mutation onSuccess xử lý
+      } else {
+        // Nếu không phải CHO_KHAM, navigate trực tiếp
+        console.log('⏭️ [handleExamine] Status is not CHO_KHAM, navigating directly')
+        navigate({ to: '/doctor-medical-records/examine/$id', params: { id } })
+      }
     },
-    [navigate]
+    [navigate, updateStatusMutation, activeTab, myMedicalRecordsQuery.data, allMedicalRecordsQuery.data]
   )
 
   // Get current data based on active tab

@@ -80,9 +80,11 @@ export function ExaminationPage({ id, fromRecordId }: ExaminationPageProps) {
     },
   })
 
-  // Auto update status when page loads
+  // Auto update status when page loads (backup mechanism)
+  // Chỉ gọi nếu status vẫn là CHO_KHAM (trường hợp handleExamine không update được)
   useEffect(() => {
     if (medicalRecord?.status === 'CHO_KHAM' && !isViewingHistory) {
+      console.log('🔄 [ExaminationPage] Backup status update triggered for CHO_KHAM')
       updateStatusMutation.mutate({
         id: medicalRecord.id,
         status: 'DANG_KHAM',
