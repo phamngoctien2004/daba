@@ -82,7 +82,6 @@ export function CreateMedicalRecordForm({
   const [showQRModal, setShowQRModal] = useState(false)
   const [qrCode, setQrCode] = useState<string | null>(null)
   const [orderCode, setOrderCode] = useState<number | null>(null)
-  const [invoiceIdForQR, setInvoiceIdForQR] = useState<number | null>(null)
   const [isCreatingQR, setIsCreatingQR] = useState(false)
   const [qrPaymentSuccess, setQrPaymentSuccess] = useState(false)
 
@@ -372,11 +371,10 @@ export function CreateMedicalRecordForm({
       // Step 4: Show QR Modal
       setQrCode(qrCodeImageUrl) // Use generated image URL instead of raw string
       setOrderCode(paymentData.orderCode)
-      setInvoiceIdForQR(paymentData.invoiceId)
       setShowQRModal(true)
       setIsCreatingQR(false)
 
-      // Step 4: Subscribe to payment success event
+      // Step 5: Subscribe to payment success event
       console.log(`🔵 [QR Payment] Subscribing to invoice.${paymentData.invoiceId}`)
       const unsubscribe = wsClient.subscribeToInvoicePayment(
         paymentData.invoiceId,
