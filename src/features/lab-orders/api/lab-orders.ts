@@ -1,7 +1,7 @@
 import { get, post, put, del } from '@/lib/api-client'
-import type { 
-  LabOrder, 
-  LabOrderStatus, 
+import type {
+  LabOrder,
+  LabOrderStatus,
   LabOrdersPagination,
   LabParam,
   LabResultDetailParam,

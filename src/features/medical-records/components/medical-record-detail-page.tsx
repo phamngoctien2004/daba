@@ -2,7 +2,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Calendar, User, Phone, MapPin, ChevronDown, ChevronUp } from 'lucide-react'
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,9 +11,13 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
+import { QRPaymentModal } from '@/components/qr-payment-modal'
 import { useMedicalRecordDetail, usePayCash } from '../hooks/use-medical-record-detail'
 import { exportInvoiceHtml } from '../api/medical-records'
 import type { MedicalRecordStatus, InvoiceDetail } from '../types'
+import { createPaymentLink } from '@/features/payments/api/payments'
+import { wsClient } from '@/lib/websocket-client'
+import { generatePaymentQRCode } from '@/lib/qr-code-generator'
 
 interface MedicalRecordDetailPageProps {
     id: string
@@ -178,6 +182,22 @@ export function MedicalRecordDetailPage({ id }: MedicalRecordDetailPageProps) {
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qr'>('cash')
     const [paymentSuccess, setPaymentSuccess] = useState(false)
     const { mutate: payWithCash, isPending: isPayingCash } = usePayCash()
+
+    // QR Payment state
+    const [showQRModal, setShowQRModal] = useState(false)
+    const [qrCode, setQrCode] = useState<string | null>(null)
+    const [orderCode, setOrderCode] = useState<number | null>(null)
+    const [isCreatingQR, setIsCreatingQR] = useState(false)
+    const [qrPaymentSuccess, setQrPaymentSuccess] = useState(false)
+
+    // WebSocket cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (wsClient.isConnected()) {
+                wsClient.disconnect()
+            }
+        }
+    }, [])
 
     // Helper function to print invoice
     const handlePrintInvoice = async (medicalRecordId: string) => {
@@ -437,19 +457,125 @@ export function MedicalRecordDetailPage({ id }: MedicalRecordDetailPageProps) {
                             ) : (
                                 <Button
                                     variant="default"
-                                    onClick={() => {
-                                        // TODO: Implement QR code generation
-                                        console.log('Tạo mã QR thanh toán')
-                                        toast.info('Chức năng tạo mã QR đang được phát triển')
+                                    disabled={isCreatingQR}
+                                    onClick={async () => {
+                                        // Get unpaid invoice details
+                                        const unpaidInvoices = (record.invoiceDetailsResponse || []).filter(
+                                            (detail) => detail.status === 'CHUA_THANH_TOAN' || detail.status === 'THANH_TOAN_MOT_PHAN'
+                                        )
+
+                                        if (unpaidInvoices.length === 0) {
+                                            toast.error('Không có hóa đơn cần thanh toán')
+                                            return
+                                        }
+
+                                        // Calculate total unpaid amount
+                                        const totalUnpaid = unpaidInvoices.reduce((sum, detail) => {
+                                            const detailPaid = detail.paid ?? 0
+                                            const detailTotal = detail.healthPlanPrice ?? 0
+                                            return sum + (detailTotal - detailPaid)
+                                        }, 0)
+
+                                        try {
+                                            setIsCreatingQR(true)
+
+                                            // Step 1: Connect to WebSocket
+                                            console.log('🔵 [QR Payment] Connecting to WebSocket...')
+                                            await wsClient.connect()
+
+                                            // Step 2: Create payment link
+                                            console.log('🔵 [QR Payment] Creating payment link...')
+                                            const paymentData = await createPaymentLink({
+                                                medicalRecordId: Number(record.id),
+                                                totalAmount: totalUnpaid,
+                                                healthPlanIds: unpaidInvoices.map((detail) => detail.healthPlanId),
+                                                doctorId: 0, // Medical record detail không có doctorId, gửi 0
+                                            })
+
+                                            console.log('✅ [QR Payment] Payment data received:', paymentData)
+
+                                            // Step 3: Generate QR code image URL from qrCode string
+                                            const qrCodeImageUrl = generatePaymentQRCode(paymentData.qrCode, '400x400')
+                                            console.log('🔵 [QR Payment] Generated QR image URL:', qrCodeImageUrl)
+
+                                            // Step 4: Show QR Modal
+                                            setQrCode(qrCodeImageUrl) // Use generated image URL
+                                            setOrderCode(paymentData.orderCode)
+                                            setShowQRModal(true)
+                                            setIsCreatingQR(false)
+
+                                            // Step 4: Subscribe to payment success event
+                                            console.log(`🔵 [QR Payment] Subscribing to invoice.${paymentData.invoiceId}`)
+                                            const unsubscribe = wsClient.subscribeToInvoicePayment(
+                                                paymentData.invoiceId,
+                                                async (event) => {
+                                                    console.log('✅ [QR Payment] Payment success event received:', event)
+
+                                                    // Mark payment as successful
+                                                    setQrPaymentSuccess(true)
+                                                    toast.success('Thanh toán thành công!')
+
+                                                    // Step 5: Print invoice (API dòng 3107/3113)
+                                                    try {
+                                                        console.log('🖨️ [QR Payment] Printing invoice...')
+                                                        await handlePrintInvoice(record.id)
+                                                    } catch (error) {
+                                                        console.error('❌ [QR Payment] Print error:', error)
+                                                        toast.error('Không thể in hóa đơn')
+                                                    }
+
+                                                    // Cleanup
+                                                    setTimeout(() => {
+                                                        unsubscribe()
+                                                        setShowQRModal(false)
+                                                        setPaymentSuccess(true)
+                                                    }, 2000)
+                                                }
+                                            )
+                                        } catch (error) {
+                                            console.error('❌ [QR Payment] Error:', error)
+                                            setIsCreatingQR(false)
+                                            toast.error(
+                                                error instanceof Error ? error.message : 'Không thể tạo mã QR thanh toán'
+                                            )
+                                        }
                                     }}
                                 >
-                                    Tạo mã QR
+                                    {isCreatingQR ? 'Đang tạo...' : 'Tạo mã QR'}
                                 </Button>
                             )}
                         </div>
                     </CardContent>
                 </Card>
             )}
+
+            {/* QR Payment Modal */}
+            <QRPaymentModal
+                open={showQRModal}
+                qrCode={qrCode}
+                orderCode={orderCode}
+                amount={
+                    (record.invoiceDetailsResponse || [])
+                        .filter((detail) => detail.status === 'CHUA_THANH_TOAN' || detail.status === 'THANH_TOAN_MOT_PHAN')
+                        .reduce((sum, detail) => {
+                            const detailPaid = detail.paid ?? 0
+                            const detailTotal = detail.healthPlanPrice ?? 0
+                            return sum + (detailTotal - detailPaid)
+                        }, 0)
+                }
+                isConnecting={isCreatingQR}
+                paymentSuccess={qrPaymentSuccess}
+                onClose={() => {
+                    setShowQRModal(false)
+                    setQrPaymentSuccess(false)
+                }}
+                onForceClose={() => {
+                    setShowQRModal(false)
+                    setQrPaymentSuccess(false)
+                    wsClient.disconnect()
+                    toast.warning('Đã hủy thanh toán QR')
+                }}
+            />
         </div>
     )
 }

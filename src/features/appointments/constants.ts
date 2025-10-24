@@ -4,6 +4,7 @@ export const STATUS_LABELS: Record<AppointmentStatus, string> = {
   DA_XAC_NHAN: 'Đã xác nhận',
   KHONG_DEN: 'Không đến',
   DANG_KHAM: 'Đang khám',
+  HOAN_THANH: 'Hoàn thành',
 }
 
 export const STATUS_FILTER_OPTIONS = (
@@ -21,6 +22,8 @@ export const getStatusBadgeVariant = (status: AppointmentStatus) => {
       return 'destructive' as const
     case 'DANG_KHAM':
       return 'outline' as const
+    case 'HOAN_THANH':
+      return 'secondary' as const
     default:
       return 'default' as const
   }

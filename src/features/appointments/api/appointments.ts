@@ -4,6 +4,7 @@ export type AppointmentStatus =
   | 'DA_XAC_NHAN'
   | 'KHONG_DEN'
   | 'DANG_KHAM'
+  | 'HOAN_THANH'
 
 export interface AppointmentHealthPlan {
   id: number
@@ -22,25 +23,41 @@ export interface AppointmentDepartment {
   name: string
 }
 
-export interface Appointment {
+export interface AppointmentPatient {
   id: number
-  patientId: number
+  code: string
+  registrationDate: string
   fullName: string
   phone: string | null
-  gender: 'NAM' | 'NU'
   birth: string
+  gender: 'NAM' | 'NU'
   email: string | null
-  address: string | null
-  date: string
-  time: string
-  symptoms: string | null
-  status: AppointmentStatus
+}
+
+export interface Appointment {
+  id: number
+  patientResponse: AppointmentPatient
   healthPlanResponse: AppointmentHealthPlan | null
   doctorResponse: AppointmentDoctor | null
-  departmentResponse: AppointmentDepartment | null
-  notes: string | null
-  createdAt: string
-  updatedAt: string
+  date: string
+  time: string
+  status: AppointmentStatus
+  symptoms: string | null
+  invoiceCode: string | null
+  totalAmount: number
+
+  // Legacy fields for backward compatibility (computed)
+  patientId?: number
+  fullName?: string
+  phone?: string | null
+  gender?: 'NAM' | 'NU'
+  birth?: string
+  email?: string | null
+  address?: string | null
+  departmentResponse?: AppointmentDepartment | null
+  notes?: string | null
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface AppointmentListParams {

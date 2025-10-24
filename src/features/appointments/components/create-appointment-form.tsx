@@ -146,7 +146,7 @@ export function CreateAppointmentForm({
                   <PatientSearch
                     value={selectedPatient}
                     onSelect={handlePatientSelect}
-                    onCreateNew={() => {}}
+                    onCreateNew={() => { }}
                     disabled={isFormDisabled}
                   />
                 </FormControl>

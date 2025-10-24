@@ -24,6 +24,10 @@ export interface AppointmentDataForMedicalRecord {
   symptoms: string | null
   appointmentDate: string | null
   appointmentTime: string | null
+  // Payment info from appointment (nếu đã thanh toán khi đặt lịch)
+  isPaidFromAppointment?: boolean
+  totalAmount?: number
+  invoiceCode?: string | null
 }
 
 /**

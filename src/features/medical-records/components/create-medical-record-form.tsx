@@ -23,6 +23,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
+import { QRPaymentModal } from '@/components/qr-payment-modal'
 import {
   getAppointmentForMedicalRecord,
   clearAppointmentForMedicalRecord,
@@ -43,6 +44,9 @@ import {
   type Doctor,
 } from '@/features/departments/api/departments'
 import { fetchHealthPlans, type HealthPlan } from '@/features/health-plans/api/services'
+import { createPaymentLink } from '@/features/payments/api/payments'
+import { wsClient } from '@/lib/websocket-client'
+import { generatePaymentQRCode } from '@/lib/qr-code-generator'
 
 interface CreateMedicalRecordFormProps {
   onSuccess?: (medicalRecordId?: number) => void
@@ -66,9 +70,21 @@ export function CreateMedicalRecordForm({
   const [selectedHealthPlan, setSelectedHealthPlan] = useState<HealthPlan | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
 
+  // Service detail state (for displaying room info and sub-plans)
+  const [serviceDetail, setServiceDetail] = useState<any>(null)
+  const [isLoadingServiceDetail, setIsLoadingServiceDetail] = useState(false)
+
   // Payment state
   const [createdMedicalRecordId, setCreatedMedicalRecordId] = useState<number | null>(null)
   const [paymentCompleted, setPaymentCompleted] = useState(false)
+
+  // QR Payment state
+  const [showQRModal, setShowQRModal] = useState(false)
+  const [qrCode, setQrCode] = useState<string | null>(null)
+  const [orderCode, setOrderCode] = useState<number | null>(null)
+  const [invoiceIdForQR, setInvoiceIdForQR] = useState<number | null>(null)
+  const [isCreatingQR, setIsCreatingQR] = useState(false)
+  const [qrPaymentSuccess, setQrPaymentSuccess] = useState(false)
 
   // Load appointment data from localStorage on mount and clear previous data
   useEffect(() => {
@@ -109,9 +125,6 @@ export function CreateMedicalRecordForm({
       return plan.type === 'XET_NGHIEM'
     } else if (examinationType === 'CHUYEN_KHOA') {
       return plan.type === 'CHUYEN_KHOA'
-    } else if (examinationType === 'KHAC') {
-      // Các type khác ngoài 3 type trên
-      return plan.type !== 'DICH_VU' && plan.type !== 'XET_NGHIEM' && plan.type !== 'CHUYEN_KHOA'
     }
     return false
   })
@@ -154,9 +167,8 @@ export function CreateMedicalRecordForm({
             setExaminationType('XET_NGHIEM')
           } else if (healthPlan.type === 'CHUYEN_KHOA') {
             setExaminationType('CHUYEN_KHOA')
-          } else {
-            setExaminationType('KHAC')
           }
+          // Removed 'KHAC' option
 
           const healthPlanIdStr = String(appointmentData.healthPlanId)
           setSelectedDoctorOrServiceId(healthPlanIdStr)
@@ -177,7 +189,7 @@ export function CreateMedicalRecordForm({
     }
   }, [appointmentData, form, healthPlans, isInitialized])
 
-  // 3. Load doctors when examination type is 'doctor'
+  // 3. Load available doctors when examination type is 'doctor'
   useEffect(() => {
     // Only load if examination type is valid
     if (!examinationType) return
@@ -189,19 +201,38 @@ export function CreateMedicalRecordForm({
         return
       }
 
-      // Load all doctors for 'doctor' examination type
+      // Load available doctors from schedule API for 'doctor' examination type
       try {
-        console.log('🔄 [Load Doctors] Loading all doctors...')
-        const allDoctors = await fetchAllDoctors()
-        console.log('✅ [Load Doctors] Loaded doctors:', allDoctors.length)
-        setDoctors(allDoctors)
+        console.log('🔄 [Load Doctors] Loading available doctors from schedule...')
+
+        // Import schedule API
+        const { fetchAvailableDoctorsToday } = await import('@/features/schedules/api/schedules')
+        const availableDoctors = await fetchAvailableDoctorsToday()
+
+        console.log('✅ [Load Doctors] Loaded available doctors:', availableDoctors.length)
+
+        // Convert AvailableDoctor to Doctor format
+        const doctors = availableDoctors.map(ad => ({
+          id: ad.id,
+          fullName: ad.fullName,
+          position: ad.position,
+          name: ad.fullName,
+          available: ad.available,
+          roomName: ad.roomName,
+          examinationFee: ad.examinationFee || 0,
+        } as Doctor))
+
+        setDoctors(doctors)
 
         // If there's a pre-selected doctor from appointment, set it
         if (appointmentData?.doctorId && selectedDoctorOrServiceId) {
-          const doctor = allDoctors.find(d => d.id === appointmentData.doctorId)
+          const doctor = doctors.find(d => d.id === appointmentData.doctorId)
           if (doctor) {
             console.log('✅ [Load Doctors] Found pre-selected doctor:', doctor.position)
             setSelectedDoctor(doctor)
+            setIsInitialized(true)
+          } else {
+            console.warn('⚠️ [Load Doctors] Pre-selected doctor not available in current shift')
             setIsInitialized(true)
           }
         } else if (!appointmentData?.doctorId) {
@@ -209,8 +240,16 @@ export function CreateMedicalRecordForm({
           setIsInitialized(true)
         }
       } catch (error) {
-        console.error('❌ [Load Doctors] Failed to load doctors:', error)
-        setDoctors([])
+        console.error('❌ [Load Doctors] Failed to load available doctors:', error)
+        // Fallback to loading all doctors if schedule API fails
+        try {
+          console.log('🔄 [Load Doctors] Falling back to all doctors...')
+          const allDoctors = await fetchAllDoctors()
+          setDoctors(allDoctors)
+        } catch (fallbackError) {
+          console.error('❌ [Load Doctors] Fallback failed:', fallbackError)
+          setDoctors([])
+        }
         setIsInitialized(true)
       }
     }
@@ -229,15 +268,15 @@ export function CreateMedicalRecordForm({
       setCreatedMedicalRecordId(medicalRecordId)
       setPaymentCompleted(true)
 
-      // Update appointment status to DANG_KHAM
+      // Update appointment status to HOAN_THANH if created from appointment
       if (appointmentData?.appointmentId) {
         try {
-          console.log('🔄 [Update Appointment] Updating appointment status to DANG_KHAM:', appointmentData.appointmentId)
+          console.log('🔄 [Update Appointment] Updating appointment status to HOAN_THANH:', appointmentData.appointmentId)
           await confirmAppointment({
             id: appointmentData.appointmentId,
-            status: 'DANG_KHAM',
+            status: 'HOAN_THANH',
           })
-          console.log('✅ [Update Appointment] Appointment status updated successfully')
+          console.log('✅ [Update Appointment] Appointment status updated to HOAN_THANH successfully')
         } catch (error) {
           console.error('❌ [Update Appointment] Failed to update appointment status:', error)
           // Don't show error to user - this is a secondary action
@@ -245,7 +284,7 @@ export function CreateMedicalRecordForm({
       }
 
       // Show success message
-      toast.success('Tạo phiếu khám và thanh toán thành công')
+      toast.success('Tạo phiếu khám thành công')
 
       // Auto-print invoice immediately after payment success
       try {
@@ -292,15 +331,149 @@ export function CreateMedicalRecordForm({
     },
   })
 
-  const onSubmit = (values: CreateMedicalRecordInput) => {
+  // WebSocket subscription cleanup
+  useEffect(() => {
+    return () => {
+      // Cleanup WebSocket when component unmounts
+      if (wsClient.isConnected()) {
+        wsClient.disconnect()
+      }
+    }
+  }, [])
+
+  // Handle QR payment flow
+  const handleQRPayment = async (formValues: CreateMedicalRecordInput) => {
+    try {
+      setIsCreatingQR(true)
+
+      // Calculate amount (can be from health plan or doctor examination fee)
+      const amount =
+        selectedHealthPlan?.price || selectedDoctor?.examinationFee || 0
+
+      // Step 1: Connect to WebSocket
+      console.log('🔵 [QR Payment] Connecting to WebSocket...')
+      await wsClient.connect()
+
+      // Step 2: Create payment link FIRST (without medical record)
+      console.log('🔵 [QR Payment] Creating payment link...')
+      const paymentData = await createPaymentLink({
+        medicalRecordId: 0, // Chưa có medical record, gửi 0 hoặc null
+        totalAmount: amount,
+        healthPlanIds: formValues.healthPlanId ? [formValues.healthPlanId] : [],
+        doctorId: formValues.doctorId || 0,
+      })
+
+      console.log('✅ [QR Payment] Payment data received:', paymentData)
+
+      // Step 3: Generate QR code image URL from qrCode string
+      const qrCodeImageUrl = generatePaymentQRCode(paymentData.qrCode, '400x400')
+      console.log('🔵 [QR Payment] Generated QR image URL:', qrCodeImageUrl)
+
+      // Step 4: Show QR Modal
+      setQrCode(qrCodeImageUrl) // Use generated image URL instead of raw string
+      setOrderCode(paymentData.orderCode)
+      setInvoiceIdForQR(paymentData.invoiceId)
+      setShowQRModal(true)
+      setIsCreatingQR(false)
+
+      // Step 4: Subscribe to payment success event
+      console.log(`🔵 [QR Payment] Subscribing to invoice.${paymentData.invoiceId}`)
+      const unsubscribe = wsClient.subscribeToInvoicePayment(
+        paymentData.invoiceId,
+        async (event) => {
+          console.log('✅ [QR Payment] Payment success event received:', event)
+
+          // Mark payment as successful
+          setQrPaymentSuccess(true)
+          toast.success('Thanh toán thành công!')
+
+          try {
+            // Step 5: NOW create medical record with invoiceId
+            console.log('� [QR Payment] Creating medical record with invoiceId...')
+            const payload: CreateMedicalRecordPayload = {
+              patientId: formValues.patientId,
+              doctorId: formValues.doctorId,
+              healthPlanId: formValues.healthPlanId,
+              symptoms: formValues.symptoms,
+              appointmentId: null,
+              invoiceId: paymentData.invoiceId, // ← GỬI INVOICE ID
+            }
+
+            const result = await createMedicalRecord(payload)
+            const medicalRecordId = result.medicalRecordId
+
+            console.log('✅ [QR Payment] Medical record created:', medicalRecordId)
+            setCreatedMedicalRecordId(medicalRecordId)
+
+
+            // Step 7: Print invoice
+            console.log('🖨️ [QR Payment] Printing invoice...')
+            const htmlContent = await exportInvoiceHtml(medicalRecordId)
+
+            const printWindow = window.open('', '_blank')
+            if (printWindow) {
+              printWindow.document.write(htmlContent)
+              printWindow.document.close()
+            }
+
+            // Cleanup
+            setTimeout(() => {
+              unsubscribe()
+              setShowQRModal(false)
+              setPaymentCompleted(true)
+
+              // Clear form and localStorage
+              // form.reset()
+              clearAppointmentForMedicalRecord()
+
+              // Invalidate queries
+              void queryClient.invalidateQueries({ queryKey: ['appointments'] })
+            }, 2000) // Wait 2s to show success message
+          } catch (error) {
+            console.error('❌ [QR Payment] Create medical record error:', error)
+            toast.error('Thanh toán thành công nhưng không thể tạo phiếu khám. Vui lòng liên hệ quản trị viên.')
+
+            // Still cleanup
+            unsubscribe()
+            setShowQRModal(false)
+          }
+        }
+      )
+    } catch (error) {
+      console.error('❌ [QR Payment] Error:', error)
+      setIsCreatingQR(false)
+      toast.error(
+        error instanceof Error ? error.message : 'Không thể tạo mã QR thanh toán'
+      )
+    }
+  }
+
+  const onSubmit = async (values: CreateMedicalRecordInput) => {
     const payload: CreateMedicalRecordPayload = {
       patientId: values.patientId,
       doctorId: values.doctorId,
       healthPlanId: values.healthPlanId,
       symptoms: values.symptoms,
+      // Gửi kèm appointmentId nếu bệnh nhân đã đặt lịch
+      appointmentId: appointmentData?.appointmentId ?? null,
     }
 
-    createMedicalRecordMutation(payload)
+    console.log('📤 [CreateMedicalRecordForm] Submitting payload:', payload)
+
+    // For paid appointments, just create medical record
+    if (appointmentData?.isPaidFromAppointment) {
+      createMedicalRecordMutation(payload)
+      return
+    }
+
+    // For unpaid, check payment method
+    if (values.paymentMethod === 'qr') {
+      // Show QR payment first, then create medical record after payment success
+      await handleQRPayment(values)
+    } else {
+      // Cash payment - use existing flow
+      createMedicalRecordMutation(payload)
+    }
   }
 
   if (!appointmentData) {
@@ -389,6 +562,28 @@ export function CreateMedicalRecordForm({
       {/* Medical Record Form */}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+
+          {/* Symptoms */}
+          <FormField
+            control={form.control}
+            name="symptoms"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Triệu chứng <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Mô tả triệu chứng của bệnh nhân"
+                    className="min-h-[100px] resize-none"
+                    disabled={isCreatingRecord || !!createdMedicalRecordId}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           {/* 3 Selects in One Row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Select 1: Examination Type */}
@@ -416,6 +611,8 @@ export function CreateMedicalRecordForm({
                   setSelectedHealthPlan(null)
                   setSelectedDoctor(null)
                   setDoctors([])
+                  setServiceDetail(null)
+                  setIsLoadingServiceDetail(false)
                 }}
               >
                 <SelectTrigger className="mt-2">
@@ -426,7 +623,6 @@ export function CreateMedicalRecordForm({
                   <SelectItem value="DICH_VU">Gói khám</SelectItem>
                   <SelectItem value="XET_NGHIEM">Xét nghiệm</SelectItem>
                   <SelectItem value="CHUYEN_KHOA">Chuyên khoa</SelectItem>
-                  <SelectItem value="KHAC">Khác</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -441,16 +637,15 @@ export function CreateMedicalRecordForm({
                     <FormLabel>
                       {examinationType === 'DICH_VU' ? 'Gói khám' :
                         examinationType === 'XET_NGHIEM' ? 'Xét nghiệm' :
-                          examinationType === 'CHUYEN_KHOA' ? 'Chuyên khoa' :
-                            examinationType === 'KHAC' ? 'Dịch vụ khác' : 'Bác sĩ'}{' '}
+                          examinationType === 'CHUYEN_KHOA' ? 'Chuyên khoa' : 'Bác sĩ'}{' '}
                       <span className="text-destructive">*</span>
                     </FormLabel>
                     {examinationType !== 'doctor' && examinationType !== 'department' ? (
-                      // Show filtered services list (DICH_VU, XET_NGHIEM, CHUYEN_KHOA, KHAC)
+                      // Show filtered services list (DICH_VU, XET_NGHIEM, CHUYEN_KHOA)
                       <Select
                         disabled={isLoadingHealthPlans || isCreatingRecord || !!createdMedicalRecordId}
                         value={selectedDoctorOrServiceId}
-                        onValueChange={(value) => {
+                        onValueChange={async (value) => {
                           setSelectedDoctorOrServiceId(value)
                           const healthPlanId = Number(value)
                           form.setValue('healthPlanId', healthPlanId)
@@ -458,6 +653,24 @@ export function CreateMedicalRecordForm({
                           setSelectedHealthPlan(healthPlan || null)
                           // Also set third select value to show selected service
                           setSelectedThirdSelect(value)
+
+                          // Load service detail
+                          if (healthPlanId) {
+                            setIsLoadingServiceDetail(true)
+                            try {
+                              const { fetchServiceDetail } = await import('@/features/health-plans/api/services')
+                              const detail = await fetchServiceDetail(healthPlanId)
+                              setServiceDetail(detail)
+                              console.log('✅ [Service Detail] Loaded:', detail)
+                            } catch (error) {
+                              console.error('❌ [Service Detail] Failed to load:', error)
+                              setServiceDetail(null)
+                            } finally {
+                              setIsLoadingServiceDetail(false)
+                            }
+                          } else {
+                            setServiceDetail(null)
+                          }
                         }}
                       >
                         <FormControl>
@@ -514,78 +727,186 @@ export function CreateMedicalRecordForm({
 
           </div>
 
-          {/* Calculated Fee Display */}
-          {(selectedHealthPlan || selectedDoctor) && (
-            <div className="rounded-lg border bg-muted/50 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Chi phí khám:</span>
-                <span className="text-lg font-bold">
-                  {selectedHealthPlan
-                    ? (selectedHealthPlan.fee || selectedHealthPlan.price || 0).toLocaleString('vi-VN')
-                    : (selectedDoctor?.examinationFee || 0).toLocaleString('vi-VN')
-                  } VNĐ
-                </span>
+          {/* Doctor/Service Info Display */}
+          {selectedDoctor && (
+            <div className="rounded-lg border bg-blue-50 p-4 dark:bg-blue-900/20">
+              <h4 className="mb-3 font-semibold text-blue-900 dark:text-blue-100">
+                Thông tin bác sĩ
+              </h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Bác sĩ:</span>
+                  <span className="font-medium">{selectedDoctor.position || selectedDoctor.fullName}</span>
+                </div>
+                {selectedDoctor.roomName && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Phòng khám:</span>
+                    <span className="font-medium">{selectedDoctor.roomName}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t pt-2">
+                  <span className="text-muted-foreground">Chi phí:</span>
+                  <span className="text-lg font-bold text-blue-900 dark:text-blue-100">
+                    {(selectedDoctor.examinationFee || 0).toLocaleString('vi-VN')} VNĐ
+                  </span>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Symptoms */}
-          <FormField
-            control={form.control}
-            name="symptoms"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Triệu chứng <span className="text-destructive">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Mô tả triệu chứng của bệnh nhân"
-                    className="min-h-[100px] resize-none"
-                    disabled={isCreatingRecord || !!createdMedicalRecordId}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {serviceDetail && (
+            <div className="rounded-lg border bg-purple-50 p-4 dark:bg-purple-900/20">
+              <h4 className="mb-3 font-semibold text-purple-900 dark:text-purple-100">
+                Thông tin dịch vụ
+              </h4>
 
-          {/* Payment Method - Show before record is created */}
-          {!createdMedicalRecordId && (
-            <FormField
-              control={form.control}
-              name="paymentMethod"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>
-                    Phương thức thanh toán <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-col space-y-1"
-                      disabled={isCreatingRecord || !!createdMedicalRecordId}
-                    >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="cash" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Tiền mặt</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="qr" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Chuyển khoản QR</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+              {/* Service Package with Sub-plans */}
+              {serviceDetail.subPlans && Array.isArray(serviceDetail.subPlans) && (
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Gói dịch vụ:</span>
+                    <span className="font-medium">{serviceDetail.name}</span>
+                  </div>
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-muted-foreground">
+                      Bao gồm {serviceDetail.subPlans.length} dịch vụ:
+                    </p>
+                    <div className="space-y-2">
+                      {serviceDetail.subPlans.map((subPlan: any, index: number) => (
+                        <div
+                          key={subPlan.id || index}
+                          className="rounded-md border bg-white p-3 dark:bg-gray-800"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="font-medium">{subPlan.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {subPlan.roomName}
+                              </p>
+                            </div>
+
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex justify-between border-t pt-2">
+                    <span className="font-medium text-muted-foreground">Tổng chi phí:</span>
+                    <span className="text-lg font-bold text-purple-900 dark:text-purple-100">
+                      {serviceDetail.price.toLocaleString('vi-VN')} VNĐ
+                    </span>
+                  </div>
+                </div>
               )}
-            />
+
+              {/* Single Service */}
+              {serviceDetail.roomName && !serviceDetail.subPlans && (
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Dịch vụ:</span>
+                    <span className="font-medium">{serviceDetail.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Phòng:</span>
+                    <span className="font-medium">{serviceDetail.roomName}</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-2">
+                    <span className="text-muted-foreground">Chi phí:</span>
+                    <span className="text-lg font-bold text-purple-900 dark:text-purple-100">
+                      {serviceDetail.price.toLocaleString('vi-VN')} VNĐ
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Loading service detail */}
+          {isLoadingServiceDetail && (
+            <div className="rounded-lg border bg-muted/50 p-4">
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm text-muted-foreground">Đang tải thông tin dịch vụ...</span>
+              </div>
+            </div>
+          )}
+
+
+          {/* Payment Status/Method */}
+          {appointmentData?.isPaidFromAppointment ? (
+            /* Show payment success message when created from paid appointment */
+            <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-800">
+                  <svg
+                    className="h-5 w-5 text-green-600 dark:text-green-300"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-green-900 dark:text-green-100">
+                    Đã thanh toán
+                  </h4>
+                  <p className="mt-1 text-sm text-green-800 dark:text-green-200">
+                    Số tiền: {appointmentData.totalAmount?.toLocaleString('vi-VN') ?? 0} VNĐ
+                  </p>
+                  {appointmentData.invoiceCode && (
+                    <p className="mt-0.5 text-xs text-green-700 dark:text-green-300">
+                      Mã hóa đơn: {appointmentData.invoiceCode}
+                    </p>
+                  )}
+                  <p className="mt-2 text-xs text-green-700 dark:text-green-300">
+                    Đã thanh toán khi đặt lịch khám
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Show payment method selection for walk-in patients */
+            !createdMedicalRecordId && (
+              <FormField
+                control={form.control}
+                name="paymentMethod"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>
+                      Phương thức thanh toán <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                        disabled={isCreatingRecord || !!createdMedicalRecordId}
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="cash" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Tiền mặt</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="qr" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Chuyển khoản QR</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )
           )}
 
           {/* Form Actions */}
@@ -595,7 +916,7 @@ export function CreateMedicalRecordForm({
               <>
                 <Button type="submit" disabled={isCreatingRecord}>
                   {isCreatingRecord && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Xác nhận thanh toán
+                  {appointmentData?.isPaidFromAppointment ? 'Tạo phiếu khám' : 'Xác nhận thanh toán'}
                 </Button>
                 <Button
                   type="button"
@@ -609,17 +930,30 @@ export function CreateMedicalRecordForm({
             )}
 
             {/* Show success message after payment */}
-            {paymentCompleted && (
-              <div className="w-full rounded-lg border bg-green-50 p-4 text-green-900 dark:bg-green-900/20 dark:text-green-100">
-                <p className="font-semibold">Thanh toán thành công!</p>
-                <p className="text-sm mt-1">
-                  Hóa đơn đã được in tự động. Bạn có thể tiếp tục tạo phiếu khám mới hoặc quay lại danh sách.
-                </p>
-              </div>
-            )}
+
           </div>
         </form>
       </Form>
+
+      {/* QR Payment Modal */}
+      <QRPaymentModal
+        open={showQRModal}
+        qrCode={qrCode}
+        orderCode={orderCode}
+        amount={selectedHealthPlan?.price || selectedDoctor?.examinationFee || 0}
+        isConnecting={isCreatingQR}
+        paymentSuccess={qrPaymentSuccess}
+        onClose={() => {
+          setShowQRModal(false)
+          setQrPaymentSuccess(false)
+        }}
+        onForceClose={() => {
+          setShowQRModal(false)
+          setQrPaymentSuccess(false)
+          wsClient.disconnect()
+          toast.warning('Đã hủy thanh toán QR')
+        }}
+      />
     </div>
   )
 }

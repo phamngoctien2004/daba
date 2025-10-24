@@ -156,42 +156,63 @@ export function AppointmentsManagement() {
       if (appointment) {
         console.log('🔵 [handleOpenMedicalRecord] Appointment found:', appointment)
 
-        // Clear old data first, then save new appointment data
-        import('@/lib/appointment-storage').then(
-          ({ clearAppointmentForMedicalRecord, saveAppointmentForMedicalRecord }) => {
-            // Clear previous data
-            clearAppointmentForMedicalRecord()
-            console.log('🗑️ [handleOpenMedicalRecord] Cleared old appointment data')
+        // First, update appointment status to HOAN_THANH via API
+        mutateAppointmentStatus(
+          { id: appointmentId, status: 'HOAN_THANH' },
+          {
+            onSuccess: () => {
+              console.log('✅ [handleOpenMedicalRecord] Status updated to HOAN_THANH')
 
-            // Prepare new appointment data
-            const appointmentData = {
-              appointmentId: appointment.id,
-              patientId: appointment.patientId || appointment.id, // Use actual patientId from appointment
-              patientName: appointment.fullName,
-              patientPhone: appointment.phone,
-              patientEmail: appointment.email,
-              patientGender: appointment.gender,
-              patientBirth: appointment.birth,
-              patientAddress: appointment.address,
-              doctorId: appointment.doctorResponse?.id ?? null,
-              doctorName: appointment.doctorResponse?.position ?? null,
-              departmentId: appointment.departmentResponse?.id ?? null,
-              departmentName: appointment.departmentResponse?.name ?? null,
-              healthPlanId: appointment.healthPlanResponse?.id ?? null,
-              healthPlanName: appointment.healthPlanResponse?.name ?? null,
-              symptoms: appointment.symptoms,
-              appointmentDate: appointment.date,
-              appointmentTime: appointment.time,
-            }
+              // After successful status update, proceed with medical record creation
+              import('@/lib/appointment-storage').then(
+                ({ clearAppointmentForMedicalRecord, saveAppointmentForMedicalRecord }) => {
+                  // Clear previous data
+                  clearAppointmentForMedicalRecord()
+                  console.log('🗑️ [handleOpenMedicalRecord] Cleared old appointment data')
 
-            console.log('💾 [handleOpenMedicalRecord] Saving new appointment data:', appointmentData)
-            // Save new data
-            saveAppointmentForMedicalRecord(appointmentData)
+                  // Prepare new appointment data using patientResponse structure
+                  const appointmentData = {
+                    appointmentId: appointment.id,
+                    patientId: appointment.patientResponse.id,
+                    patientName: appointment.patientResponse.fullName,
+                    patientPhone: appointment.patientResponse.phone,
+                    patientEmail: appointment.patientResponse.email,
+                    patientGender: appointment.patientResponse.gender,
+                    patientBirth: appointment.patientResponse.birth,
+                    patientAddress: appointment.address ?? null,
+                    doctorId: appointment.doctorResponse?.id ?? null,
+                    doctorName: appointment.doctorResponse?.position ?? null,
+                    departmentId: appointment.departmentResponse?.id ?? null,
+                    departmentName: appointment.departmentResponse?.name ?? null,
+                    healthPlanId: appointment.healthPlanResponse?.id ?? null,
+                    healthPlanName: appointment.healthPlanResponse?.name ?? null,
+                    symptoms: appointment.symptoms,
+                    appointmentDate: appointment.date,
+                    appointmentTime: appointment.time,
+                    // Payment info (đã thanh toán khi đặt lịch)
+                    isPaidFromAppointment: appointment.status === 'DA_XAC_NHAN' && !!appointment.invoiceCode,
+                    totalAmount: appointment.totalAmount ?? 0,
+                    invoiceCode: appointment.invoiceCode ?? null,
+                  }
 
-            // Navigate after saving
-            globalNavigate({
-              to: '/appointments/record/create',
-            })
+                  console.log('💾 [handleOpenMedicalRecord] Saving new appointment data:', appointmentData)
+                  // Save new data
+                  saveAppointmentForMedicalRecord(appointmentData)
+
+                  // Navigate after saving
+                  globalNavigate({
+                    to: '/appointments/record/create',
+                  })
+                }
+              )
+            },
+            onError: (error) => {
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : 'Không thể cập nhật trạng thái lịch khám. Vui lòng thử lại.'
+              toast.error(message)
+            },
           }
         )
       } else {
@@ -202,7 +223,7 @@ export function AppointmentsManagement() {
         })
       }
     },
-    [globalNavigate, appointments]
+    [globalNavigate, appointments, mutateAppointmentStatus]
   )
 
   // Note: handlePrintInvoice removed - no longer needed with 3-status system

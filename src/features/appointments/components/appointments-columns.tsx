@@ -77,15 +77,18 @@ export const getAppointmentsColumns = ({
   isConfirmPending,
 }: GetAppointmentsColumnsOptions): ColumnDef<Appointment>[] => [
     {
-      accessorKey: 'fullName',
+      accessorKey: 'patientResponse.fullName',
       header: 'Bệnh nhân',
       cell: ({ row }) => {
         const appointment = row.original
         return (
           <div className='space-y-1'>
-            <div className='font-medium'>{appointment.fullName}</div>
+            <div className='font-medium'>{appointment.patientResponse.fullName}</div>
             <div className='text-muted-foreground text-xs'>
-              Ngày sinh: {formatDateDisplay(appointment.birth)}
+              Ngày sinh: {formatDateDisplay(appointment.patientResponse.birth)}
+            </div>
+            <div className='text-muted-foreground text-xs'>
+              Mã BN: {appointment.patientResponse.code}
             </div>
           </div>
         )
@@ -102,9 +105,9 @@ export const getAppointmentsColumns = ({
         const appointment = row.original
         return (
           <div className='space-y-1 text-sm'>
-            <div>{appointment.phone ?? '—'}</div>
+            <div>{appointment.patientResponse.phone ?? '—'}</div>
             <div className='text-muted-foreground text-xs'>
-              Email: {appointment.email ?? '—'}
+              Email: {appointment.patientResponse.email ?? '—'}
             </div>
           </div>
         )
@@ -122,9 +125,11 @@ export const getAppointmentsColumns = ({
               {formatDateDisplay(appointment.date)} •{' '}
               {formatTimeDisplay(appointment.time)}
             </div>
-            <div className='text-muted-foreground text-xs'>
-              Tạo lúc {formatDateDisplay(appointment.createdAt)}
-            </div>
+            {appointment.createdAt && (
+              <div className='text-muted-foreground text-xs'>
+                Tạo lúc {formatDateDisplay(appointment.createdAt)}
+              </div>
+            )}
           </div>
         )
       },

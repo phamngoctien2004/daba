@@ -43,14 +43,14 @@ export const payCash = async (
 
 export interface CreatePaymentLinkPayload {
   medicalRecordId: number
-  amount: number
-  description?: string
-  returnUrl?: string
-  cancelUrl?: string
+  totalAmount: number
+  healthPlanIds: number[]
+  doctorId: number
 }
 
 export interface PaymentLinkResponse {
-  checkoutUrl: string
+  invoiceId: number
+  checkoutUrl?: string
   orderCode: number
   qrCode: string
 }
@@ -77,6 +77,7 @@ export const createPaymentLink = async (
   }
 
   return {
+    invoiceId: typeof paymentData.invoiceId === 'number' ? paymentData.invoiceId : 0,
     checkoutUrl: typeof paymentData.checkoutUrl === 'string' ? paymentData.checkoutUrl : '',
     orderCode: typeof paymentData.orderCode === 'number' ? paymentData.orderCode : 0,
     qrCode: typeof paymentData.qrCode === 'string' ? paymentData.qrCode : '',

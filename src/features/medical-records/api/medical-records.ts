@@ -252,6 +252,8 @@ export interface CreateMedicalRecordPayload {
   diagnosis?: string | null
   treatmentPlan?: string | null
   note?: string | null
+  appointmentId?: number | null // ID lịch hẹn nếu bệnh nhân đã đặt lịch
+  invoiceId?: number | null // ID hóa đơn từ thanh toán QR
 }
 
 /**

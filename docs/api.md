@@ -195,8 +195,32 @@
 **Response:**
 ```json
 {
-  "data": "",
-  "message": "Appointment booked successfully"
+    "data": {
+        "id": 59,
+        "patientResponse": {
+            "id": 5,
+            "code": "BN1757508991380",
+            "registrationDate": "2025-09-10T19:56:32",
+            "fullName": "Nguyen Van A",
+            "phone": "0395527082",
+            "birth": "1995-08-15",
+            "gender": "NAM",
+            "email": null,
+        },
+        "healthPlanResponse": {
+            "id": 12,
+            "name": "Gói khám tổng quát"
+        },
+        "doctorResponse": null,
+        "date": "2025-10-24",
+        "time": "09:00:00",
+        "status": "CHO_THANH_TOAN",
+        "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
+        "qr": null,
+        "invoiceCode": null,
+        "totalAmount": 5000.00
+    },
+    "message": "Appointment booked successfully"
 }
 ```
 
@@ -219,224 +243,59 @@
     "data": {
         "content": [
             {
-                "id": 13,
-                "fullName": "Tokuda",
-                "phone": "0395527082",
-                "gender": null,
-                "birth": "2000-11-20",
-                "email": "nguyenvana@example.com",
-                "address": "123 Đường ABC, Quận 1, TP.HN",
-                "healthPlanResponse": {
-                    "id": 3,
-                    "name": "X-quang phổi",
-                    "price": 0.0
+                "id": 49,
+                "patientResponse": {
+                    "id": 5,
+                    "code": "BN1757508991380",
+                    "registrationDate": "2025-09-10T19:56:32",
+                    "fullName": "Nguyen Van A",
+                    "phone": "0395527082",
+                    "birth": "1995-08-15",
+                    "gender": "NAM",
+                    "email": null,
                 },
-                "doctorResponse": null,
-                "departmentResponse": null,
-                "date": "2025-09-22",
-                "time": "07:00:00",
-                "status": "DA_DEN",
-                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
-                "patientId": 15
-            },
-            {
-                "id": 18,
-                "fullName": "shaka",
-                "phone": "0395527082",
-                "gender": null,
-                "birth": "2000-11-20",
-                "email": "nguyenvana@example.com",
-                "address": "123 Đường ABC, Quận 1, TP.HN",
                 "healthPlanResponse": null,
                 "doctorResponse": {
-                    "id": 4,
-                    "position": "TS. NGUYEN VAN A",
+                    "id": 1,
+                    "position": "PGS. Phạm Tiến",
                     "available": true
                 },
-                "departmentResponse": {
-                    "id": 2,
-                    "name": "Khoa Ngoại tổng quát"
-                },
-                "date": "2025-09-22",
-                "time": "07:00:00",
-                "status": "DA_DEN",
-                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
-                "patientId": 10
+                "date": "2025-10-23",
+                "time": "09:30:00",
+                "status": "DA_XAC_NHAN",
+                "symptoms": "dff",
+                "invoiceCode": "HD1761101888",
+                "totalAmount": 6000
             },
             {
-                "id": 19,
-                "fullName": "NPham Ngoc Tien",
-                "phone": "0395527082",
-                "gender": null,
-                "birth": "2000-11-20",
-                "email": "nguyenvana@example.com",
-                "address": "123 Đường ABC, Quận 1, TP.HN",
+                "id": 50,
+                "patientResponse": {
+                    "id": 7,
+                    "code": "BN1757509934308",
+                    "registrationDate": "2025-09-10T20:12:14",
+                    "fullName": "Phạm văn Tiến",
+                    "phone": null,
+                    "birth": "1994-08-15",
+                    "gender": "NU",
+                    "email": null,
+                },
                 "healthPlanResponse": null,
                 "doctorResponse": {
-                    "id": 4,
-                    "position": "TS. NGUYEN VAN A",
+                    "id": 1,
+                    "position": "PGS. Phạm Tiến",
                     "available": true
                 },
-                "departmentResponse": {
-                    "id": 2,
-                    "name": "Khoa Ngoại tổng quát"
-                },
-                "date": "2025-09-22",
-                "time": "07:00:00",
-                "status": "DA_DEN",
-                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
-                "patientId": 15
-            },
-            {
-                "id": 20,
-                "fullName": "NPham Ngoc Tien",
-                "phone": "1234567890",
-                "gender": null,
-                "birth": "2000-11-20",
-                "email": "nguyenvanb@example.com",
-                "address": "123 Đường ABC, Quận 1, TP.HN",
-                "healthPlanResponse": null,
-                "doctorResponse": {
-                    "id": 10,
-                    "position": "PGS.TS. HOANG VAN G",
-                    "available": true
-                },
-                "departmentResponse": {
-                    "id": 2,
-                    "name": "Khoa Ngoại tổng quát"
-                },
-                "date": "2025-09-22",
-                "time": "07:00:00",
-                "status": "DA_DEN",
-                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
-                "patientId": 14
-            },
-            {
-                "id": 22,
-                "fullName": "NPham Ngoc Tien",
-                "phone": "1234567891",
-                "gender": null,
-                "birth": "2000-11-20",
-                "email": "nguyenvaffnb@example.com",
-                "address": "123 Đường ABC, Quận 1, TP.HN",
-                "healthPlanResponse": {
-                    "id": 10,
-                    "name": "GOI DICH VU SIEU CAP VU TRU TAI NHA TAN RANG",
-                    "price": 0.0
-                },
-                "doctorResponse": {
-                    "id": 10,
-                    "position": "PGS.TS. HOANG VAN G",
-                    "available": true
-                },
-                "departmentResponse": null,
-                "date": "2025-09-22",
-                "time": "07:00:00",
-                "status": "DA_DEN",
-                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
-                "patientId": 15
-            },
-            {
-                "id": 23,
-                "fullName": "NPham Ngoc Tien",
-                "phone": "0395527082",
-                "gender": null,
-                "birth": "2000-11-20",
-                "email": "nguyenvab@example.com",
-                "address": "123 Đường ABC, Quận 1, TP.HN",
-                "healthPlanResponse": null,
-                "doctorResponse": {
-                    "id": 10,
-                    "position": "PGS.TS. HOANG VAN G",
-                    "available": true
-                },
-                "departmentResponse": null,
-                "date": "2025-09-22",
-                "time": "07:00:00",
-                "status": "DA_DEN",
-                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
-                "patientId": 5
-            },
-            {
-                "id": 24,
-                "fullName": "NPham Ngoc Tien",
-                "phone": "0395527086",
-                "gender": null,
-                "birth": "2000-11-20",
-                "email": "nguyenvab@example.com",
-                "address": "123 Đường ABC, Quận 1, TP.HN",
-                "healthPlanResponse": null,
-                "doctorResponse": {
-                    "id": 10,
-                    "position": "PGS.TS. HOANG VAN G",
-                    "available": true
-                },
-                "departmentResponse": null,
-                "date": "2025-09-22",
-                "time": "07:00:00",
-                "status": "DA_DEN",
-                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
-                "patientId": 16
-            },
-            {
-                "id": 25,
-                "fullName": "hehe",
-                "phone": "0395527023",
-                "gender": null,
-                "birth": "2000-11-20",
-                "email": "nguyenv22ab@example.com",
-                "address": "123 Đường ABC, Quận 1, TP.HN",
-                "healthPlanResponse": {
-                    "id": 10,
-                    "name": "GOI DICH VU SIEU CAP VU TRU TAI NHA TAN RANG",
-                    "price": 0.0
-                },
-                "doctorResponse": null,
-                "departmentResponse": null,
-                "date": "2025-09-22",
-                "time": "07:00:00",
-                "status": "DA_DEN",
-                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
-                "patientId": 18
-            },
-            {
-                "id": 26,
-                "fullName": "NPham Ngoc Tien",
-                "phone": "0395527011",
-                "gender": null,
-                "birth": "2000-11-20",
-                "email": "tienhvnhgpt@gmail.com",
-                "address": "123 Đường ABC, Quận 1, TP.HN",
-                "healthPlanResponse": null,
-                "doctorResponse": null,
-                "departmentResponse": null,
-                "date": "2025-09-22",
-                "time": "07:00:00",
-                "status": "DA_DEN",
-                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
-                "patientId": 19
-            },
-            {
-                "id": 27,
-                "fullName": "NPham Ngoc Tien",
-                "phone": "0395527011",
-                "gender": null,
-                "birth": "2000-11-20",
-                "email": "tienhvnhgpt@gmail.com",
-                "address": "123 Đường ABC, Quận 1, TP.HN",
-                "healthPlanResponse": null,
-                "doctorResponse": null,
-                "departmentResponse": null,
-                "date": "2025-09-22",
-                "time": "07:00:00",
-                "status": "DA_DEN",
-                "symptoms": "Đau đầu, chóng mặt trong 2 ngày",
-                "patientId": 19
+                "date": "2025-10-23",
+                "time": "14:30:00",
+                "status": "DA_XAC_NHAN",
+                "symptoms": "again",
+                "invoiceCode": "HD1761102215",
+                "totalAmount": 6000
             }
         ],
         "pageable": {
             "pageNumber": 0,
-            "pageSize": 10,
+            "pageSize": 3,
             "sort": {
                 "sorted": false,
                 "unsorted": true,
@@ -446,18 +305,18 @@
             "paged": true,
             "unpaged": false
         },
-        "totalPages": 2,
-        "totalElements": 18,
+        "totalPages": 4,
+        "totalElements": 11,
         "last": false,
-        "size": 10,
+        "first": true,
+        "size": 3,
         "number": 0,
         "sort": {
             "sorted": false,
             "unsorted": true,
             "empty": true
         },
-        "first": true,
-        "numberOfElements": 10,
+        "numberOfElements": 3,
         "empty": false
     },
     "message": "success"
@@ -475,7 +334,7 @@
 ```json
 {
   "id": 1,
-  "status": "DA_XAC_NHAN" // DA_XAC_NHAN, KHONG_DEN, DANG_KHAM
+  "status": "HOAN_THANH" // DA_XAC_NHAN, KHONG_DEN, DANG_KHAM
 }
 ```
 
@@ -1079,6 +938,73 @@
 }
 ```
 
+
+### 6.2 Lấy chi tiết dịch vụ
+**Endpoint:** `GET /api/services/optional/{id}`
+
+**Mô tả:** Lấy thông tin chi tiết của một dịch vụ
+
+**Path Parameters:**
+- `id`: ID của dịch vụ
+
+**Response:**
+```json
+{
+    "data": {
+        "id": 12,
+        "code": "DV_001",
+        "name": "Gói khám tổng quát",
+        "price": 5000.0,
+        "type": "DICH_VU",
+        "subPlans": [
+            {
+                "id": 17,
+                "code": "XN_NUOC_TIEU",
+                "name": "Xét nghiệm nước tiểu tổng quát",
+                "price": 2000.0,
+                "roomName": "Phòng khám khoa xét nghiệm  - 204A",
+            },
+            {
+                "id": 19,
+                "code": "XN_DONG_MAU",
+                "name": "Xét nghiệm đông máu",
+                "price": 2000.0,
+                "roomName": "Phòng khám khoa xét nghiệm  - 204A",
+            },
+            {
+                "id": 24,
+                "code": "ECG",
+                "name": "Điện tim đồ (ECG)",
+                "price": 2000.0,
+                "roomName": "Phòng khám Tim mạch - 108A",
+            },
+            {
+                "id": 1,
+                "code": "KB001",
+                "name": "khám bệnh",
+                "price": 0.0,
+                "roomName": "Phòng khám Nội tổng quát - 101A",
+            }
+        ]
+    },
+    "message": "Fetched service detail successfully"
+}
+
+```
+### trường hợp response là dịch vụ lẻ
+```json
+{
+    "data": {
+        "id": 18,
+        "code": "XN_SINH_HOA",
+        "name": "Xét nghiệm sinh hóa",
+        "price": 2000.0,
+        "roomName": "Phòng khám khoa xét nghiệm  - 204A",
+        "type": "XET_NGHIEM"
+    },
+    "message": "Fetched service detail successfully"
+}
+```
 ---
 
 ## 7. Medical Record API
@@ -1637,7 +1563,9 @@
   "clinicalExamination": "string",
   "diagnosis": "string",
   "treatmentPlan": "string",
-  "note": "string"
+  "note": "string",
+  "invoiceId": "null",
+  "appointmentId": "123"
 }
 ```
 
@@ -2725,10 +2653,9 @@
 ```json
 {
   "medicalRecordId": 1,
-  "amount": 500000,
-  "description": "string",
-  "returnUrl": "string",
-  "cancelUrl": "string"
+  "totalAmount": 500000,
+  "healthPlanIds": [1],
+  "doctorId": 10,
 }
 ```
 
@@ -2736,7 +2663,7 @@
 ```json
 {
   "data": {
-    "checkoutUrl": "string",
+    "invoiceId": 1,
     "orderCode": 123456,
     "qrCode": "string"
   },
@@ -2847,9 +2774,8 @@
 **Query Parameters:**
 - `startDate` (required): Ngày bắt đầu (yyyy-MM-dd)
 - `endDate` (required): Ngày kết thúc (yyyy-MM-dd)
-- `departmentId` (optional): ID khoa
 - `doctorId` (optional): ID bác sĩ
-- `shift` (optional): Ca làm việc (MORNING, AFTERNOON, EVENING)
+- `shift` (optional): Ca làm việc (SANG (7-12), CHIEU (12-17), TOI)
 
 **Response:**
 ```json
@@ -2864,17 +2790,22 @@
                     "id": 1,
                     "fullName": "tien",
                     "position": "PGS. Phạm Tiến",
+                    "examinationFee": 6000,
                     "available": true,
+                    "roomName": "phong A",
                     "invalidTimes": [
                         "09:00:00"
                     ],
-                    "shift": "SANG"
+                    "shift": "SANG",
+                    
                 },
                 {
                     "id": 1,
                     "fullName": "tien",
                     "position": "PGS. Phạm Tiến",
+                    "examinationFee": 6000,
                     "available": true,
+                    "roomName": "phong A",
                     "invalidTimes": [
                         "15:00:00"
                     ],
@@ -3002,7 +2933,7 @@
 ```json
 {
   "id": 1,
-  "status": "CONFIRMED"
+  "status": "HOAN_THANH"
 }
 ```
 

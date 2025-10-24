@@ -6,6 +6,7 @@ const statusEnum = z.enum([
   'DA_XAC_NHAN',
   'KHONG_DEN',
   'DANG_KHAM',
+  'HOAN_THANH',
 ])
 
 const appointmentsSearchSchema = z.object({
