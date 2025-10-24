@@ -7,13 +7,13 @@ const APPOINTMENT_DATA_KEY = 'appointment_for_medical_record'
  * Appointment data structure for medical record creation
  */
 export interface AppointmentDataForMedicalRecord {
-  appointmentId: number
+  appointmentId: number | null
   patientId: number
   patientName: string
   patientPhone: string | null
   patientEmail: string | null
-  patientGender: 'NAM' | 'NU'
-  patientBirth: string
+  patientGender: 'NAM' | 'NU' | 'KHAC'
+  patientBirth: string | null
   patientAddress: string | null
   doctorId: number | null
   doctorName: string | null
@@ -22,8 +22,8 @@ export interface AppointmentDataForMedicalRecord {
   healthPlanId: number | null
   healthPlanName: string | null
   symptoms: string | null
-  appointmentDate: string
-  appointmentTime: string
+  appointmentDate: string | null
+  appointmentTime: string | null
 }
 
 /**

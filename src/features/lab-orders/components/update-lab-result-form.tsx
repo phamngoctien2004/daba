@@ -26,7 +26,7 @@ const updateLabResultSchema = z.object({
   note: z.string().optional(),
   summary: z.string().optional(),
   explanation: z.string().optional(),
-  isDone: z.boolean().default(false),
+  isDone: z.boolean(),
 })
 
 type UpdateLabResultFormValues = z.infer<typeof updateLabResultSchema>

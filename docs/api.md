@@ -2148,24 +2148,163 @@
 ```json
 {
     "data": {
-        "id": 446,
-        "code": "XN1760593761675",
-        "recordId": 209,
-        "healthPlanId": 1,
-        "healthPlanName": "khám bệnh",
-        "room": "Phòng khám Nội tổng quát - 101A",
-        "doctorPerformed": null,
+        "id": 478,
+        "code": "XN1760685100338",
+        "recordId": 217,
+        "healthPlanId": 16,
+        "healthPlanName": "Xét nghiệm máu tổng quát",
+        "room": "Phòng khám khoa xét nghiệm  - 204A",
+        "doctorPerformed": "TS. NGUYEN VAN A",
         "doctorPerformedId": null,
         "doctorOrdered": null,
-        "status": "HOAN_THANH",
+        "status": "CHO_KET_QUA",
         "statusPayment": null,
-        "price": 0.00,
-        "orderDate": "2025-10-16T12:49:22",
+        "price": 2000.00,
+        "orderDate": "2025-10-17T19:34:30",
         "diagnosis": null,
-        "expectedResultDate": "2025-10-16T12:49:22",
+        "expectedResultDate": "2025-10-17T20:34:30",
         "serviceParent": null,
-        "labResultResponse": null
+        "labResultResponse": {
+            "id": 35,
+            "date": "2025-10-17T20:28:33",
+            "resultDetails": null,
+            "note": null,
+            "explanation": null,
+            "urls": ["url1", "url2"],
+            "paramResults": [
+                {
+                    "id": 1,
+                    "name": "Hồng cầu (RBC)",
+                    "value": null,
+                    "unit": "T/L",
+                    "range": "3.6-5.4",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 2,
+                    "name": "Bạch cầu (WBC)",
+                    "value": null,
+                    "unit": "G/L",
+                    "range": "4.0-10.0",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 3,
+                    "name": "Tiểu cầu (PLT)",
+                    "value": null,
+                    "unit": "G/L",
+                    "range": "150-400",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 4,
+                    "name": "Huyết sắc tố (Hb)",
+                    "value": null,
+                    "unit": "g/L",
+                    "range": "120-170",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 5,
+                    "name": "Hematocrit (Hct)",
+                    "value": null,
+                    "unit": "%",
+                    "range": "36-50",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 6,
+                    "name": "Đường huyết (Glucose)",
+                    "value": null,
+                    "unit": "mmol/L",
+                    "range": "3.9-6.4",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 7,
+                    "name": "Cholesterol toàn phần",
+                    "value": null,
+                    "unit": "mmol/L",
+                    "range": "0-5.2",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 8,
+                    "name": "Triglyceride",
+                    "value": null,
+                    "unit": "mmol/L",
+                    "range": "0-1.7",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 9,
+                    "name": "HDL – Cholesterol",
+                    "value": null,
+                    "unit": "mmol/L",
+                    "range": "1.0-3.0",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 10,
+                    "name": "LDL – Cholesterol",
+                    "value": null,
+                    "unit": "mmol/L",
+                    "range": "0-3.4",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 11,
+                    "name": "AST (GOT)",
+                    "value": null,
+                    "unit": "U/L",
+                    "range": "0-40",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 12,
+                    "name": "ALT (GPT)",
+                    "value": null,
+                    "unit": "U/L",
+                    "range": "0-40",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 13,
+                    "name": "GGT",
+                    "value": null,
+                    "unit": "U/L",
+                    "range": "0-55",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 14,
+                    "name": "Ure",
+                    "value": null,
+                    "unit": "mmol/L",
+                    "range": "2.5-7.5",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 15,
+                    "name": "Creatinin",
+                    "value": null,
+                    "unit": "µmol/L",
+                    "range": "53-115",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                },
+                {
+                    "id": 16,
+                    "name": "Acid uric",
+                    "value": null,
+                    "unit": "µmol/L",
+                    "range": "155-428",
+                    "rangeStatus": "CHUA_XAC_DINH"
+                }
+            ]
+        }
     },
+    "message": "Get lab order successfully"
+}},
     "message": "Get lab order by id successfully"
 }
 ```

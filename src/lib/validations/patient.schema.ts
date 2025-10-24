@@ -12,7 +12,7 @@ export const patientFormSchema = z.object({
   ),
   email: z.string().email('Email không hợp lệ').nullable().or(z.literal('')).transform(val => val === '' ? null : val),
   gender: z.enum(['NAM', 'NU'], {
-    required_error: 'Vui lòng chọn giới tính',
+    message: 'Vui lòng chọn giới tính',
   }),
   birth: z.string().min(1, 'Vui lòng chọn ngày sinh'),
   address: z.string().nullable(),

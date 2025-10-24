@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import { fetchLabOrderParams, createLabResultDetails } from '../api/lab-orders'
-import type { LabResultDetailParam } from '../api/lab-orders'
+import type { LabResultDetailParam } from '../types'
 
 interface LabResultDetailsFormProps {
     labOrderId: number

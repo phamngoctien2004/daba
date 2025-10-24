@@ -1,5 +1,13 @@
 import { get, post, put, del } from '@/lib/api-client'
-import type { LabOrder, LabOrderStatus, LabOrdersPagination } from '../types'
+import type { 
+  LabOrder, 
+  LabOrderStatus, 
+  LabOrdersPagination,
+  LabParam,
+  LabResultDetailParam,
+  CreateLabResultDetailsPayload,
+  LabResultDetail
+} from '../types'
 
 export type { LabOrder, LabOrderStatus } from '../types'
 
@@ -282,13 +290,6 @@ export const deleteLabOrder = async (id: number): Promise<{ message: string }> =
  * Get lab order params
  * GET /api/lab-orders/{id}/params
  */
-export interface LabParam {
-  id: number
-  name: string
-  unit: string
-  range: string
-}
-
 export const fetchLabOrderParams = async (labOrderId: number): Promise<LabParam[]> => {
   try {
     const { data } = await get<LabOrdersApiResponse>(`/lab-orders/${labOrderId}/params`)
@@ -322,16 +323,6 @@ export const fetchLabOrderParams = async (labOrderId: number): Promise<LabParam[
  * Create lab result details
  * POST /api/lab-results/details
  */
-export interface LabResultDetailParam {
-  paramId: number
-  value: string
-}
-
-export interface CreateLabResultDetailsPayload {
-  labResultId: number
-  paramDetails: LabResultDetailParam[]
-}
-
 export const createLabResultDetails = async (
   payload: CreateLabResultDetailsPayload
 ): Promise<{ message: string }> => {
@@ -351,15 +342,6 @@ export const createLabResultDetails = async (
  * Get lab result details
  * GET /api/lab-results/{id}/details
  */
-export interface LabResultDetail {
-  id: number
-  name: string
-  value: string
-  unit: string
-  range: string
-  rangeStatus: 'CAO' | 'THAP' | 'TRUNG_BINH'
-}
-
 export const fetchLabResultDetails = async (labResultId: number): Promise<LabResultDetail[]> => {
   try {
     const { data } = await get<LabOrdersApiResponse>(`/lab-results/${labResultId}/details`)

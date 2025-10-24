@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -12,10 +12,7 @@ import {
 import { createAppointment } from '../api/appointments'
 import { fetchDepartments, fetchDoctorsByDepartment } from '@/features/departments/api/departments'
 import { type Patient } from '@/features/patients/api/patients'
-import { } from '@/lib/appointment-storage'
-
 import { PatientSearch } from '@/features/patients/components/patient-search'
-import { CreatePatientDialog } from '@/features/patients/components/create-patient-dialog'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -54,7 +51,6 @@ export function CreateAppointmentForm({
   onCancel,
 }: CreateAppointmentFormProps) {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
-  const [isCreatePatientOpen, setIsCreatePatientOpen] = useState(false)
   const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null)
 
   const form = useForm<CreateAppointmentInput>({
@@ -150,7 +146,7 @@ export function CreateAppointmentForm({
                   <PatientSearch
                     value={selectedPatient}
                     onSelect={handlePatientSelect}
-                    onCreateNew={() => setIsCreatePatientOpen(true)}
+                    onCreateNew={() => {}}
                     disabled={isFormDisabled}
                   />
                 </FormControl>

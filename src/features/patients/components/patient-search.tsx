@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useDebounce } from '@/hooks/use-debounce'
-import { searchPatients, type Patient } from '../api/patients'
+import { fetchPatients, type Patient } from '../api/patients'
 import {
   Command,
   CommandEmpty,
@@ -38,7 +38,7 @@ export function PatientSearch({
 
   const debouncedSearch = useDebounce(searchQuery, 500)
 
-  const fetchPatients = useCallback(async (query: string) => {
+  const searchPatients = useCallback(async (query: string) => {
     if (!query || query.length < 2) {
       setPatients([])
       return
@@ -46,7 +46,7 @@ export function PatientSearch({
 
     setIsLoading(true)
     try {
-      const results = await searchPatients(query)
+      const { patients: results } = await fetchPatients({ keyword: query })
       setPatients(results)
     } catch (error) {
       console.error('Error searching patients:', error)
@@ -57,8 +57,8 @@ export function PatientSearch({
   }, [])
 
   useEffect(() => {
-    fetchPatients(debouncedSearch)
-  }, [debouncedSearch, fetchPatients])
+    searchPatients(debouncedSearch)
+  }, [debouncedSearch, searchPatients])
 
   const handleSelect = (patient: Patient) => {
     onSelect(patient)
@@ -79,7 +79,7 @@ export function PatientSearch({
           >
             {value ? (
               <span className="truncate">
-                {value.name} - {value.phone || 'Không có SĐT'}
+                {value.fullName} - {value.phone || 'Không có SĐT'}
               </span>
             ) : (
               <span className="text-muted-foreground">
@@ -135,7 +135,7 @@ export function PatientSearch({
                       className="flex items-center justify-between"
                     >
                       <div className="flex flex-col">
-                        <span className="font-medium">{patient.name}</span>
+                        <span className="font-medium">{patient.fullName}</span>
                         <span className="text-xs text-muted-foreground">
                           {patient.phone || 'Không có SĐT'} •{' '}
                           {patient.gender === 'NAM' ? 'Nam' : 'Nữ'} •{' '}

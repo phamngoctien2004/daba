@@ -4,7 +4,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { CalendarDays, Loader2, RotateCcw } from 'lucide-react'
+import { CalendarDays, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTableUrlState, type NavigateFn } from '@/hooks/use-table-url-state'
 import {
