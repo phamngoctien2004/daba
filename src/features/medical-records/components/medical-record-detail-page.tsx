@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -178,6 +179,7 @@ function InvoiceDetailCard({ detail }: { detail: InvoiceDetail }) {
 
 export function MedicalRecordDetailPage({ id }: MedicalRecordDetailPageProps) {
     const navigate = useNavigate()
+    const queryClient = useQueryClient()
     const { data: record, isLoading, error } = useMedicalRecordDetail(id)
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qr'>('cash')
     const [paymentSuccess, setPaymentSuccess] = useState(false)
@@ -514,6 +516,12 @@ export function MedicalRecordDetailPage({ id }: MedicalRecordDetailPageProps) {
                                                     // Mark payment as successful
                                                     setQrPaymentSuccess(true)
                                                     toast.success('Thanh toán thành công!')
+
+                                                    // Refetch medical record data to update UI
+                                                    console.log('🔄 [QR Payment] Refetching medical record data...')
+                                                    await queryClient.invalidateQueries({
+                                                        queryKey: ['medical-record', id]
+                                                    })
 
                                                     // Step 5: Print invoice (API dòng 3107/3113)
                                                     try {
