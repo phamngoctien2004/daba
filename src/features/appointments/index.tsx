@@ -83,10 +83,10 @@ export function AppointmentsManagement() {
     staleTime: 30_000,
   })
 
-  const [pendingAppointmentId, setPendingAppointmentId] =
+  const [_pendingAppointmentId, setPendingAppointmentId] =
     useState<number | null>(null)
 
-  const { mutate: mutateAppointmentStatus, isPending: isConfirmPending } =
+  const { mutate: mutateAppointmentStatus, isPending: _isConfirmPending } =
     useMutation({
       mutationFn: confirmAppointment,
       onMutate: ({ id }) => {
@@ -132,13 +132,6 @@ export function AppointmentsManagement() {
       }),
     })
   }, [navigate])
-
-  const handleUpdateStatus = useCallback(
-    (id: number, nextStatus: AppointmentStatus) => {
-      mutateAppointmentStatus({ id, status: nextStatus })
-    },
-    [mutateAppointmentStatus]
-  )
 
   const appointments = appointmentsQuery.data?.appointments ?? []
   const pagination = appointmentsQuery.data?.pagination ?? {
@@ -261,9 +254,6 @@ export function AppointmentsManagement() {
           pageCount={pagination.totalPages}
           isLoading={isLoading}
           isRefetching={isRefetching}
-          pendingAppointmentId={pendingAppointmentId}
-          isConfirmPending={isConfirmPending}
-          onUpdateStatus={handleUpdateStatus}
           onOpenMedicalRecord={handleOpenMedicalRecord}
           dateValue={resolvedDate}
           onDateChange={handleDateChange}

@@ -117,3 +117,46 @@ export const fetchAvailableDoctorsToday = async (): Promise<AvailableDoctor[]> =
 
     return availableDoctors
 }
+
+/**
+ * Params for fetching available doctors by department
+ */
+export interface FetchAvailableDoctorsByDepartmentParams {
+    departmentId: number
+    startDate: string // yyyy-MM-dd
+    endDate: string // yyyy-MM-dd
+    shift?: Shift // Optional shift filter
+}
+
+/**
+ * Fetch available doctors by department for a specific date range
+ * GET /api/schedules/available?startDate=X&endDate=Y&departmentId=Z&shift=SANG
+ */
+export const fetchAvailableDoctorsByDepartment = async (
+    params: FetchAvailableDoctorsByDepartmentParams
+): Promise<AvailableDoctor[]> => {
+    const searchParams: Record<string, string> = {
+        startDate: params.startDate,
+        endDate: params.endDate,
+        departmentId: String(params.departmentId),
+    }
+
+    // Add shift parameter if provided
+    if (params.shift) {
+        searchParams.shift = params.shift
+    }
+
+    const { data } = await get<{ data: AvailableSchedule[] }>('/schedules/available', {
+        params: searchParams,
+    })
+
+    const schedules = data?.data ?? []
+
+    // Extract all available doctors from all schedules
+    const allDoctors = schedules.flatMap((schedule) => schedule.doctors)
+
+    // Filter only available doctors
+    const availableDoctors = allDoctors.filter((doctor) => doctor.available === true)
+
+    return availableDoctors
+}

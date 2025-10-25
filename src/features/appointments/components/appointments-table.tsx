@@ -20,7 +20,6 @@ import { STATUS_FILTER_OPTIONS } from '../constants'
 import { getAppointmentsColumns } from './appointments-columns'
 import {
   type Appointment,
-  type AppointmentStatus,
   DEFAULT_APPOINTMENT_PAGE,
   DEFAULT_APPOINTMENT_PAGE_SIZE,
 } from '../api/appointments'
@@ -50,9 +49,6 @@ type AppointmentsTableProps = {
   pageCount: number
   isLoading: boolean
   isRefetching: boolean
-  pendingAppointmentId: number | null
-  isConfirmPending: boolean
-  onUpdateStatus: (id: number, status: AppointmentStatus) => void
   onOpenMedicalRecord: (id: number) => void
   dateValue: string
   onDateChange: (date: Date | undefined) => void
@@ -67,9 +63,6 @@ export function AppointmentsTable({
   pageCount,
   isLoading,
   isRefetching,
-  pendingAppointmentId,
-  isConfirmPending,
-  onUpdateStatus,
   onOpenMedicalRecord,
   dateValue,
   onDateChange,
@@ -107,17 +100,9 @@ export function AppointmentsTable({
   const columns = useMemo(
     () =>
       getAppointmentsColumns({
-        onUpdateStatus,
         onOpenMedicalRecord,
-        pendingAppointmentId,
-        isConfirmPending,
       }),
-    [
-      onUpdateStatus,
-      onOpenMedicalRecord,
-      pendingAppointmentId,
-      isConfirmPending,
-    ]
+    [onOpenMedicalRecord]
   )
 
   const effectivePageCount = Math.max(pageCount, 1)

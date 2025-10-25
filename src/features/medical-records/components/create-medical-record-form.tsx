@@ -41,8 +41,17 @@ import {
 } from '@/lib/validations/medical-record.schema'
 import {
   fetchAllDoctors,
+  fetchDepartments,
+  fetchDoctorById,
   type Doctor,
+  type Department,
 } from '@/features/departments/api/departments'
+import {
+  fetchAvailableDoctorsByDepartment,
+  getTodayDate,
+  getCurrentShift,
+  type AvailableDoctor
+} from '@/features/schedules/api/schedules'
 import { fetchHealthPlans, type HealthPlan } from '@/features/health-plans/api/services'
 import { createPaymentLink } from '@/features/payments/api/payments'
 import { wsClient } from '@/lib/websocket-client'
@@ -61,7 +70,7 @@ export function CreateMedicalRecordForm({
 
   const [appointmentData, setAppointmentData] =
     useState<AppointmentDataForMedicalRecord | null>(null)
-  // Examination type: 'doctor', 'DICH_VU', 'XET_NGHIEM', 'CHUYEN_KHOA', 'KHAC'
+  // Examination type: 'CHUYEN_KHOA', 'DICH_VU', 'XET_NGHIEM'
   const [examinationType, setExaminationType] = useState<string>('')
   const [selectedDoctorOrServiceId, setSelectedDoctorOrServiceId] = useState<string>('') // For Select 2
   const [selectedThirdSelect, setSelectedThirdSelect] = useState<string>('') // For Select 3
@@ -69,6 +78,9 @@ export function CreateMedicalRecordForm({
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null)
   const [selectedHealthPlan, setSelectedHealthPlan] = useState<HealthPlan | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
+
+  // New state for department-based doctor selection (for CHUYEN_KHOA type)
+  const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null)
 
   // Service detail state (for displaying room info and sub-plans)
   const [serviceDetail, setServiceDetail] = useState<any>(null)
@@ -108,6 +120,30 @@ export function CreateMedicalRecordForm({
   const { data: healthPlans = [], isLoading: isLoadingHealthPlans, error: healthPlansError } = useQuery({
     queryKey: ['health-plans'],
     queryFn: fetchHealthPlans,
+  })
+
+  // 2. Fetch departments for CHUYEN_KHOA examination type
+  const { data: departments = [], isLoading: isDepartmentsLoading } = useQuery({
+    queryKey: ['departments'],
+    queryFn: fetchDepartments,
+    enabled: examinationType === 'CHUYEN_KHOA',
+  })
+
+  // 3. Fetch available doctors by selected department and today's date
+  const { data: availableDoctors = [], isLoading: isAvailableDoctorsLoading } = useQuery({
+    queryKey: ['available-doctors', selectedDepartment?.id],
+    queryFn: async () => {
+      if (!selectedDepartment) return []
+      const today = getTodayDate()
+      const currentShift = getCurrentShift()
+      return fetchAvailableDoctorsByDepartment({
+        departmentId: selectedDepartment.id,
+        startDate: today,
+        endDate: today,
+        shift: currentShift,
+      })
+    },
+    enabled: examinationType === 'CHUYEN_KHOA' && !!selectedDepartment,
   })
 
   // Debug: Log data and errors
@@ -167,7 +203,6 @@ export function CreateMedicalRecordForm({
           } else if (healthPlan.type === 'CHUYEN_KHOA') {
             setExaminationType('CHUYEN_KHOA')
           }
-          // Removed 'KHAC' option
 
           const healthPlanIdStr = String(appointmentData.healthPlanId)
           setSelectedDoctorOrServiceId(healthPlanIdStr)
@@ -178,17 +213,67 @@ export function CreateMedicalRecordForm({
         }
       }
     } else if (appointmentData.doctorId) {
-      console.log('🟢 [Auto-fill] Detected doctor:', appointmentData.doctorId)
-      // Doctor examination (default) - will be handled when doctors load
-      setExaminationType('doctor')
-      const doctorIdStr = String(appointmentData.doctorId)
-      setSelectedDoctorOrServiceId(doctorIdStr)
-      form.setValue('doctorId', appointmentData.doctorId)
-      // Will set doctor after loading all doctors
-    }
-  }, [appointmentData, form, healthPlans, isInitialized])
+      console.log('🟢 [Auto-fill] Detected doctor ID:', appointmentData.doctorId)
+      console.log('� [Auto-fill] Fetching doctor details to get department...')
 
-  // 3. Load available doctors when examination type is 'doctor'
+      // Fetch doctor details to get department information
+      fetchDoctorById(appointmentData.doctorId)
+        .then((doctorDetail) => {
+          if (doctorDetail && doctorDetail.departmentResponse) {
+            console.log('✅ [Auto-fill] Got doctor detail with department:', doctorDetail.departmentResponse.name)
+
+            // Set examination type to CHUYEN_KHOA
+            setExaminationType('CHUYEN_KHOA')
+
+            // Wait for departments to load, then auto-select
+            if (departments.length > 0) {
+              const department = departments.find((d) => d.id === doctorDetail.departmentResponse!.id)
+              if (department) {
+                console.log('✅ [Auto-fill] Found and selected department:', department.name)
+                setSelectedDepartment(department)
+                // Doctor will be auto-selected after available doctors load
+                setIsInitialized(true)
+              } else {
+                console.warn('⚠️ [Auto-fill] Department not found in list')
+              }
+            }
+          } else {
+            console.warn('⚠️ [Auto-fill] Doctor detail has no department information')
+          }
+        })
+        .catch((error) => {
+          console.error('❌ [Auto-fill] Failed to fetch doctor details:', error)
+        })
+    }
+  }, [appointmentData, form, healthPlans, departments, isInitialized])
+
+  // 3. Auto-select doctor from available doctors when CHUYEN_KHOA and appointment data exists
+  useEffect(() => {
+    if (examinationType !== 'CHUYEN_KHOA') return
+    if (!appointmentData?.doctorId) return
+    if (availableDoctors.length === 0) return
+    if (selectedDoctor) return // Already selected
+
+    console.log('🔄 [Auto-select Doctor] Looking for doctor ID:', appointmentData.doctorId)
+
+    const doctor = availableDoctors.find((d) => d.id === appointmentData.doctorId)
+    if (doctor) {
+      console.log('✅ [Auto-select Doctor] Found doctor:', doctor.fullName)
+      setSelectedDoctor({
+        id: doctor.id,
+        fullName: doctor.fullName,
+        position: doctor.position,
+        examinationFee: doctor.examinationFee,
+        roomName: doctor.roomName,
+        available: doctor.available,
+      } as any)
+      form.setValue('doctorId', doctor.id)
+    } else {
+      console.warn('⚠️ [Auto-select Doctor] Doctor not available in current shift')
+    }
+  }, [examinationType, appointmentData, availableDoctors, selectedDoctor, form])
+
+  // 4. Load available doctors when examination type is 'doctor' (OLD FLOW - KEEP FOR BACKWARD COMPATIBILITY)
   useEffect(() => {
     // Only load if examination type is valid
     if (!examinationType) return
@@ -611,35 +696,69 @@ export function CreateMedicalRecordForm({
                   setDoctors([])
                   setServiceDetail(null)
                   setIsLoadingServiceDetail(false)
+                  // Reset department selection for CHUYEN_KHOA
+                  setSelectedDepartment(null)
                 }}
               >
                 <SelectTrigger className="mt-2">
                   <SelectValue placeholder="Chọn loại khám" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="doctor">Bác sĩ</SelectItem>
+                  <SelectItem value="CHUYEN_KHOA">Chuyên khoa</SelectItem>
                   <SelectItem value="DICH_VU">Gói khám</SelectItem>
                   <SelectItem value="XET_NGHIEM">Xét nghiệm</SelectItem>
-                  <SelectItem value="CHUYEN_KHOA">Chuyên khoa</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Select 2: Service or Doctor (conditional) */}
+            {/* Select 2: Department (for CHUYEN_KHOA) or Service (for DICH_VU/XET_NGHIEM) */}
             {examinationType && (
               <FormField
                 control={form.control}
-                name={examinationType === 'service' ? 'healthPlanId' : 'doctorId'}
+                name={examinationType === 'CHUYEN_KHOA' ? 'doctorId' : 'healthPlanId'}
                 render={() => (
                   <FormItem>
                     <FormLabel>
-                      {examinationType === 'DICH_VU' ? 'Gói khám' :
-                        examinationType === 'XET_NGHIEM' ? 'Xét nghiệm' :
-                          examinationType === 'CHUYEN_KHOA' ? 'Chuyên khoa' : 'Bác sĩ'}{' '}
+                      {examinationType === 'CHUYEN_KHOA' ? 'Chuyên khoa' :
+                        examinationType === 'DICH_VU' ? 'Gói khám' :
+                          examinationType === 'XET_NGHIEM' ? 'Xét nghiệm' : ''}{' '}
                       <span className="text-destructive">*</span>
                     </FormLabel>
-                    {examinationType !== 'doctor' && examinationType !== 'department' ? (
-                      // Show filtered services list (DICH_VU, XET_NGHIEM, CHUYEN_KHOA)
+                    {examinationType === 'CHUYEN_KHOA' ? (
+                      // Show departments list for CHUYEN_KHOA
+                      <Select
+                        disabled={isDepartmentsLoading || isCreatingRecord || !!createdMedicalRecordId}
+                        value={selectedDepartment?.id.toString() || ''}
+                        onValueChange={(value) => {
+                          const deptId = parseInt(value)
+                          const department = departments.find(d => d.id === deptId)
+                          setSelectedDepartment(department || null)
+                          // Reset doctor selection when department changes
+                          setSelectedDoctor(null)
+                          form.setValue('doctorId', null)
+                        }}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={isDepartmentsLoading ? "Đang tải..." : "Chọn chuyên khoa"} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {departments.length === 0 ? (
+                            <div className="py-2 px-3 text-sm text-muted-foreground">
+                              {isDepartmentsLoading ? 'Đang tải...' : 'Không có chuyên khoa nào'}
+                            </div>
+                          ) : (
+                            departments.map((dept) => (
+                              <SelectItem key={dept.id} value={dept.id.toString()}>
+                                {dept.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      // Show filtered services list (DICH_VU, XET_NGHIEM)
                       <Select
                         disabled={isLoadingHealthPlans || isCreatingRecord || !!createdMedicalRecordId}
                         value={selectedDoctorOrServiceId}
@@ -690,32 +809,6 @@ export function CreateMedicalRecordForm({
                           )}
                         </SelectContent>
                       </Select>
-                    ) : (
-                      // Show all doctors list (for 'doctor' examination type)
-                      <Select
-                        disabled={isCreatingRecord || doctors.length === 0 || !!createdMedicalRecordId}
-                        value={selectedDoctorOrServiceId}
-                        onValueChange={(value) => {
-                          setSelectedDoctorOrServiceId(value)
-                          form.setValue('doctorId', value ? Number(value) : null)
-                          // Find and save selected doctor
-                          const doctor = doctors.find(d => d.id === Number(value))
-                          setSelectedDoctor(doctor || null)
-                        }}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={doctors.length === 0 ? "Đang tải..." : "Chọn bác sĩ"} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {doctors.map((doctor) => (
-                            <SelectItem key={doctor.id} value={doctor.id.toString()}>
-                              {doctor.position || doctor.fullName || doctor.name || 'N/A'}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
                     )}
                     <FormMessage />
                   </FormItem>
@@ -724,6 +817,69 @@ export function CreateMedicalRecordForm({
             )}
 
           </div>
+
+          {/* Select 3: Available Doctors (only for CHUYEN_KHOA) */}
+          {examinationType === 'CHUYEN_KHOA' && selectedDepartment && (
+            <FormField
+              control={form.control}
+              name="doctorId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Bác sĩ khả dụng <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <Select
+                    disabled={isAvailableDoctorsLoading || isCreatingRecord || !!createdMedicalRecordId}
+                    value={field.value?.toString() || ''}
+                    onValueChange={(value) => {
+                      const doctorId = parseInt(value)
+                      field.onChange(doctorId)
+                      // Find and save selected doctor
+                      const doctor = availableDoctors.find(d => d.id === doctorId)
+                      if (doctor) {
+                        setSelectedDoctor({
+                          id: doctor.id,
+                          fullName: doctor.fullName,
+                          position: doctor.position,
+                          examinationFee: doctor.examinationFee,
+                          roomName: doctor.roomName,
+                          available: doctor.available,
+                        } as any)
+                      }
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={
+                          isAvailableDoctorsLoading
+                            ? "Đang tải..."
+                            : availableDoctors.length === 0
+                              ? "Không có bác sĩ khả dụng hôm nay"
+                              : "Chọn bác sĩ"
+                        } />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {availableDoctors.length === 0 ? (
+                        <div className="py-2 px-3 text-sm text-muted-foreground">
+                          Không có bác sĩ khả dụng hôm nay
+                        </div>
+                      ) : (
+                        availableDoctors.map((doctor: AvailableDoctor) => (
+                          <SelectItem key={doctor.id} value={doctor.id.toString()}>
+                            {doctor.fullName}
+                            {doctor.position && ` - ${doctor.position}`}
+                            {doctor.roomName && ` (${doctor.roomName})`}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           {/* Doctor/Service Info Display */}
           {selectedDoctor && (

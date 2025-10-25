@@ -503,26 +503,31 @@
 
 ---
 
-### 4.2 Lấy thông tin bác sĩ hiện tại
-**Endpoint:** `GET /api/doctors/me`
-
-**Mô tả:** Lấy thông tin của bác sĩ đang đăng nhập
-
-**Headers:**
-- `Authorization`: Bearer {token}
+### 4.2 Lấy thông tin bác sĩ 
+**Endpoint:** `GET /api/doctors/{id}`
 
 **Response:**
 ```json
 {
-  "data": {
-    "id": 1,
-    "name": "Dr. Nguyễn Văn A",
-    "specialization": "string",
-    "departmentName": "string",
-    "phone": "string",
-    "email": "string"
-  },
-  "message": "Fetched my info successfully"
+    "data": {
+        "id": 1,
+        "fullName": "BS. PNT",
+        "degreeResponse": {
+            "degreeId": 6,
+            "degreeName": "Giáo sư",
+            "examinationFee": 6000
+        },
+        "position": "PGS. Phạm Tiến",
+        "departmentResponse": {
+            "id": 2,
+            "name": "Khoa Ngoại tổng quát"
+        },
+        "examinationFee": 6000,
+        "available": true,
+        "roomNumber": "112A",
+        "roomName": "Phóng khám Ngoại tổng quát"
+    },
+    "message": "Fetched doctor successfully"
 }
 ```
 
@@ -2774,6 +2779,7 @@
 **Query Parameters:**
 - `startDate` (required): Ngày bắt đầu (yyyy-MM-dd)
 - `endDate` (required): Ngày kết thúc (yyyy-MM-dd)
+- `departmentId` (optional): ID khoa
 - `doctorId` (optional): ID bác sĩ
 - `shift` (optional): Ca làm việc (SANG (7-12), CHIEU (12-17), TOI)
 

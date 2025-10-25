@@ -10,7 +10,13 @@ import {
   type CreateAppointmentInput,
 } from '@/lib/validations/appointment.schema'
 import { createAppointment } from '../api/appointments'
-import { fetchDepartments, fetchDoctorsByDepartment } from '@/features/departments/api/departments'
+import { fetchDepartments, type Department } from '@/features/departments/api/departments'
+import {
+  fetchAvailableDoctorsByDepartment,
+  getTodayDate,
+  getCurrentShift,
+  type AvailableDoctor
+} from '@/features/schedules/api/schedules'
 import { type Patient } from '@/features/patients/api/patients'
 import { PatientSearch } from '@/features/patients/components/patient-search'
 
@@ -51,7 +57,7 @@ export function CreateAppointmentForm({
   onCancel,
 }: CreateAppointmentFormProps) {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
-  const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null)
+  const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null)
 
   const form = useForm<CreateAppointmentInput>({
     resolver: zodResolver(createAppointmentSchema),
@@ -71,16 +77,26 @@ export function CreateAppointmentForm({
     },
   })
 
-  // Fetch departments
+  // Fetch departments (Chuyên khoa)
   const { data: departments = [], isLoading: isDepartmentsLoading } = useQuery({
     queryKey: ['departments'],
     queryFn: fetchDepartments,
   })
 
-  // Fetch doctors by selected department
-  const { data: doctors = [], isLoading: isDoctorsLoading } = useQuery({
-    queryKey: ['doctors', selectedDepartment],
-    queryFn: () => fetchDoctorsByDepartment(selectedDepartment!),
+  // Fetch available doctors by selected department and today's date
+  const { data: availableDoctors = [], isLoading: isAvailableDoctorsLoading } = useQuery({
+    queryKey: ['available-doctors', selectedDepartment?.id],
+    queryFn: async () => {
+      if (!selectedDepartment) return []
+      const today = getTodayDate()
+      const currentShift = getCurrentShift()
+      return fetchAvailableDoctorsByDepartment({
+        departmentId: selectedDepartment.id,
+        startDate: today,
+        endDate: today,
+        shift: currentShift,
+      })
+    },
     enabled: !!selectedDepartment,
   })
 
@@ -114,7 +130,8 @@ export function CreateAppointmentForm({
 
   const handleDepartmentChange = (value: string) => {
     const deptId = parseInt(value)
-    setSelectedDepartment(deptId)
+    const department = departments.find(d => d.id === deptId)
+    setSelectedDepartment(department || null)
     form.setValue('departmentId', deptId)
     form.setValue('doctorId', 0) // Reset doctor selection
   }
@@ -183,13 +200,13 @@ export function CreateAppointmentForm({
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Department Selection */}
+            {/* Specialty/Department Selection */}
             <FormField
               control={form.control}
               name="departmentId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Khoa kh�m *</FormLabel>
+                  <FormLabel>Chuyên khoa *</FormLabel>
                   <Select
                     onValueChange={handleDepartmentChange}
                     value={field.value?.toString() || ''}
@@ -197,7 +214,7 @@ export function CreateAppointmentForm({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Ch�n khoa kh�m" />
+                        <SelectValue placeholder="Chọn chuyên khoa" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -213,30 +230,43 @@ export function CreateAppointmentForm({
               )}
             />
 
-            {/* Doctor Selection */}
+            {/* Available Doctor Selection */}
             <FormField
               control={form.control}
               name="doctorId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>B�c s) *</FormLabel>
+                  <FormLabel>Bác sĩ khả dụng *</FormLabel>
                   <Select
                     onValueChange={(value) => field.onChange(parseInt(value))}
                     value={field.value?.toString() || ''}
-                    disabled={isFormDisabled || !selectedDepartment || isDoctorsLoading}
+                    disabled={isFormDisabled || !selectedDepartment || isAvailableDoctorsLoading}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Ch�n b�c s)" />
+                        <SelectValue placeholder={
+                          !selectedDepartment
+                            ? "Vui lòng chọn chuyên khoa trước"
+                            : isAvailableDoctorsLoading
+                              ? "Đang tải..."
+                              : "Chọn bác sĩ"
+                        } />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {doctors.map((doctor) => (
-                        <SelectItem key={doctor.id} value={doctor.id.toString()}>
-                          {doctor.name}
-                          {doctor.position && ` - ${doctor.position}`}
-                        </SelectItem>
-                      ))}
+                      {availableDoctors.length === 0 && selectedDepartment ? (
+                        <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                          Không có bác sĩ khả dụng hôm nay
+                        </div>
+                      ) : (
+                        availableDoctors.map((doctor: AvailableDoctor) => (
+                          <SelectItem key={doctor.id} value={doctor.id.toString()}>
+                            {doctor.fullName}
+                            {doctor.position && ` - ${doctor.position}`}
+                            {doctor.roomName && ` (${doctor.roomName})`}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />

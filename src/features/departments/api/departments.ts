@@ -7,6 +7,25 @@ export interface Department {
   description?: string
 }
 
+export interface DoctorDetail {
+  id: number
+  fullName: string
+  position?: string
+  degreeResponse?: {
+    degreeId: number
+    degreeName: string
+    examinationFee: number
+  }
+  departmentResponse?: {
+    id: number
+    name: string
+  }
+  examinationFee?: number
+  available?: boolean
+  roomNumber?: string
+  roomName?: string
+}
+
 const isDepartment = (value: unknown): value is Department => {
   if (typeof value !== 'object' || value === null) return false
   const obj = value as Record<string, unknown>
@@ -121,4 +140,30 @@ export const fetchDoctorsByDepartment = async (
 
   console.warn('⚠️ [fetchDoctorsByDepartment] Returning empty array - response is not an array')
   return []
+}
+
+/**
+ * Get doctor by ID with department information
+ * GET /api/doctors/{id}
+ * Response: {data: DoctorDetail, message: string}
+ */
+export const fetchDoctorById = async (doctorId: number): Promise<DoctorDetail | null> => {
+  console.log(`🟡 [fetchDoctorById] Calling API: GET /doctors/${doctorId}`)
+
+  try {
+    const { data } = await get<{ data: DoctorDetail; message: string }>(`/doctors/${doctorId}`)
+
+    console.log('🟡 [fetchDoctorById] Raw response:', data)
+
+    if (data?.data) {
+      console.log('✅ [fetchDoctorById] Returning doctor:', data.data)
+      return data.data
+    }
+
+    console.warn('⚠️ [fetchDoctorById] No data in response')
+    return null
+  } catch (error) {
+    console.error('❌ [fetchDoctorById] Error:', error)
+    return null
+  }
 }

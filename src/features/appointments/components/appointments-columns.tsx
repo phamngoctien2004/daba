@@ -8,12 +8,9 @@ import {
 } from '../constants'
 import {
   type Appointment,
-  type AppointmentStatus,
 } from '../api/appointments'
 import {
   ClipboardPlus,
-  Loader2,
-  XCircle,
 } from 'lucide-react'
 
 const formatDateDisplay = (value: string) => {
@@ -64,17 +61,11 @@ const renderHealthPlan = (appointment: Appointment) => {
 }
 
 type GetAppointmentsColumnsOptions = {
-  onUpdateStatus: (id: number, status: AppointmentStatus) => void
   onOpenMedicalRecord: (id: number) => void
-  pendingAppointmentId: number | null
-  isConfirmPending: boolean
 }
 
 export const getAppointmentsColumns = ({
-  onUpdateStatus,
   onOpenMedicalRecord,
-  pendingAppointmentId,
-  isConfirmPending,
 }: GetAppointmentsColumnsOptions): ColumnDef<Appointment>[] => [
     {
       accessorKey: 'patientResponse.fullName',
@@ -172,34 +163,17 @@ export const getAppointmentsColumns = ({
       enableHiding: false,
       cell: ({ row }) => {
         const appointment = row.original
-        const isLoading =
-          isConfirmPending && pendingAppointmentId === appointment.id
 
         return (
           <div className='flex flex-wrap items-center justify-end gap-2'>
             {appointment.status === 'DA_XAC_NHAN' && (
-              <>
-                <Button
-                  size='sm'
-                  onClick={() => onOpenMedicalRecord(appointment.id)}
-                >
-                  <ClipboardPlus className='me-2 size-4' />
-                  Tạo phiếu khám
-                </Button>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => onUpdateStatus(appointment.id, 'KHONG_DEN')}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <Loader2 className='me-2 size-4 animate-spin' />
-                  ) : (
-                    <XCircle className='me-2 size-4' />
-                  )}
-                  Không đến
-                </Button>
-              </>
+              <Button
+                size='sm'
+                onClick={() => onOpenMedicalRecord(appointment.id)}
+              >
+                <ClipboardPlus className='me-2 size-4' />
+                Tạo phiếu khám
+              </Button>
             )}
 
             {appointment.status === 'DANG_KHAM' && (
