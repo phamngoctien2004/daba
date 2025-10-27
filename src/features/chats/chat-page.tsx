@@ -200,24 +200,45 @@ export function Chats() {
 
   // Auto-scroll to bottom when new message arrives (after initial load)
   useEffect(() => {
-    // Only scroll if:
-    // 1. Already scrolled initially (not first load)
-    // 2. Not loading more old messages
-    // 3. Has messages
-    if (hasInitialScrolled.current && !isLoadingMoreRef.current && messagesData?.messages && messagesData.messages.length > 0) {
-      // Use double RAF for smooth scroll after DOM paint
+    // Skip if no messages or loading more
+    if (!messagesData?.messages || messagesData.messages.length === 0 || isLoadingMoreRef.current) {
+      return
+    }
+
+    // Check if user is near bottom (within 200px) or already scrolled initially
+    const scrollContainer = scrollContainerRef.current
+    const shouldAutoScroll = hasInitialScrolled.current || (
+      scrollContainer &&
+      scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 200
+    )
+
+    if (shouldAutoScroll) {
+      // Use triple RAF for smooth scroll after DOM paint
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+          requestAnimationFrame(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+            console.log('🔽 Auto-scroll to bottom on new message')
+          })
         })
       })
+    } else {
+      console.log('⏸️ Skip auto-scroll: User scrolled up')
     }
   }, [messagesData?.messages.length]) // Only trigger when message count changes
 
   // Filtered conversations based on search
-  const filteredConversations = conversations?.filter((conv) =>
+  let filteredConversations = conversations?.filter((conv) =>
     conv.patientName.toLowerCase().includes(search.trim().toLowerCase())
-  )
+  ) || []
+
+  // Đưa phòng đang chọn lên đầu
+  if (selectedConversation?.id) {
+    filteredConversations = [
+      ...filteredConversations.filter(c => c.id === selectedConversation.id),
+      ...filteredConversations.filter(c => c.id !== selectedConversation.id)
+    ]
+  }
 
   // Group messages by date
   const groupedMessages = messagesData?.messages.reduce(
@@ -259,6 +280,12 @@ export function Chats() {
         onSuccess: () => {
           setMessageInput('')
           setImageUrls([])
+          // Scroll to bottom after sending message
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+            })
+          })
         },
       }
     )
@@ -430,18 +457,14 @@ export function Chats() {
                             <span className='font-medium truncate'>
                               {conversation.patientName}
                             </span>
-                            {/* Unread badge */}
+                            {/* Unread dot */}
                             {getUnreadCount(conversation.id) > 0 && (
-                              <span className='ml-auto flex-shrink-0 bg-primary text-primary-foreground text-xs font-semibold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5'>
-                                {getUnreadCount(conversation.id)}
-                              </span>
+                              <span className='ml-auto flex-shrink-0 bg-red-500 rounded-full w-2 h-2 block' />
                             )}
                           </div>
-                          <span className='text-muted-foreground group-hover:text-accent-foreground/90 text-xs truncate block'>
-                            {conversation.responder === 'LE_TAN'
-                              ? 'Lễ tân'
-                              : 'Tư vấn'}
-                          </span>
+                          {getUnreadCount(conversation.id) > 0 ? (
+                            <span className='text-red-500 text-xs truncate block'>Có tin nhắn mới</span>
+                          ) : null}
                         </div>
                       </div>
                     </button>
