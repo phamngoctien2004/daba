@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, FormEvent } from 'react'
+import { useEffect, useState, useRef, FormEvent, useCallback } from 'react'
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import {
@@ -61,20 +61,27 @@ export function Chats() {
   const hasScrolledToUnread = useRef(false)
   const isLoadingMoreRef = useRef(false)
   const hasInitialScrolled = useRef(false)
+  const isSendingMessageRef = useRef(false) // Track when user is sending message
 
   // Fetch conversations
   const { data: conversations, isLoading: isLoadingConversations } =
     useConversations()
 
+  // Memoize callback for unread tracking
+  const handleUnreadMessage = useCallback(
+    (conversationId: string, message: Message) => {
+      // Track unread message for conversation that is NOT currently open
+      console.log(`📬 Unread message from conversation ${conversationId}`)
+      addUnreadMessage(conversationId, message.sentTime)
+    },
+    [addUnreadMessage]
+  )
+
   // Subscribe to ALL conversations for unread tracking
   useAllConversationsSubscription(
     conversations,
     selectedConversation?.id || null,
-    (conversationId, message) => {
-      // Track unread message for conversation that is NOT currently open
-      console.log(`📬 Unread message from conversation ${conversationId}`)
-      addUnreadMessage(conversationId, message.sentTime)
-    }
+    handleUnreadMessage
   )
 
   // Fetch messages for selected conversation
@@ -95,30 +102,35 @@ export function Chats() {
 
   // Connect to WebSocket on mount
   useEffect(() => {
-    if (!wsClient.isConnected()) {
-      wsClient.connect().catch((error) => {
+    const connectWs = async () => {
+      try {
+        if (!wsClient.isConnected()) {
+          await wsClient.connect()
+          console.log('✅ Chat page: WebSocket connected')
+        }
+      } catch (error) {
         console.error('Failed to connect to WebSocket:', error)
-      })
-    }
-
-    return () => {
-      // Cleanup on unmount
-      if (wsClient.isConnected()) {
-        wsClient.disconnect()
       }
     }
+    connectWs()
+
+    // NOTE: Không disconnect khi unmount vì có thể có components khác đang dùng WebSocket
+    // WebSocket sẽ được quản lý globally và tự reconnect khi cần
   }, [])
+
+  // Memoize callback to prevent re-subscription on every render
+  const handleMessageReceived = useCallback(() => {
+    // Clear unread when viewing this conversation and receiving message
+    if (selectedConversation?.id) {
+      clearUnread(selectedConversation.id)
+    }
+  }, [selectedConversation?.id, clearUnread])
 
   // Subscribe to chat updates for selected conversation
   useChatSubscription(
     selectedConversation?.id || null,
     !!selectedConversation?.id,
-    () => {
-      // Clear unread when viewing this conversation and receiving message
-      if (selectedConversation?.id) {
-        clearUnread(selectedConversation.id)
-      }
-    }
+    handleMessageReceived
   )
 
   // Clear unread when switching conversation
@@ -158,45 +170,50 @@ export function Chats() {
     return () => scrollContainer.removeEventListener('scroll', handleScroll)
   }, [messagesData?.hasMoreOld])
 
-  // Auto-scroll to unread messages or bottom when conversation loads
-  useEffect(() => {
-    // Skip scroll if loading more messages or already scrolled initially
-    if (isLoadingMoreRef.current || hasInitialScrolled.current) {
-      return
-    }
-
-    if (messagesData?.messages && messagesData.messages.length > 0) {
-      // Use requestAnimationFrame for smooth scroll after DOM paint
-      requestAnimationFrame(() => {
-        // If has unread messages and should show divider
-        if (messagesData.lastReadId && messagesData.totalUnread > 0 && showUnreadDivider && !hasScrolledToUnread.current) {
-          setTimeout(() => {
-            if (unreadDividerRef.current) {
-              unreadDividerRef.current.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-              })
-              hasScrolledToUnread.current = true
-              hasInitialScrolled.current = true
-            }
-          }, 300)
-        } else if (!messagesData.lastReadId || messagesData.totalUnread === 0) {
-          // No unread messages, scroll to bottom
-          setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-            hasInitialScrolled.current = true
-          }, 300)
-        }
-      })
-    }
-  }, [messagesData?.messages, messagesData?.lastReadId, messagesData?.totalUnread, showUnreadDivider])
-
   // Reset scroll flags when conversation changes
   useEffect(() => {
     hasScrolledToUnread.current = false
     hasInitialScrolled.current = false
     isLoadingMoreRef.current = false
   }, [selectedConversation?.id])
+
+  // Auto-scroll to unread messages or bottom when conversation loads
+  useEffect(() => {
+    // Skip scroll if loading more messages or still loading
+    if (isLoadingMoreRef.current || isLoadingMessages) {
+      return
+    }
+
+    // Only proceed if messages loaded and haven't scrolled yet for this conversation
+    if (messagesData?.messages && messagesData.messages.length > 0 && !hasInitialScrolled.current) {
+      // Wait for DOM to be fully rendered before scrolling
+      const scrollTimeout = setTimeout(() => {
+        // If has unread messages and should show divider
+        if (messagesData.lastReadId && messagesData.totalUnread > 0 && showUnreadDivider && !hasScrolledToUnread.current) {
+          if (unreadDividerRef.current) {
+            // Use instant scroll first to ensure position, then smooth
+            unreadDividerRef.current.scrollIntoView({
+              behavior: 'auto', // Instant scroll
+              block: 'center'
+            })
+            hasScrolledToUnread.current = true
+            hasInitialScrolled.current = true
+            console.log('📍 Scrolled to unread divider')
+          }
+        } else if (!messagesData.lastReadId || messagesData.totalUnread === 0) {
+          // No unread messages, scroll to bottom
+          if (messagesEndRef.current) {
+            // Use instant scroll to ensure it works even with slow rendering
+            messagesEndRef.current.scrollIntoView({ behavior: 'auto' })
+            hasInitialScrolled.current = true
+            console.log('📍 Scrolled to bottom (no unread)')
+          }
+        }
+      }, 100) // Reduced timeout since we're using instant scroll
+
+      return () => clearTimeout(scrollTimeout)
+    }
+  }, [messagesData?.messages, messagesData?.lastReadId, messagesData?.totalUnread, showUnreadDivider, selectedConversation?.id, isLoadingMessages])
 
   // Auto-scroll to bottom when new message arrives (after initial load)
   useEffect(() => {
@@ -205,9 +222,9 @@ export function Chats() {
       return
     }
 
-    // Check if user is near bottom (within 200px) or already scrolled initially
+    // Check if user is near bottom (within 200px) or already scrolled initially, or is sending message
     const scrollContainer = scrollContainerRef.current
-    const shouldAutoScroll = hasInitialScrolled.current || (
+    const shouldAutoScroll = isSendingMessageRef.current || hasInitialScrolled.current || (
       scrollContainer &&
       scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 200
     )
@@ -268,6 +285,9 @@ export function Chats() {
       return
     }
 
+    // Mark that we're sending a message (to force scroll)
+    isSendingMessageRef.current = true
+
     sendMessage(
       {
         conversationId: parseInt(selectedConversation.id),
@@ -280,12 +300,19 @@ export function Chats() {
         onSuccess: () => {
           setMessageInput('')
           setImageUrls([])
-          // Scroll to bottom after sending message
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-            })
-          })
+
+          // Force scroll to bottom after optimistic update completes
+          // Use setTimeout to ensure React has flushed state updates
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+            console.log('📤 Scrolled to bottom after sending message')
+          }, 100)
+        },
+        onSettled: () => {
+          // Reset flag after message is sent (success or error)
+          setTimeout(() => {
+            isSendingMessageRef.current = false
+          }, 1000)
         },
       }
     )

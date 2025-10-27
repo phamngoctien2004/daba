@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import {
   fetchConversations,
@@ -150,6 +150,12 @@ export function useChatSubscription(
   onMessageReceived?: (message: Message) => void
 ) {
   const queryClient = useQueryClient()
+  const callbackRef = useRef(onMessageReceived)
+
+  // Keep callback ref up to date
+  useEffect(() => {
+    callbackRef.current = onMessageReceived
+  }, [onMessageReceived])
 
   useEffect(() => {
     if (!enabled || !conversationId) {
@@ -160,31 +166,47 @@ export function useChatSubscription(
 
     const setupSubscription = async () => {
       try {
+        // Ensure WebSocket is connected
         if (!wsClient.isConnected()) {
+          console.log('🔄 WebSocket not connected, connecting...')
           await wsClient.connect()
         }
 
+        // Unsubscribe old subscription if exists
+        if (unsubscribe) {
+          unsubscribe()
+          unsubscribe = null
+        }
+
         unsubscribe = wsClient.subscribeToChatConversation(conversationId, (message: Message) => {
-          console.log('Received message via WebSocket:', message)
+          console.log('📨 Received message via WebSocket:', message)
 
           // Call callback if provided (for unread tracking)
-          if (onMessageReceived) {
-            onMessageReceived(message)
+          if (callbackRef.current) {
+            callbackRef.current(message)
           }
 
           queryClient.setQueryData(['messages', conversationId], (oldData: any) => {
             if (!oldData) {
+              console.log('📝 No old data, creating new message list')
               return { messages: [message], hasMoreOld: false }
             }
+
+            // Check if message already exists (prevent duplicate)
             const exists = oldData.messages.some((msg: any) => msg.id === message.id)
             if (exists) {
+              console.log('⏭️ Message already exists, skipping:', message.id)
               return oldData
             }
+
+            console.log('✅ Adding new message to list:', message.id)
             return {
               ...oldData,
               messages: [...oldData.messages, message],
             }
           })
+
+          // Update conversations list to show latest message
           queryClient.invalidateQueries({ queryKey: ['conversations'] })
         })
 
@@ -202,7 +224,7 @@ export function useChatSubscription(
         console.log('Chat subscription closed for conversation:', conversationId)
       }
     }
-  }, [conversationId, enabled, queryClient, onMessageReceived])
+  }, [conversationId, enabled, queryClient])
 }
 
 /**
@@ -215,6 +237,12 @@ export function useAllConversationsSubscription(
   onNewMessage: (conversationId: string, message: Message) => void
 ) {
   const queryClient = useQueryClient()
+  const callbackRef = useRef(onNewMessage)
+
+  // Keep callback ref up to date
+  useEffect(() => {
+    callbackRef.current = onNewMessage
+  }, [onNewMessage])
 
   useEffect(() => {
     if (!conversations || conversations.length === 0) {
@@ -229,15 +257,22 @@ export function useAllConversationsSubscription(
           await wsClient.connect()
         }
 
-        // Subscribe to each conversation
+        // Subscribe to each conversation (EXCEPT the currently active one)
         conversations.forEach((conv) => {
+          // Skip if this is the currently active conversation
+          // (it will be handled by useChatSubscription)
+          if (conv.id === currentConversationId) {
+            console.log(`⏭️ Skipping subscription to current conversation ${conv.id}`)
+            return
+          }
+
           const unsubscribe = wsClient.subscribeToChatConversation(
             conv.id,
             (message: Message) => {
               // Only track as unread if NOT currently viewing this conversation
               if (conv.id !== currentConversationId) {
                 console.log(`📩 New message from conversation ${conv.id} (not current)`)
-                onNewMessage(conv.id, message)
+                callbackRef.current(conv.id, message)
               }
 
               // Update conversations list (for last message preview)
@@ -247,7 +282,7 @@ export function useAllConversationsSubscription(
           unsubscribers.push(unsubscribe)
         })
 
-        console.log(`✅ Subscribed to ${conversations.length} conversations for unread tracking`)
+        console.log(`✅ Subscribed to ${unsubscribers.length}/${conversations.length} conversations for unread tracking (excluding current)`)
       } catch (error) {
         console.error('❌ Failed to subscribe to all conversations:', error)
       }
@@ -260,5 +295,5 @@ export function useAllConversationsSubscription(
       unsubscribers.forEach((unsubscribe) => unsubscribe())
       console.log('🔌 Unsubscribed from all conversations')
     }
-  }, [conversations, currentConversationId, onNewMessage, queryClient])
+  }, [conversations, currentConversationId, queryClient])
 }
