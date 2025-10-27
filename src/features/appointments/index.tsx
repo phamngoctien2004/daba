@@ -10,6 +10,7 @@ import {
 import { toast } from 'sonner'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { ChatButton } from '@/components/chat-button'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search as GlobalSearch } from '@/components/search'
@@ -233,6 +234,7 @@ export function AppointmentsManagement() {
         <GlobalSearch />
         <div className='ms-auto flex items-center space-x-4'>
           <ThemeSwitch />
+          <ChatButton />
           <ConfigDrawer />
           <ProfileDropdown />
         </div>

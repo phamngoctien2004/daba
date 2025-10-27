@@ -1,5 +1,6 @@
 import { Client, type IMessage } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
+import type { Message } from '@/features/chats/types'
 
 const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || 'http://localhost:8080/ws'
 
@@ -10,6 +11,7 @@ export interface PaymentSuccessEvent {
 }
 
 export type PaymentEventCallback = (event: PaymentSuccessEvent) => void
+export type ChatMessageCallback = (message: Message) => void
 
 class WebSocketClient {
     private client: Client | null = null
@@ -137,6 +139,77 @@ class WebSocketClient {
             this.client.deactivate()
             this.client = null
         }
+    }
+
+    /**
+     * Subscribe to chat messages for a specific conversation
+     * Topic: /topic/chat/{conversationId}
+     */
+    subscribeToChatConversation(
+        conversationId: string,
+        callback: ChatMessageCallback
+    ): () => void {
+        const topic = `/topic/chat/${conversationId}`
+
+        if (!this.client?.connected) {
+            console.warn('⚠️ [WebSocket] Not connected. Call connect() first.')
+            return () => { }
+        }
+
+        // Unsubscribe if already subscribed
+        if (this.subscriptions.has(topic)) {
+            console.log(`🔵 [WebSocket] Already subscribed to ${topic}`)
+            return this.subscriptions.get(topic).unsubscribe
+        }
+
+        console.log(`🔵 [WebSocket] Subscribing to ${topic}`)
+
+        const subscription = this.client.subscribe(topic, (message: IMessage) => {
+            try {
+                const chatMessage = JSON.parse(message.body) as Message
+                console.log(`✅ [WebSocket] Received message from ${topic}:`, chatMessage)
+                callback(chatMessage)
+            } catch (error) {
+                console.error('❌ [WebSocket] Failed to parse chat message:', error)
+            }
+        })
+
+        // Store subscription
+        this.subscriptions.set(topic, subscription)
+
+        // Return unsubscribe function
+        return () => {
+            console.log(`🔵 [WebSocket] Unsubscribing from ${topic}`)
+            subscription.unsubscribe()
+            this.subscriptions.delete(topic)
+        }
+    }
+
+    /**
+     * Send a chat message via WebSocket
+     * Destination: /app/chat.send
+     */
+    sendChatMessage(messageDTO: {
+        conversationId: number
+        senderId: number
+        message: string
+        sentTime: string
+        urls: string[]
+    }, token: string): void {
+        if (!this.client?.connected) {
+            console.warn('⚠️ [WebSocket] Not connected. Cannot send message.')
+            throw new Error('WebSocket not connected')
+        }
+
+        console.log('🔵 [WebSocket] Sending chat message with token:', messageDTO)
+
+        this.client.publish({
+            destination: '/app/chat.send',
+            body: JSON.stringify(messageDTO),
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
     }
 
     /**
