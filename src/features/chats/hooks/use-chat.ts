@@ -84,7 +84,6 @@ export function useUploadChatImages() {
 export function useSendMessage() {
   const { toast } = useToast()
 
-  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({
       conversationId,
@@ -113,25 +112,9 @@ export function useSendMessage() {
       return { conversationId, senderId, message, sentTime, urls }
     },
     onSuccess: (data) => {
-      // Optimistic update: tự thêm tin nhắn vào danh sách
-      queryClient.setQueryData(['messages', String(data.conversationId)], (oldData: any) => {
-        const newMsg = {
-          id: Date.now(), // Tạm thời, backend sẽ trả id thật qua WebSocket
-          conversationId: data.conversationId,
-          senderId: data.senderId,
-          message: data.message,
-          sentTime: data.sentTime,
-          urls: data.urls,
-        }
-        if (!oldData) {
-          return { messages: [newMsg], hasMoreOld: false }
-        }
-        return {
-          ...oldData,
-          messages: [...oldData.messages, newMsg],
-        }
-      })
-      console.log('Message sent successfully:', data)
+      // No optimistic update - rely on WebSocket to add the message
+      // This prevents duplicates when server's sentTime differs from client's
+      console.log('Message sent successfully, waiting for WebSocket confirmation:', data)
     },
     onError: (error) => {
       console.error('Failed to send message:', error)
@@ -192,13 +175,31 @@ export function useChatSubscription(
               return { messages: [message], hasMoreOld: false }
             }
 
-            // Check if message already exists (prevent duplicate)
-            const exists = oldData.messages.some((msg: any) => msg.id === message.id)
-            if (exists) {
-              console.log('⏭️ Message already exists, skipping:', message.id)
+            // First, check if message already exists by server id
+            const existsById = oldData.messages.some((msg: any) => msg.id === message.id)
+            if (existsById) {
+              console.log('⏭️ Message already exists by id, skipping:', message.id)
               return oldData
             }
 
+            // Some messages are optimistically added with a temporary id (e.g. Date.now())
+            // Detect optimistic message by matching senderId + sentTime (stable client-generated value)
+            const optIndex = oldData.messages.findIndex((msg: any) =>
+              msg.sentTime === message.sentTime && msg.senderId === message.senderId
+            )
+
+            if (optIndex !== -1) {
+              // Replace optimistic message with authoritative server message
+              const newMessages = [...oldData.messages]
+              newMessages[optIndex] = message
+              console.log('🔁 Replaced optimistic message with server message:', message.id)
+              return {
+                ...oldData,
+                messages: newMessages,
+              }
+            }
+
+            // Otherwise append as new message
             console.log('✅ Adding new message to list:', message.id)
             return {
               ...oldData,

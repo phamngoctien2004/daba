@@ -1,5 +1,5 @@
 import { type ColumnDef } from '@tanstack/react-table'
-import { format, isValid, parseISO } from 'date-fns'
+import { format, isValid, parseISO, isAfter, startOfDay } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,6 +11,7 @@ import {
 } from '../api/appointments'
 import {
   ClipboardPlus,
+  Clock,
 } from 'lucide-react'
 
 const formatDateDisplay = (value: string) => {
@@ -164,16 +165,34 @@ export const getAppointmentsColumns = ({
       cell: ({ row }) => {
         const appointment = row.original
 
+        // Check if appointment date is in the future
+        const appointmentDate = parseISO(appointment.date)
+        const today = startOfDay(new Date())
+        const isFutureAppointment = isValid(appointmentDate) && isAfter(appointmentDate, today)
+
         return (
           <div className='flex flex-wrap items-center justify-end gap-2'>
             {appointment.status === 'DA_XAC_NHAN' && (
-              <Button
-                size='sm'
-                onClick={() => onOpenMedicalRecord(appointment.id)}
-              >
-                <ClipboardPlus className='me-2 size-4' />
-                Tạo phiếu khám
-              </Button>
+              <>
+                {isFutureAppointment ? (
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    disabled
+                  >
+                    <Clock className='me-2 size-4' />
+                    Chưa đến lịch hẹn
+                  </Button>
+                ) : (
+                  <Button
+                    size='sm'
+                    onClick={() => onOpenMedicalRecord(appointment.id)}
+                  >
+                    <ClipboardPlus className='me-2 size-4' />
+                    Tạo phiếu khám
+                  </Button>
+                )}
+              </>
             )}
 
             {appointment.status === 'DANG_KHAM' && (
