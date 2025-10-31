@@ -9,6 +9,7 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search as GlobalSearch } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useDebounce } from '@/hooks/use-debounce'
 import type { NavigateFn } from '@/hooks/use-table-url-state'
 import { MedicalRecordsTable } from './components/medical-records-table-view'
 import { fetchDoctorMedicalRecords, updateMedicalRecordStatus, type MedicalRecordStatus } from './api/medical-records'
@@ -52,7 +53,10 @@ export function DoctorMedicalRecordsManagement() {
     return todayIso
   }, [search.date, todayIso])
 
-  const keywordFilter = resolveKeyword(search.keyword)
+  // Debounce keyword to avoid excessive API calls
+  const rawKeyword = resolveKeyword(search.keyword)
+  const keywordFilter = useDebounce(rawKeyword, 500)
+
   const statusFilter = resolveStatus(search.status)
 
   const page = Math.max(1, search.page ?? DEFAULT_PAGE)

@@ -135,6 +135,26 @@ export const get = <T = unknown>(url: string, config?: AxiosRequestConfig) => {
 }
 
 /**
+ * GET request with body (non-standard but required by some endpoints)
+ * Used for endpoints that require request body with GET method
+ */
+export const getWithBody = <T = unknown>(
+  url: string,
+  data?: unknown,
+  config?: AxiosRequestConfig
+) => {
+  return apiClient.request<T>({
+    method: 'GET',
+    url,
+    data,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    ...config,
+  })
+}
+
+/**
  * Generic POST request
  */
 export const post = <T = unknown>(

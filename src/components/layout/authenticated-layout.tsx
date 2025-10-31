@@ -6,6 +6,7 @@ import { SearchProvider } from '@/context/search-provider'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { SkipToMain } from '@/components/skip-to-main'
+import { useGlobalChatSubscription } from '@/features/chats/hooks/use-global-chat-subscription'
 
 type AuthenticatedLayoutProps = {
   children?: React.ReactNode
@@ -13,6 +14,10 @@ type AuthenticatedLayoutProps = {
 
 export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   const defaultOpen = getCookie('sidebar_state') !== 'false'
+
+  // Subscribe to all conversations for unread tracking (global)
+  useGlobalChatSubscription()
+
   return (
     <SearchProvider>
       <LayoutProvider>

@@ -17,6 +17,8 @@ class WebSocketClient {
     private client: Client | null = null
     private isConnecting = false
     private subscriptions: Map<string, any> = new Map()
+    // Store multiple callbacks for each topic
+    private topicCallbacks: Map<string, Set<any>> = new Map()
 
     /**
      * Connect to WebSocket server
@@ -144,6 +146,7 @@ class WebSocketClient {
     /**
      * Subscribe to chat messages for a specific conversation
      * Topic: /topic/chat/{conversationId}
+     * Supports multiple callbacks for the same topic
      */
     subscribeToChatConversation(
         conversationId: string,
@@ -156,32 +159,60 @@ class WebSocketClient {
             return () => { }
         }
 
-        // Unsubscribe if already subscribed
-        if (this.subscriptions.has(topic)) {
-            console.log(`🔵 [WebSocket] Already subscribed to ${topic}`)
-            return this.subscriptions.get(topic).unsubscribe
+        // Get or create callbacks set for this topic
+        if (!this.topicCallbacks.has(topic)) {
+            this.topicCallbacks.set(topic, new Set())
+        }
+        const callbacks = this.topicCallbacks.get(topic)!
+
+        // Add callback to set
+        callbacks.add(callback)
+        console.log(`🔵 [WebSocket] Added callback for ${topic} (total: ${callbacks.size})`)
+
+        // Subscribe to topic if not already subscribed
+        if (!this.subscriptions.has(topic)) {
+            console.log(`🔵 [WebSocket] Subscribing to ${topic}`)
+
+            const subscription = this.client.subscribe(topic, (message: IMessage) => {
+                try {
+                    const chatMessage = JSON.parse(message.body) as Message
+                    console.log(`✅ [WebSocket] Received message from ${topic}:`, chatMessage)
+
+                    // Call all registered callbacks
+                    const currentCallbacks = this.topicCallbacks.get(topic)
+                    if (currentCallbacks) {
+                        currentCallbacks.forEach((cb) => {
+                            try {
+                                cb(chatMessage)
+                            } catch (error) {
+                                console.error('❌ [WebSocket] Callback error:', error)
+                            }
+                        })
+                    }
+                } catch (error) {
+                    console.error('❌ [WebSocket] Failed to parse chat message:', error)
+                }
+            })
+
+            // Store subscription
+            this.subscriptions.set(topic, subscription)
         }
 
-        console.log(`🔵 [WebSocket] Subscribing to ${topic}`)
-
-        const subscription = this.client.subscribe(topic, (message: IMessage) => {
-            try {
-                const chatMessage = JSON.parse(message.body) as Message
-                console.log(`✅ [WebSocket] Received message from ${topic}:`, chatMessage)
-                callback(chatMessage)
-            } catch (error) {
-                console.error('❌ [WebSocket] Failed to parse chat message:', error)
-            }
-        })
-
-        // Store subscription
-        this.subscriptions.set(topic, subscription)
-
-        // Return unsubscribe function
+        // Return unsubscribe function for this specific callback
         return () => {
-            console.log(`🔵 [WebSocket] Unsubscribing from ${topic}`)
-            subscription.unsubscribe()
-            this.subscriptions.delete(topic)
+            console.log(`🔵 [WebSocket] Removing callback for ${topic}`)
+            callbacks.delete(callback)
+
+            // If no more callbacks, unsubscribe from topic
+            if (callbacks.size === 0) {
+                console.log(`🔵 [WebSocket] No more callbacks, unsubscribing from ${topic}`)
+                const subscription = this.subscriptions.get(topic)
+                if (subscription) {
+                    subscription.unsubscribe()
+                    this.subscriptions.delete(topic)
+                }
+                this.topicCallbacks.delete(topic)
+            }
         }
     }
 

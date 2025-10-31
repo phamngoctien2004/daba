@@ -52,7 +52,10 @@ export function UserAuthForm({
   const loginMutation = useMutation({
     mutationFn: loginApi,
     onSuccess: (response) => {
+      console.log('🟢 Login response:', response)
       const { accessToken, userResponse } = response.data
+      console.log('🟢 User data:', userResponse)
+      console.log('🟢 User role:', userResponse.role, 'Type:', typeof userResponse.role)
 
       // Store user and token in auth store
       login(userResponse, accessToken)

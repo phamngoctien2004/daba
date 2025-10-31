@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useCallback } from 'react'
 import { CreateAppointmentForm } from '@/features/appointments/components/create-appointment-form'
 import {
   Card,
@@ -17,14 +18,15 @@ export const Route = createFileRoute('/_authenticated/appointments/create')({
 function CreateAppointmentPage() {
   const navigate = useNavigate()
 
-  const handleSuccess = () => {
+  // Memoize callbacks to prevent unnecessary re-renders of CreateAppointmentForm
+  const handleSuccess = useCallback(() => {
     // Navigate back to appointments list after successful creation
     navigate({ to: '/appointments' })
-  }
+  }, [navigate])
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     navigate({ to: '/appointments' })
-  }
+  }, [navigate])
 
   return (
     <div className="container mx-auto py-6 space-y-6">

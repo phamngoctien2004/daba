@@ -8,7 +8,33 @@ import {
   setAuthToken,
   setUserData,
 } from '@/lib/auth-storage'
-import { type User } from '@/types/auth'
+import { type User, UserRole } from '@/types/auth'
+
+/**
+ * Normalize role string to UserRole enum
+ * Handles case-insensitive role matching
+ */
+function normalizeRole(role: string): UserRole {
+  const roleUpper = role.toUpperCase()
+
+  // Direct match
+  if (Object.values(UserRole).includes(roleUpper as UserRole)) {
+    return roleUpper as UserRole
+  }
+
+  // Fallback mapping for common variations
+  const roleMapping: Record<string, UserRole> = {
+    'ADMIN': UserRole.ADMIN,
+    'BAC_SI': UserRole.BAC_SI,
+    'BACSI': UserRole.BAC_SI,
+    'DOCTOR': UserRole.BAC_SI,
+    'LE_TAN': UserRole.LE_TAN,
+    'LETAN': UserRole.LE_TAN,
+    'RECEPTIONIST': UserRole.LE_TAN,
+  }
+
+  return roleMapping[roleUpper] || (role as UserRole)
+}
 
 interface AuthState {
   user: User | null
@@ -45,10 +71,19 @@ export const useAuthStore = create<AuthState>()((set) => {
     },
 
     login: (user, accessToken) => {
-      setUserData(user)
+      // Normalize role to ensure consistency
+      const normalizedUser: User = {
+        ...user,
+        role: normalizeRole(user.role),
+      }
+
+      console.log('🟡 [Auth Store] Original role:', user.role)
+      console.log('🟡 [Auth Store] Normalized role:', normalizedUser.role)
+
+      setUserData(normalizedUser)
       setAuthToken(accessToken)
       set({
-        user,
+        user: normalizedUser,
         accessToken,
         isAuthenticated: true,
       })

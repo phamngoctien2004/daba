@@ -28,6 +28,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 
 import { useAuthStore } from '@/stores/auth-store'
 import { useUnreadStore } from '@/stores/unread-store'
+import { useActiveConversationStore } from '@/stores/active-conversation-store'
 import { getAuthToken } from '@/lib/auth-storage'
 import { wsClient } from '@/lib/websocket-client'
 import {
@@ -37,14 +38,13 @@ import {
   useSendMessage,
   useChatSubscription,
   useUploadChatImages,
-  useAllConversationsSubscription,
 } from './hooks/use-chat'
 import type { Conversation, Message } from './types'
 import { ImageModal } from './components/image-modal'
 
 export function Chats() {
   const { user } = useAuthStore()
-  const { addUnreadMessage, clearUnread, getUnreadCount } = useUnreadStore()
+  const { clearUnread, getUnreadCount, setUnreadCount } = useUnreadStore()
   const [search, setSearch] = useState('')
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation | null>(null)
@@ -52,13 +52,10 @@ export function Chats() {
     useState<Conversation | null>(null)
   const [messageInput, setMessageInput] = useState('')
   const [imageUrls, setImageUrls] = useState<string[]>([])
-  const [showUnreadDivider, setShowUnreadDivider] = useState(true)
   const [showLoadMore, setShowLoadMore] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const unreadDividerRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const hasScrolledToUnread = useRef(false)
   const isLoadingMoreRef = useRef(false)
   const hasInitialScrolled = useRef(false)
   const isSendingMessageRef = useRef(false) // Track when user is sending message
@@ -67,22 +64,26 @@ export function Chats() {
   const { data: conversations, isLoading: isLoadingConversations } =
     useConversations()
 
-  // Memoize callback for unread tracking
-  const handleUnreadMessage = useCallback(
-    (conversationId: string, message: Message) => {
-      // Track unread message for conversation that is NOT currently open
-      console.log(`📬 Unread message from conversation ${conversationId}`)
-      addUnreadMessage(conversationId, message.sentTime)
-    },
-    [addUnreadMessage]
-  )
+  // Sync unread status from conversations API on initial load
+  useEffect(() => {
+    if (conversations && conversations.length > 0) {
+      conversations.forEach((conv) => {
+        // If conversation has newMessage flag, mark it as having 1 unread
+        // (We don't have exact count from conversations API, but we know there's at least 1)
+        if (conv.newMessage) {
+          const currentUnread = getUnreadCount(conv.id)
+          // Only set if not already tracked (to avoid overwriting WebSocket updates)
+          if (currentUnread === 0) {
+            console.log(`📩 Syncing unread for conversation ${conv.id} from API`)
+            setUnreadCount(conv.id, 1)
+          }
+        }
+      })
+    }
+  }, [conversations, getUnreadCount, setUnreadCount])
 
-  // Subscribe to ALL conversations for unread tracking
-  useAllConversationsSubscription(
-    conversations,
-    selectedConversation?.id || null,
-    handleUnreadMessage
-  )
+  // NOTE: Global subscription is now handled by useGlobalChatSubscription in AuthenticatedLayout
+  // No need to subscribe to all conversations here
 
   // Fetch messages for selected conversation
   const { data: messagesData, isLoading: isLoadingMessages } = useMessages(
@@ -133,27 +134,21 @@ export function Chats() {
     handleMessageReceived
   )
 
-  // Clear unread when switching conversation
+  // Set/clear active conversation and clear unread when switching
   useEffect(() => {
     if (selectedConversation?.id) {
+      // Mark this conversation as active (so global subscription won't show notifications for it)
+      useActiveConversationStore.getState().setActiveConversation(selectedConversation.id)
       clearUnread(selectedConversation.id)
+    } else {
+      useActiveConversationStore.getState().clearActiveConversation()
+    }
+
+    // Clear active conversation when component unmounts
+    return () => {
+      useActiveConversationStore.getState().clearActiveConversation()
     }
   }, [selectedConversation?.id, clearUnread])
-
-  // Hide unread divider after 3s when opening conversation
-  useEffect(() => {
-    if (selectedConversation) {
-      // Reset divider visibility
-      setShowUnreadDivider(true)
-
-      // Hide divider after 3s
-      const timer = setTimeout(() => {
-        setShowUnreadDivider(false)
-      }, 3000)
-
-      return () => clearTimeout(timer)
-    }
-  }, [selectedConversation?.id])
 
   // Detect scroll to show/hide load more button
   useEffect(() => {
@@ -172,12 +167,11 @@ export function Chats() {
 
   // Reset scroll flags when conversation changes
   useEffect(() => {
-    hasScrolledToUnread.current = false
     hasInitialScrolled.current = false
     isLoadingMoreRef.current = false
   }, [selectedConversation?.id])
 
-  // Auto-scroll to unread messages or bottom when conversation loads
+  // Auto-scroll to bottom when conversation loads
   useEffect(() => {
     // Skip scroll if loading more messages or still loading
     if (isLoadingMoreRef.current || isLoadingMessages) {
@@ -188,32 +182,17 @@ export function Chats() {
     if (messagesData?.messages && messagesData.messages.length > 0 && !hasInitialScrolled.current) {
       // Wait for DOM to be fully rendered before scrolling
       const scrollTimeout = setTimeout(() => {
-        // If has unread messages and should show divider
-        if (messagesData.lastReadId && messagesData.totalUnread > 0 && showUnreadDivider && !hasScrolledToUnread.current) {
-          if (unreadDividerRef.current) {
-            // Use instant scroll first to ensure position, then smooth
-            unreadDividerRef.current.scrollIntoView({
-              behavior: 'auto', // Instant scroll
-              block: 'center'
-            })
-            hasScrolledToUnread.current = true
-            hasInitialScrolled.current = true
-            console.log('📍 Scrolled to unread divider')
-          }
-        } else if (!messagesData.lastReadId || messagesData.totalUnread === 0) {
-          // No unread messages, scroll to bottom
-          if (messagesEndRef.current) {
-            // Use instant scroll to ensure it works even with slow rendering
-            messagesEndRef.current.scrollIntoView({ behavior: 'auto' })
-            hasInitialScrolled.current = true
-            console.log('📍 Scrolled to bottom (no unread)')
-          }
+        // Scroll to bottom
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'auto' })
+          hasInitialScrolled.current = true
+          console.log('📍 Scrolled to bottom')
         }
-      }, 100) // Reduced timeout since we're using instant scroll
+      }, 100)
 
       return () => clearTimeout(scrollTimeout)
     }
-  }, [messagesData?.messages, messagesData?.lastReadId, messagesData?.totalUnread, showUnreadDivider, selectedConversation?.id, isLoadingMessages])
+  }, [messagesData?.messages, selectedConversation?.id, isLoadingMessages])
 
   // Auto-scroll to bottom when new message arrives (after initial load)
   useEffect(() => {
@@ -610,9 +589,6 @@ export function Chats() {
                                   {/* Messages */}
                                   {messages.map((msg, msgIndex) => {
                                     const isOwnMessage = msg.senderId === user?.id
-                                    const isLastReadMessage = messagesData?.lastReadId === msg.id
-                                    const hasNextMessage = messages[msgIndex + 1]
-                                    const shouldShowDivider = showUnreadDivider && isLastReadMessage && hasNextMessage
 
                                     return (
                                       <div key={msg.id || msgIndex}>
@@ -691,20 +667,6 @@ export function Chats() {
                                             )}
                                           </span>
                                         </div>
-
-                                        {/* Unread Divider After This Message */}
-                                        {shouldShowDivider && (
-                                          <div
-                                            ref={unreadDividerRef}
-                                            className='flex items-center gap-3 my-4'
-                                          >
-                                            <div className='flex-1 h-0.5 bg-gradient-to-r from-transparent via-destructive to-transparent' />
-                                            <span className='text-xs font-semibold text-destructive uppercase bg-background px-3 py-1 rounded-full border-2 border-destructive shadow-sm whitespace-nowrap'>
-                                              Tin nhắn chưa đọc
-                                            </span>
-                                            <div className='flex-1 h-0.5 bg-gradient-to-r from-transparent via-destructive to-transparent' />
-                                          </div>
-                                        )}
                                       </div>
                                     )
                                   })}

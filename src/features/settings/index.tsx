@@ -43,7 +43,7 @@ export function Settings() {
       {/* ===== Top Heading ===== */}
       <Header>
         <Search />
-        <div className='ms-auto flex items-center space-x-4'>
+        <div className='ms-auto flex items-center gap-1'>
           <ThemeSwitch />
           <ConfigDrawer />
           <ProfileDropdown />

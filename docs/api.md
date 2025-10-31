@@ -423,6 +423,80 @@
 ]
 ```
 
+
+**Endpoint:** `GET /api/departments/admin`
+
+**Mô tả:** Lấy tất cả các khoa trong bệnh  admin
+
+- param
+- `keyword(optional)`
+- các tham số phân trang với kiêu pageable(spring boot)
+
+**Response:**
+```json
+[
+    {
+        "id": 1,
+        "name": "Khoa Nội tổng hợp",
+        "phone": "0901234567",
+        "description": "Khám và điều trị các bệnh lý nội khoa"
+    },
+    {
+        "id": 2,
+        "name": "Khoa Ngoại tổng quát",
+        "phone": "0902345678",
+        "description": "Phẫu thuật và điều trị các bệnh ngoại khoa"
+    },
+    {
+        "id": 3,
+        "name": "Khoa Nhi",
+        "phone": "0903456789",
+        "description": "Khám và điều trị bệnh cho trẻ em"
+    },
+    {
+        "id": 4,
+        "name": "Khoa Sản",
+        "phone": "0904567890",
+        "description": "Khám thai, sinh đẻ và chăm sóc sức khỏe sinh sản"
+    },
+    {
+        "id": 5,
+        "name": "Khoa Tim mạch",
+        "phone": "0905678901",
+        "description": "Khám và điều trị các bệnh về tim mạch"
+    },
+    {
+        "id": 6,
+        "name": "Khoa Mắt",
+        "phone": "0906789012",
+        "description": "Khám và điều trị các bệnh lý về mắt"
+    },
+    {
+        "id": 7,
+        "name": "Khoa Tai Mũi Họng",
+        "phone": "0907890123",
+        "description": "Khám và điều trị các bệnh lý về tai, mũi, họng"
+    },
+    {
+        "id": 8,
+        "name": "Khoa Răng Hàm Mặt",
+        "phone": "0908901234",
+        "description": "Khám và điều trị các bệnh lý về răng, hàm, mặt"
+    },
+    {
+        "id": 9,
+        "name": "Khoa Da liễu",
+        "phone": "0909012345",
+        "description": "Khám và điều trị các bệnh ngoài da"
+    },
+    {
+        "id": 10,
+        "name": "Khoa Xét nghiệm",
+        "phone": "0910123456",
+        "description": "Thực hiện các xét nghiệm máu, sinh hóa, vi sinh"
+    }
+]
+```
 ---
 
 ### 3.2 Lấy danh sách bác sĩ theo khoa
@@ -477,7 +551,7 @@
 **Response:**
 ```json
 {
-  "data": [/api/services
+  "data": [
         {
             "id": 3,
             "fullName": "BS. PHAM VAN TIEN",
@@ -918,6 +992,148 @@
 ]
 ```
 
+**Endpoint:** `GET /api/services/admin`
+
+**Mô tả:** Lấy danh sách các gói khám/dịch vụ (phía admin)
+
+**Query Parameters:**
+- `keyword` (optional): Từ khóa tìm kiếm
+- `priceFrom`, `priceTo`: dưới 1tr, 1tr-3tr, 3tr-5tr, trên 5tr
+- `type`: DICH_VU, XET_NGHIEM
+**Response:**
+```json
+{
+    "data": {
+        "content": [
+            {
+                "id": 1,
+                "code": "KB001",
+                "name": "khám bệnh",
+                "price": 0.0,
+                "roomNumber": "101A",
+                "roomName": "Phòng khám Nội tổng quát",
+                "type": "KHAC"
+            },
+            {
+                "id": 12,
+                "code": "DV_001",
+                "name": "Gói khám tổng quát",
+                "price": 5000.0,
+                "description": "Gói khám sức khỏe tổng quát là chương trình khám sức khỏe toàn diện, giúp phát hiện sớm các bệnh lý tiềm ẩn, đánh giá tình trạng sức khỏe hiện tại, tư vấn chế độ sinh hoạt và phòng ngừa bệnh tật. Gói khám bao gồm: Khám lâm sàng tổng quát (khám nội khoa, đo huyết áp, chiều cao, cân nặng, BMI, mạch, nhiệt độ), khám chuyên khoa (tai mũi họng, mắt, răng hàm mặt). Xét nghiệm máu tổng quát (công thức máu, hồng cầu, bạch cầu, tiểu cầu, hemoglobin), xét nghiệm sinh hóa (đường huyết đói, ure, creatinin, AST, ALT, bilirubin, cholesterol, triglycerid, HDL, LDL), xét nghiệm nước tiểu tổng quát. Chẩn đoán hình ảnh: X-quang phổi, điện tim đồ, siêu âm ổ bụng (gan, mật, tụy, lách, thận). Kết quả khám được bác sĩ chuyên khoa tư vấn chi tiết, giải thích các chỉ số, đưa ra khuyến nghị về chế độ ăn uống, tập luyện, sinh hoạt. Phát hiện sớm các bệnh lý về tim mạch, tiểu đường, gan, thận, ung thư để có phương án điều trị kịp thời. Gói khám phù hợp với mọi đối tượng, đặc biệt khuyến khích cho người trên 35 tuổi, người có tiền sử gia đình mắc bệnh mãn tính. Thời gian khám: khoảng 2-3 giờ, có kết quả đầy đủ trong ngày hoặc 1-2 ngày.",
+                "roomNumber": "101A",
+                "roomName": "Phòng khám Nội tổng quát",
+                "type": "DICH_VU"
+            },
+            {
+                "id": 32,
+                "code": "XN_TUYEN_GIAP",
+                "name": "Xét nghiệm tuyến giáp cơ bản",
+                "price": 2000.0,
+                "description": "TSH, FT4 cơ bản (lấy mẫu, trả kết quả tại phòng nội)",
+                "roomNumber": "101A",
+                "roomName": "Phòng khám Nội tổng quát",
+                "type": "XET_NGHIEM"
+            },
+            {
+                "id": 33,
+                "code": "SA_MO_MEM",
+                "name": "Siêu âm mô mềm - mạch nông",
+                "price": 2000.0,
+                "description": "Cơ, gân, tuyến giáp, mô mềm…",
+                "roomNumber": "112A",
+                "roomName": "Phóng khám Ngoại tổng quát",
+                "type": "XET_NGHIEM"
+            },
+            {
+                "id": 30,
+                "code": "TEST_NHI_NHANH",
+                "name": "Test nhanh Nhi khoa",
+                "price": 2000.0,
+                "description": "Test nhanh Nhi khoa là các xét nghiệm chẩn đoán tại chỗ (Point-of-Care Testing - POCT) cho kết quả nhanh chóng trong 5-30 phút, giúp bác sĩ nhi khoa chẩn đoán và điều trị kịp thời các bệnh nhiễm trùng thường gặp ở trẻ em. Các loại test nhanh phổ biến trong Nhi khoa: Test nhanh cúm (Influenza A/B): phát hiện virus cúm A và B từ dịch mũi họng. Triệu chứng: sốt cao đột ngột, ho, sổ mũi, đau họng, đau đầu, mệt mỏi. Kết quả: 10-15 phút. Test nhanh strep A (Streptococcus A): phát hiện vi khuẩn strep nhóm A gây viêm họng. Triệu chứng: đau họng, sốt, họng đỏ, hạch cổ to, không ho. Kết quả: 5-10 phút. Giúp quyết định có cần kháng sinh hay không. Test nhanh RSV (Respiratory Syncytial Virus): phát hiện virus RSV gây nhiễm trùng đường hô hấp, đặc biệt nguy hiểm ở trẻ nhỏ dưới 2 tuổi. Triệu chứng: ho, khò khè, khó thở, sổ mũi. Kết quả: 10-15 phút. Test nhanh Adenovirus: phát hiện virus Adeno gây viêm họng, viêm kết mạc, viêm phổi, tiêu chảy. Triệu chứng: sốt, đau họng, đau mắt đỏ, tiêu chảy. Kết quả: 10 phút. Test nhanh sốt xuất huyết (Dengue NS1, IgM/IgG): phát hiện virus Dengue. Triệu chứng: sốt cao, đau đầu, đau sau hốc mắt, đau khớp, xuất huyết da. NS1 dương tính trong 5 ngày đầu sốt. Kết quả: 15-20 phút. Test nhanh Rotavirus/Adenovirus (trong phân): phát hiện virus gây tiêu chảy cấp ở trẻ nhỏ. Triệu chứng: tiêu chảy nhiều lần, nôn, sốt, nguy cơ mất nước. Kết quả: 10 phút. Test nhanh COVID-19 (SARS-CoV-2): phát hiện kháng nguyên hoặc kháng thể virus COVID-19. Triệu chứng: sốt, ho, mệt, mất vị giác/khứu giác. Kết quả: 15-30 phút. Test nhanh Mycoplasma pneumoniae: phát hiện vi khuẩn gây viêm phổi không điển hình ở trẻ lớn. Triệu chứng: ho khan kéo dài, sốt nhẹ. Test nhanh phân (Occult Blood Test): phát hiện máu ẩn trong phân, đánh giá tiêu chảy có máu, dị ứng protein sữa bò. Ưu điểm của test nhanh: Kết quả nhanh (5-30 phút), không cần máy móc phức tạp, lấy mẫu đơn giản (dịch mũi họng, nước tiểu, phân, máu), giúp chẩn đoán và điều trị kịp thời, tránh lạm dụng kháng sinh, yên tâm cho phụ huynh. Hạn chế: độ nhạy, độ đặc hiệu thấp hơn xét nghiệm chuẩn tại phòng lab, cần kết hợp triệu chứng lâm sàng để đưa ra quyết định điều trị. Quy trình: Lấy mẫu bệnh phẩm (phết họng, hút dịch mũi, lấy máu đầu ngón tay, lấy phân), thực hiện test theo hướng dẫn nhà sản xuất, chờ kết quả 5-30 phút, bác sĩ đọc kết quả và tư vấn điều trị. Phù hợp cho: trẻ có triệu chứng nhiễm trùng cấp cần chẩn đoán nhanh, phụ huynh muốn biết nguyên nhân bệnh của con, quyết định có cần kháng sinh hay chỉ điều trị triệu chứng.",
+                "roomNumber": "103A",
+                "roomName": "Phòng khám Nhi khoa",
+                "type": "XET_NGHIEM"
+            },
+            {
+                "id": 22,
+                "code": "SA_THAI",
+                "name": "Siêu âm thai",
+                "price": 2000.0,
+                "description": "Siêu âm thai (obstetric ultrasound) là phương pháp chẩn đoán hình ảnh an toàn, không xâm lấn, sử dụng sóng siêu âm để theo dõi sự phát triển của thai nhi và sức khỏe của mẹ bầu trong suốt thai kỳ. Các loại siêu âm thai: Siêu âm thai 3 tháng đầu (6-12 tuần): xác định tuổi thai chính xác, xác nhận tim thai, số lượng thai (đơn thai/đa thai), vị trí thai (trong/ngoài tử cung), phát hiện sớm dị tật lớn. Siêu âm sàng lọc dị tật 3 tháng giữa (11-13 tuần): đo độ mờ da gáy (NT - nuchal translucency) để sàng lọc hội chứng Down và các bất thường nhiễm sắc thể. Siêu âm thai hình thái học (18-22 tuần): đánh giá chi tiết cấu trúc thai nhi (não, tim, cột sống, thận, tứ chi), phát hiện dị tật bẩm sinh, đánh giá lượng nước ối, vị trí rau thai, đo chiều dài cổ tử cung (nguy cơ sinh non). Siêu âm 3 tháng cuối (28-32 tuần): đánh giá tốc độ tăng trưởng thai nhi, ước tính cân nặng thai, đánh giá lượng nước ối, Doppler động mạch rốn (đánh giá tuần hoàn máu mẹ-con), xác định vị trí thai (ngôi đầu/ngôi ngược), vị trí rau thai, độ chín của rau. Siêu âm 4D: cho phép quan sát khuôn mặt và cử động của thai nhi theo thời gian thực, giá trị cảm xúc cao cho cha mẹ. Siêu âm Doppler: đánh giá lưu lượng máu trong động mạch rốn, động mạch tử cung, phát hiện sớm nguy cơ chậm tăng trưởng trong tử cung, tiền sản giật. Lợi ích: theo dõi sự phát triển bình thường của thai, phát hiện sớm dị tật để có kế hoạch xử trí, xác định tuổi thai và ngày dự sinh, phát hiện các biến chứng thai kỳ. Không cần nhịn đói, nên uống nhiều nước trước khi siêu âm giai đoạn đầu. An toàn tuyệt đối cho mẹ và bé.",
+                "roomNumber": "110A",
+                "roomName": "Phòng khám khoa sản",
+                "type": "XET_NGHIEM"
+            },
+            {
+                "id": 23,
+                "code": "SA_OB",
+                "name": "Siêu âm ổ bụng",
+                "price": 2000.0,
+                "description": "Siêu âm ổ bụng (abdominal ultrasound) là phương pháp chẩn đoán hình ảnh sử dụng sóng siêu âm để quan sát và đánh giá các cơ quan trong ổ bụng. Các cơ quan được khảo sát: Gan: đánh giá kích thước, hình dạng, cấu trúc nọ gan, phát hiện gan nhiễm mỡ, xơ gan, viêm gan, u gan (u lành tính, ung thư gan nguyên phát, di căn), áp xe gan, nang gan. Túi mật và đường mật: phát hiện sỏi mật, viêm túi mật, polyp túi mật, ung thư túi mật, giãn đường mật. Tụy: đánh giá kích thước và cấu trúc tụy, phát hiện viêm tụy cấp/mãn tính, u tụy, ung thư tụy. Lách: đo kích thước lách, phát hiện lách to, u lách, vỡ lách. Thận: đánh giá hình dạng, kích thước, vị trí thận, phát hiện sỏi thận, giãn đài bể thận, nang thận, u thận, viêm thận, teo thận. Bàng quang: đánh giá thành bàng quang, phát hiện sỏi, u bàng quang, viêm bàng quang. Tử cung và buồng trứng (ở nữ): đánh giá kích thước tử cung, phát hiện u xơ tử cung, polyp buồng tử cung, u nang buồng trứng, dịch ổ bụng. Tuyến tiền liệt (ở nam): đánh giá kích thước và cấu trúc tuyến tiền liệt. Mạch máu lớn: động mạch chủ bụng, tĩnh mạch chủ dưới, tĩnh mạch cửa. Hạch bạch huyết ổ bụng. Dịch ổ bụng (cổ trướng). Chỉ định siêu âm ổ bụng: đau bụng không rõ nguyên nhân, vàng da, gan to lách to, tiểu máu, sỏi thận, khám sức khỏe định kỳ, theo dõi bệnh lý mãn tính (gan, thận). Chuẩn bị: nhịn đói tối thiểu 6-8 giờ trước siêu âm (để giảm khí trong ruột, túi mật căng tốt), uống nhiều nước và nín tiểu trước siêu âm (để bàng quang căng giúp quan sát tốt hơn). Thời gian thực hiện: 15-30 phút. An toàn, không đau, không xâm lấn.",
+                "roomNumber": "110A",
+                "roomName": "Phòng khám khoa sản",
+                "type": "XET_NGHIEM"
+            },
+            {
+                "id": 24,
+                "code": "ECG",
+                "name": "Điện tim đồ (ECG)",
+                "price": 2000.0,
+                "description": "Điện tim đồ (ECG - Electrocardiogram) là xét nghiệm ghi nhận hoạt động điện của tim, giúp chẩn đoán các bệnh lý tim mạch. Nguyên lý: ghi nhận sự thay đổi điện thế trên bề mặt da khi tim co bóp và dẫn truyền xung điện, thông qua các điện cực đặt trên ngực, tay, chân. Kết quả là đường ghi điện tim với các sóng đặc trưng: sóng P (nhĩ co), phức bộ QRS (tâm thất co), sóng T (tâm thất hồi phục). Các loại ECG: ECG thường (resting ECG): ghi điện tim khi nghỉ ngơi, 12 chuyển đạo chuẩn, thời gian 5-10 phút. ECG gắng sức (exercise stress test): ghi điện tim khi vận động (chạy trên máy chạy bộ hoặc đạp xe), đánh giá khả năng gắng sức của tim, phát hiện thiếu máu cơ tim khi gắng sức. Holter ECG: ghi điện tim liên tục 24-48 giờ trong sinh hoạt thường ngày, phát hiện rối loạn nhịp tim kịch phát. ECG giúp chẩn đoán: Nhồi máu cơ tim cấp (STEMI, NSTEMI): thay đổi đoạn ST, sóng Q bệnh lý. Đau thắt ngực, thiếu máu cơ tim: thay đổi đoạn ST-T khi gắng sức. Rối loạn nhịp tim: nhịp nhanh (tachycardia), nhịp chậm (bradycardia), rung nhĩ, cuồng nhĩ, ngoại tâm thu, block nhĩ thất. Phì đại tim: phì đại nhĩ, phì đại thất. Viêm cơ tim, viêm màng ngoài tim. Rối loạn điện giải (tăng/giảm Kali). Tác dụng phụ của thuốc trên tim. Chỉ định làm ECG: đau ngực, khó thở, hồi hộp đánh trống ngực, chóng mặt, ngất, tiền sử gia đình có bệnh tim, tiền sử bệnh tim mạch, trước phẫu thuật, khám sức khỏe định kỳ ở người trên 40 tuổi. Chuẩn bị: không cần nhịn đói, mặc quần áo thoải mái dễ cởi, không bôi kem dưỡng da vùng ngực. Thời gian: 5-10 phút. An toàn tuyệt đối, không đau, không xâm lấn. Có kết quả ngay.",
+                "roomNumber": "108A",
+                "roomName": "Phòng khám Tim mạch",
+                "type": "XET_NGHIEM"
+            },
+            {
+                "id": 25,
+                "code": "SA_TIM",
+                "name": "Siêu âm tim",
+                "price": 2000.0,
+                "description": "Siêu âm tim (echocardiography) là phương pháp chẩn đoán hình ảnh sử dụng sóng siêu âm để quan sát cấu trúc và đánh giá chức năng của tim. Đây là xét nghiệm quan trọng nhất trong chẩn đoán bệnh lý tim. Các loại siêu âm tim: Siêu âm tim qua thành ngực (TTE - Transthoracic Echo): đầu dò siêu âm đặt trên thành ngực, phương pháp phổ biến nhất, không xâm lấn. Siêu âm tim qua thực quản (TEE - Transesophageal Echo): đầu dò siêu âm đưa qua thực quản, cho hình ảnh rõ nét hơn, dùng khi TTE không đủ thông tin. Siêu âm tim gắng sức (stress echo): siêu âm tim khi nghỉ và sau gắng sức, đánh giá thiếu máu cơ tim. Siêu âm Doppler tim: đánh giá dòng chảy máu qua các van tim và trong các buồng tim. Các thông số đánh giá: Cấu trúc tim: kích thước và độ dày thành các buồng tim (nhĩ trái, nhĩ phải, tâm thất trái, tâm thất phải), vách liên nhĩ, vách liên thất. Chức năng tâm thu: phân suất tống máu (EF - Ejection Fraction, bình thường >55%), vận động vùng thành tim. Chức năng tâm trương: đánh giá sự giãn nở của tâm thất trong quá trình đổ đầy máu. Van tim: đánh giá hình thái và chức năng 4 van tim (van hai lá, van ba lá, van động mạch chủ, van động mạch phổi), phát hiện hẹp van, hở van, sa van. Màng ngoài tim: phát hiện tràn dịch màng ngoài tim, viêm màng ngoài tim. Động mạch chủ: đánh giá gốc động mạch chủ, phát hiện giãn động mạch chủ, bóc tách động mạch chủ. Khối trong tim: phát hiện huyết khối trong buồng tim, u tim. Áp lực động mạch phổi. Siêu âm tim giúp chẩn đoán: suy tim, bệnh cơ tim (phì đại, giãn), bệnh van tim, bệnh động mạch chủ, bệnh bẩm sinh tim, viêm cơ tim, viêm màng ngoài tim, huyết khối trong tim, u tim. Chỉ định: khó thở, đau ngực, phù, hồi hộp, nghe tim có tiếng thổi, ECG bất thường, tăng huyết áp, tiền sử bệnh tim, theo dõi sau điều trị. Không cần nhịn đói, không chuẩn bị gì đặc biệt. Thời gian: 30-60 phút. An toàn, không đau.",
+                "roomNumber": "108A",
+                "roomName": "Phòng khám Tim mạch",
+                "type": "XET_NGHIEM"
+            },
+            {
+                "id": 27,
+                "code": "MAT_NHAN_AP",
+                "name": "Đo nhãn áp",
+                "price": 2000.0,
+                "description": "Đo nhãn áp (tonometry) là xét nghiệm đo áp lực bên trong nhãn cầu (intraocular pressure - IOP), rất quan trọng trong chẩn đoán và theo dõi bệnh glôcôm (tăng nhãn áp). Nhãn áp bình thường: 10-21 mmHg. Tăng nhãn áp (>21 mmHg) là yếu tố nguy cơ chính gây tổn thương thần kinh thị giác, dẫn đến mù lòa nếu không điều trị. Các phương pháp đo nhãn áp: Đo nhãn áp bằng máy thổi khí (non-contact tonometry, NCT): máy thổi luồng khí vào giác mạc, đo độ lõm của giác mạc để tính nhãn áp. Ưu điểm: nhanh, không cần thuốc tê, không tiếp xúc trực tiếp. Nhược điểm: độ chính xác thấp hơn. Đo nhãn áp tiếp xúc (applanation tonometry, Goldmann): đầu đo tiếp xúc nhẹ lên giác mạc sau khi nhỏ thuốc tê và thuốc nhuộm huỳnh quang. Ưu điểm: độ chính xác cao nhất, tiêu chuẩn vàng. Nhược điểm: cần thuốc tê, tiếp xúc trực tiếp. Đo nhãn áp cầm tay (handheld tonometry): thiết bị cầm tay, tiện lợi, dùng cho trẻ em, người già không hợp tác. Chỉ định đo nhãn áp: khám mắt định kỳ ở người trên 40 tuổi (tầm soát glôcôm), tiền sử gia đình có glôcôm, cận thị cao, đái tháo đường, tăng huyết áp, chấn thương mắt, sử dụng corticoid kéo dài, đau mắt, nhìn mờ, nhìn thấy quầng sáng quanh bóng đèn, thu hẹp thị trường, theo dõi điều trị glôcôm. Quy trình: nhỏ thuốc tê mắt (Alcaine, Benoxinate), chờ 1-2 phút, đặt đầu đo hoặc thổi khí vào giác mạc, đo cả 2 mắt, ghi nhận kết quả. Thời gian: 5 phút. Không đau, hơi khó chịu khi tiếp xúc. Sau đo: có thể cộm mắt vài phút do thuốc tê, không lái xe ngay sau khi đo.",
+                "roomNumber": "106A",
+                "roomName": "Phòng khám Mắt",
+                "type": "XET_NGHIEM"
+            }
+        ],
+        "pageable": {
+            "pageNumber": 0,
+            "pageSize": 10,
+            "sort": {
+                "sorted": false,
+                "unsorted": true,
+                "empty": true
+            },
+            "offset": 0,
+            "paged": true,
+            "unpaged": false
+        },
+        "totalPages": 2,
+        "totalElements": 20,
+        "last": false,
+        "first": true,
+        "size": 10,
+        "number": 0,
+        "sort": {
+            "sorted": false,
+            "unsorted": true,
+            "empty": true
+        },
+        "numberOfElements": 10,
+        "empty": false
+    },
+    "message": "Fetched all services for admin successfully"
+}
+```
 ---
 
 ### 6.2 Lấy chi tiết dịch vụ
@@ -2619,6 +2835,168 @@
 
 ### Base URL: `/api/invoices`
 
+### lấy tất cả hóa đơn 
+**Endpoint:** `GET /api/invoices`
+
+tham số param (optional): page=0&size=10&sort=paymentDate,asc
+request body
+```
+response
+```json
+    {
+    "data": {
+        "content": [
+            {
+                "id": 15,
+                "code": "HD000015",
+                "patientName": "Dương Văn Quang",
+                "paymentMethod": "TIEN_MAT",
+                "paymentDate": "2025-10-28T17:00:00",
+                "totalAmount": 8000,
+                "paidAmount": 8000,
+                "status": "DA_THANH_TOAN",
+                "examFee": null,
+                "date": null
+            },
+            {
+                "id": 42,
+                "code": "HD000042",
+                "patientName": "Lý Thị Nga",
+                "paymentMethod": "TIEN_MAT",
+                "paymentDate": "2025-10-28T16:20:00",
+                "totalAmount": 6000,
+                "paidAmount": 6000,
+                "status": "DA_THANH_TOAN",
+                "examFee": null,
+                "date": null
+            },
+            {
+                "id": 280,
+                "code": "HD1761641412",
+                "patientName": "-",
+                "paymentMethod": "CHUYEN_KHOAN",
+                "paymentDate": "2025-10-28T15:50:13",
+                "totalAmount": 5000,
+                "paidAmount": 5000,
+                "status": "DA_THANH_TOAN",
+                "examFee": null,
+                "date": null
+            },
+            {
+                "id": 60,
+                "code": "HD000060",
+                "patientName": "Dương Văn Quang",
+                "paymentMethod": "TIEN_MAT",
+                "paymentDate": "2025-10-28T15:45:00",
+                "totalAmount": 10000,
+                "paidAmount": 10000,
+                "status": "DA_THANH_TOAN",
+                "examFee": null,
+                "date": null
+            },
+            {
+                "id": 279,
+                "code": "HD1761640586",
+                "patientName": "-",
+                "paymentMethod": "CHUYEN_KHOAN",
+                "paymentDate": "2025-10-28T15:36:26",
+                "totalAmount": 2000,
+                "paidAmount": 0,
+                "status": "THANH_TOAN_MOT_PHAN",
+                "examFee": null,
+                "date": null
+            },
+            {
+                "id": 278,
+                "code": "HD1761636606",
+                "patientName": "-",
+                "paymentMethod": "CHUYEN_KHOAN",
+                "paymentDate": "2025-10-28T14:30:07",
+                "totalAmount": 5000,
+                "paidAmount": 5000,
+                "status": "DA_THANH_TOAN",
+                "examFee": null,
+                "date": null
+            },
+            {
+                "id": 7,
+                "code": "HD000007",
+                "patientName": "Đỗ Văn Giang",
+                "paymentMethod": "CHUYEN_KHOAN",
+                "paymentDate": "2025-10-28T14:30:00",
+                "totalAmount": 5000,
+                "paidAmount": 5000,
+                "status": "DA_THANH_TOAN",
+                "examFee": null,
+                "date": null
+            },
+            {
+                "id": 51,
+                "code": "HD000051",
+                "patientName": "Vũ Thị Phượng",
+                "paymentMethod": "TIEN_MAT",
+                "paymentDate": "2025-10-28T14:10:00",
+                "totalAmount": 10000,
+                "paidAmount": 10000,
+                "status": "DA_THANH_TOAN",
+                "examFee": null,
+                "date": null
+            },
+            {
+                "id": 33,
+                "code": "HD000033",
+                "patientName": "Lê Văn Cường",
+                "paymentMethod": "TIEN_MAT",
+                "paymentDate": "2025-10-28T11:15:00",
+                "totalAmount": 8000,
+                "paidAmount": 8000,
+                "status": "DA_THANH_TOAN",
+                "examFee": null,
+                "date": null
+            },
+            {
+                "id": 14,
+                "code": "HD000014",
+                "patientName": "Hà Thị Phương",
+                "paymentMethod": "TIEN_MAT",
+                "paymentDate": "2025-10-28T11:00:00",
+                "totalAmount": 11000,
+                "paidAmount": 11000,
+                "status": "DA_THANH_TOAN",
+                "examFee": null,
+                "date": null
+            }
+        ],
+        "pageable": {
+            "pageNumber": 0,
+            "pageSize": 10,
+            "sort": {
+                "sorted": true,
+                "unsorted": false,
+                "empty": false
+            },
+            "offset": 0,
+            "paged": true,
+            "unpaged": false
+        },
+        "totalPages": 8,
+        "totalElements": 76,
+        "last": false,
+        "first": true,
+        "size": 10,
+        "number": 0,
+        "sort": {
+            "sorted": true,
+            "unsorted": false,
+            "empty": false
+        },
+        "numberOfElements": 10,
+        "empty": false
+    },
+    "message": "Get all medical record successfully"
+}
+
+```
 ### 12.1 Thanh toán tiền mặt
 **Endpoint:** `POST /api/invoices/pay-cash`
 
@@ -3146,6 +3524,113 @@ files, type (xn,avatars)
         "https://files.tienpndev.id.vn/phongkham/xn/xn/1ecd5ac9-676a-4b06-bc13-6e2d60723dab.jpeg"
     ],
     "message": "Upload files successfully"
+}
+```
+
+
+### 19 QUản lí phòng khám
+
+**Endpoint:** `GET /api/rooms`
+
+**Mô tả:** Lấy tất cả các phòng
+
+- param
+- `keyword(optional)`
+- các tham số phân trang với kiêu pageable(spring boot)
+- `departmentId (optional)`
+**Response:**
+```json
+{
+    "data": {
+        "content": [
+            {
+                "roomId": 1,
+                "roomName": "Phòng khám Nội tổng quát",
+                "roomNumber": "101A",
+                "departmentName": "Khoa Nội tổng quát"
+            },
+            {
+                "roomId": 2,
+                "roomName": "Phòng khám răng hàm mặt",
+                "roomNumber": "102A",
+                "departmentName": "Khoa Răng Hàm Mặt"
+            },
+            {
+                "roomId": 3,
+                "roomName": "Phòng khám Nhi khoa",
+                "roomNumber": "103A",
+                "departmentName": "Khoa Nhi"
+            },
+            {
+                "roomId": 5,
+                "roomName": "Phòng khám Tai Mũi Họng",
+                "roomNumber": "105A",
+                "departmentName": "Khoa Tai Mũi Họng"
+            },
+            {
+                "roomId": 6,
+                "roomName": "Phòng khám Mắt",
+                "roomNumber": "106A",
+                "departmentName": "Khoa Mắt"
+            },
+            {
+                "roomId": 7,
+                "roomName": "Phòng khám Da liễu",
+                "roomNumber": "107A",
+                "departmentName": "Khoa Da liễu"
+            },
+            {
+                "roomId": 8,
+                "roomName": "Phòng khám Tim mạch",
+                "roomNumber": "108A",
+                "departmentName": "Khoa Tim mạch"
+            },
+            {
+                "roomId": 10,
+                "roomName": "Phòng khám khoa sản",
+                "roomNumber": "110A",
+                "departmentName": "Khoa Sản"
+            },
+            {
+                "roomId": 11,
+                "roomName": "Phòng khám khoa xét nghiệm ",
+                "roomNumber": "204A",
+                "departmentName": "Khoa Xét nghiệm"
+            },
+            {
+                "roomId": 12,
+                "roomName": "Phóng khám Ngoại tổng quát",
+                "roomNumber": "112A",
+                "departmentName": "Khoa Ngoại tổng quát"
+            }
+        ],
+        "pageable": {
+            "pageNumber": 0,
+            "pageSize": 10,
+            "sort": {
+                "sorted": false,
+                "unsorted": true,
+                "empty": true
+            },
+            "offset": 0,
+            "paged": true,
+            "unpaged": false
+        },
+        "totalPages": 1,
+        "totalElements": 10,
+        "last": true,
+        "first": true,
+        "size": 10,
+        "number": 0,
+        "sort": {
+            "sorted": false,
+            "unsorted": true,
+            "empty": true
+        },
+        "numberOfElements": 10,
+        "empty": false
+    },
+    "message": "Fetched all rooms successfully"
 }
 ```
 ## Thông tin chung

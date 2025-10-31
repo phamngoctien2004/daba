@@ -9,6 +9,7 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search as GlobalSearch } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
+import { useDebounce } from '@/hooks/use-debounce'
 import type { NavigateFn } from '@/hooks/use-table-url-state'
 import { PatientsTable } from './components/patients-table-view'
 import { CreatePatientDialog } from './components/create-patient-dialog'
@@ -38,7 +39,9 @@ export function PatientsManagement() {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
 
-  const keywordFilter = resolveKeyword(search.keyword)
+  // Debounce keyword to avoid excessive API calls
+  const rawKeyword = resolveKeyword(search.keyword)
+  const keywordFilter = useDebounce(rawKeyword, 500)
 
   const page = Math.max(1, search.page ?? DEFAULT_PAGE)
   const pageSize = Math.max(1, search.pageSize ?? DEFAULT_PAGE_SIZE)
@@ -148,7 +151,7 @@ export function PatientsManagement() {
     <>
       <Header fixed>
         <GlobalSearch />
-        <div className='ms-auto flex items-center space-x-4'>
+        <div className='ms-auto flex items-center gap-1'>
           <ThemeSwitch />
           <ChatButton />
           <ConfigDrawer />

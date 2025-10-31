@@ -10,6 +10,7 @@ interface UnreadMessage {
 interface UnreadStore {
     unreadMap: Map<string, UnreadMessage>
     addUnreadMessage: (conversationId: string, messageTime: string) => void
+    setUnreadCount: (conversationId: string, count: number, messageTime?: string) => void
     clearUnread: (conversationId: string) => void
     getUnreadCount: (conversationId: string) => number
     getTotalUnread: () => number
@@ -37,6 +38,25 @@ export const useUnreadStore = create<UnreadStore>()(
                             count: 1,
                             lastMessageTime: messageTime,
                         })
+                    }
+
+                    return { unreadMap: newMap }
+                })
+            },
+
+            setUnreadCount: (conversationId: string, count: number, messageTime?: string) => {
+                set((state) => {
+                    const newMap = new Map(state.unreadMap)
+
+                    if (count > 0) {
+                        newMap.set(conversationId, {
+                            conversationId,
+                            count,
+                            lastMessageTime: messageTime || new Date().toISOString(),
+                        })
+                    } else {
+                        // If count is 0, remove from map
+                        newMap.delete(conversationId)
                     }
 
                     return { unreadMap: newMap }

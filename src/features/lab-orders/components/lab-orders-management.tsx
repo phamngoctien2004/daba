@@ -9,6 +9,7 @@ import { Search as GlobalSearch } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { ErrorDialog } from '@/components/error-dialog'
 import { useToast } from '@/hooks/use-toast'
+import { useDebounce } from '@/hooks/use-debounce'
 import type { NavigateFn } from '@/hooks/use-table-url-state'
 import { LabOrdersTable } from './lab-orders-table'
 import { fetchDoctorLabOrders, processLabOrder } from '../api/lab-orders'
@@ -60,7 +61,10 @@ export function LabOrdersManagement() {
     message: '',
   })
 
-  const keywordFilter = resolveKeyword(search.keyword)
+  // Debounce keyword to avoid excessive API calls
+  const rawKeyword = resolveKeyword(search.keyword)
+  const keywordFilter = useDebounce(rawKeyword, 500)
+
   const dateFilter = resolveDate(search.date)
   const statusFilter = resolveStatus(search.status)
 

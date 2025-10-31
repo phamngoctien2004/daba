@@ -48,6 +48,17 @@ import { Route as AuthenticatedLabOrdersIdRouteImport } from './routes/_authenti
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedDoctorMedicalRecordsIdRouteImport } from './routes/_authenticated/doctor-medical-records/$id'
 import { Route as AuthenticatedAppointmentsCreateRouteImport } from './routes/_authenticated/appointments/create'
+import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
+import { Route as AuthenticatedAdminServicesRouteImport } from './routes/_authenticated/admin/services'
+import { Route as AuthenticatedAdminRoomsRouteImport } from './routes/_authenticated/admin/rooms'
+import { Route as AuthenticatedAdminReportsRouteImport } from './routes/_authenticated/admin/reports'
+import { Route as AuthenticatedAdminPatientsRouteImport } from './routes/_authenticated/admin/patients'
+import { Route as AuthenticatedAdminOverviewRouteImport } from './routes/_authenticated/admin/overview'
+import { Route as AuthenticatedAdminInvoicesRouteImport } from './routes/_authenticated/admin/invoices'
+import { Route as AuthenticatedAdminDoctorsRouteImport } from './routes/_authenticated/admin/doctors'
+import { Route as AuthenticatedAdminDoctorSchedulesRouteImport } from './routes/_authenticated/admin/doctor-schedules'
+import { Route as AuthenticatedAdminDepartmentsRouteImport } from './routes/_authenticated/admin/departments'
+import { Route as AuthenticatedAdminAccountsRouteImport } from './routes/_authenticated/admin/accounts'
 import { Route as AuthenticatedDoctorMedicalRecordsExamineIdRouteImport } from './routes/_authenticated/doctor-medical-records/examine.$id'
 import { Route as AuthenticatedAppointmentsRecordCreateRouteImport } from './routes/_authenticated/appointments/record/create'
 
@@ -261,6 +272,70 @@ const AuthenticatedAppointmentsCreateRoute =
     path: '/appointments/create',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminServicesRoute =
+  AuthenticatedAdminServicesRouteImport.update({
+    id: '/admin/services',
+    path: '/admin/services',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminRoomsRoute = AuthenticatedAdminRoomsRouteImport.update({
+  id: '/admin/rooms',
+  path: '/admin/rooms',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminReportsRoute =
+  AuthenticatedAdminReportsRouteImport.update({
+    id: '/admin/reports',
+    path: '/admin/reports',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminPatientsRoute =
+  AuthenticatedAdminPatientsRouteImport.update({
+    id: '/admin/patients',
+    path: '/admin/patients',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminOverviewRoute =
+  AuthenticatedAdminOverviewRouteImport.update({
+    id: '/admin/overview',
+    path: '/admin/overview',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminInvoicesRoute =
+  AuthenticatedAdminInvoicesRouteImport.update({
+    id: '/admin/invoices',
+    path: '/admin/invoices',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminDoctorsRoute =
+  AuthenticatedAdminDoctorsRouteImport.update({
+    id: '/admin/doctors',
+    path: '/admin/doctors',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminDoctorSchedulesRoute =
+  AuthenticatedAdminDoctorSchedulesRouteImport.update({
+    id: '/admin/doctor-schedules',
+    path: '/admin/doctor-schedules',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminDepartmentsRoute =
+  AuthenticatedAdminDepartmentsRouteImport.update({
+    id: '/admin/departments',
+    path: '/admin/departments',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminAccountsRoute =
+  AuthenticatedAdminAccountsRouteImport.update({
+    id: '/admin/accounts',
+    path: '/admin/accounts',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDoctorMedicalRecordsExamineIdRoute =
   AuthenticatedDoctorMedicalRecordsExamineIdRouteImport.update({
     id: '/doctor-medical-records/examine/$id',
@@ -289,6 +364,17 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/': typeof AuthenticatedIndexRoute
+  '/admin/accounts': typeof AuthenticatedAdminAccountsRoute
+  '/admin/departments': typeof AuthenticatedAdminDepartmentsRoute
+  '/admin/doctor-schedules': typeof AuthenticatedAdminDoctorSchedulesRoute
+  '/admin/doctors': typeof AuthenticatedAdminDoctorsRoute
+  '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
+  '/admin/overview': typeof AuthenticatedAdminOverviewRoute
+  '/admin/patients': typeof AuthenticatedAdminPatientsRoute
+  '/admin/reports': typeof AuthenticatedAdminReportsRoute
+  '/admin/rooms': typeof AuthenticatedAdminRoomsRoute
+  '/admin/services': typeof AuthenticatedAdminServicesRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/appointments/create': typeof AuthenticatedAppointmentsCreateRoute
   '/doctor-medical-records/$id': typeof AuthenticatedDoctorMedicalRecordsIdRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
@@ -328,6 +414,17 @@ export interface FileRoutesByTo {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/': typeof AuthenticatedIndexRoute
+  '/admin/accounts': typeof AuthenticatedAdminAccountsRoute
+  '/admin/departments': typeof AuthenticatedAdminDepartmentsRoute
+  '/admin/doctor-schedules': typeof AuthenticatedAdminDoctorSchedulesRoute
+  '/admin/doctors': typeof AuthenticatedAdminDoctorsRoute
+  '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
+  '/admin/overview': typeof AuthenticatedAdminOverviewRoute
+  '/admin/patients': typeof AuthenticatedAdminPatientsRoute
+  '/admin/reports': typeof AuthenticatedAdminReportsRoute
+  '/admin/rooms': typeof AuthenticatedAdminRoomsRoute
+  '/admin/services': typeof AuthenticatedAdminServicesRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/appointments/create': typeof AuthenticatedAppointmentsCreateRoute
   '/doctor-medical-records/$id': typeof AuthenticatedDoctorMedicalRecordsIdRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
@@ -372,6 +469,17 @@ export interface FileRoutesById {
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/admin/accounts': typeof AuthenticatedAdminAccountsRoute
+  '/_authenticated/admin/departments': typeof AuthenticatedAdminDepartmentsRoute
+  '/_authenticated/admin/doctor-schedules': typeof AuthenticatedAdminDoctorSchedulesRoute
+  '/_authenticated/admin/doctors': typeof AuthenticatedAdminDoctorsRoute
+  '/_authenticated/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
+  '/_authenticated/admin/overview': typeof AuthenticatedAdminOverviewRoute
+  '/_authenticated/admin/patients': typeof AuthenticatedAdminPatientsRoute
+  '/_authenticated/admin/reports': typeof AuthenticatedAdminReportsRoute
+  '/_authenticated/admin/rooms': typeof AuthenticatedAdminRoomsRoute
+  '/_authenticated/admin/services': typeof AuthenticatedAdminServicesRoute
+  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/appointments/create': typeof AuthenticatedAppointmentsCreateRoute
   '/_authenticated/doctor-medical-records/$id': typeof AuthenticatedDoctorMedicalRecordsIdRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
@@ -415,6 +523,17 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/'
+    | '/admin/accounts'
+    | '/admin/departments'
+    | '/admin/doctor-schedules'
+    | '/admin/doctors'
+    | '/admin/invoices'
+    | '/admin/overview'
+    | '/admin/patients'
+    | '/admin/reports'
+    | '/admin/rooms'
+    | '/admin/services'
+    | '/admin/users'
     | '/appointments/create'
     | '/doctor-medical-records/$id'
     | '/errors/$error'
@@ -454,6 +573,17 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/'
+    | '/admin/accounts'
+    | '/admin/departments'
+    | '/admin/doctor-schedules'
+    | '/admin/doctors'
+    | '/admin/invoices'
+    | '/admin/overview'
+    | '/admin/patients'
+    | '/admin/reports'
+    | '/admin/rooms'
+    | '/admin/services'
+    | '/admin/users'
     | '/appointments/create'
     | '/doctor-medical-records/$id'
     | '/errors/$error'
@@ -497,6 +627,17 @@ export interface FileRouteTypes {
     | '/(errors)/500'
     | '/(errors)/503'
     | '/_authenticated/'
+    | '/_authenticated/admin/accounts'
+    | '/_authenticated/admin/departments'
+    | '/_authenticated/admin/doctor-schedules'
+    | '/_authenticated/admin/doctors'
+    | '/_authenticated/admin/invoices'
+    | '/_authenticated/admin/overview'
+    | '/_authenticated/admin/patients'
+    | '/_authenticated/admin/reports'
+    | '/_authenticated/admin/rooms'
+    | '/_authenticated/admin/services'
+    | '/_authenticated/admin/users'
     | '/_authenticated/appointments/create'
     | '/_authenticated/doctor-medical-records/$id'
     | '/_authenticated/errors/$error'
@@ -814,6 +955,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppointmentsCreateRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/users': {
+      id: '/_authenticated/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/services': {
+      id: '/_authenticated/admin/services'
+      path: '/admin/services'
+      fullPath: '/admin/services'
+      preLoaderRoute: typeof AuthenticatedAdminServicesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/rooms': {
+      id: '/_authenticated/admin/rooms'
+      path: '/admin/rooms'
+      fullPath: '/admin/rooms'
+      preLoaderRoute: typeof AuthenticatedAdminRoomsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/reports': {
+      id: '/_authenticated/admin/reports'
+      path: '/admin/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AuthenticatedAdminReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/patients': {
+      id: '/_authenticated/admin/patients'
+      path: '/admin/patients'
+      fullPath: '/admin/patients'
+      preLoaderRoute: typeof AuthenticatedAdminPatientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/overview': {
+      id: '/_authenticated/admin/overview'
+      path: '/admin/overview'
+      fullPath: '/admin/overview'
+      preLoaderRoute: typeof AuthenticatedAdminOverviewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/invoices': {
+      id: '/_authenticated/admin/invoices'
+      path: '/admin/invoices'
+      fullPath: '/admin/invoices'
+      preLoaderRoute: typeof AuthenticatedAdminInvoicesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/doctors': {
+      id: '/_authenticated/admin/doctors'
+      path: '/admin/doctors'
+      fullPath: '/admin/doctors'
+      preLoaderRoute: typeof AuthenticatedAdminDoctorsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/doctor-schedules': {
+      id: '/_authenticated/admin/doctor-schedules'
+      path: '/admin/doctor-schedules'
+      fullPath: '/admin/doctor-schedules'
+      preLoaderRoute: typeof AuthenticatedAdminDoctorSchedulesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/departments': {
+      id: '/_authenticated/admin/departments'
+      path: '/admin/departments'
+      fullPath: '/admin/departments'
+      preLoaderRoute: typeof AuthenticatedAdminDepartmentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/accounts': {
+      id: '/_authenticated/admin/accounts'
+      path: '/admin/accounts'
+      fullPath: '/admin/accounts'
+      preLoaderRoute: typeof AuthenticatedAdminAccountsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/doctor-medical-records/examine/$id': {
       id: '/_authenticated/doctor-medical-records/examine/$id'
       path: '/doctor-medical-records/examine/$id'
@@ -857,6 +1075,17 @@ const AuthenticatedSettingsRouteRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedAdminAccountsRoute: typeof AuthenticatedAdminAccountsRoute
+  AuthenticatedAdminDepartmentsRoute: typeof AuthenticatedAdminDepartmentsRoute
+  AuthenticatedAdminDoctorSchedulesRoute: typeof AuthenticatedAdminDoctorSchedulesRoute
+  AuthenticatedAdminDoctorsRoute: typeof AuthenticatedAdminDoctorsRoute
+  AuthenticatedAdminInvoicesRoute: typeof AuthenticatedAdminInvoicesRoute
+  AuthenticatedAdminOverviewRoute: typeof AuthenticatedAdminOverviewRoute
+  AuthenticatedAdminPatientsRoute: typeof AuthenticatedAdminPatientsRoute
+  AuthenticatedAdminReportsRoute: typeof AuthenticatedAdminReportsRoute
+  AuthenticatedAdminRoomsRoute: typeof AuthenticatedAdminRoomsRoute
+  AuthenticatedAdminServicesRoute: typeof AuthenticatedAdminServicesRoute
+  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAppointmentsCreateRoute: typeof AuthenticatedAppointmentsCreateRoute
   AuthenticatedDoctorMedicalRecordsIdRoute: typeof AuthenticatedDoctorMedicalRecordsIdRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
@@ -879,6 +1108,18 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedAdminAccountsRoute: AuthenticatedAdminAccountsRoute,
+  AuthenticatedAdminDepartmentsRoute: AuthenticatedAdminDepartmentsRoute,
+  AuthenticatedAdminDoctorSchedulesRoute:
+    AuthenticatedAdminDoctorSchedulesRoute,
+  AuthenticatedAdminDoctorsRoute: AuthenticatedAdminDoctorsRoute,
+  AuthenticatedAdminInvoicesRoute: AuthenticatedAdminInvoicesRoute,
+  AuthenticatedAdminOverviewRoute: AuthenticatedAdminOverviewRoute,
+  AuthenticatedAdminPatientsRoute: AuthenticatedAdminPatientsRoute,
+  AuthenticatedAdminReportsRoute: AuthenticatedAdminReportsRoute,
+  AuthenticatedAdminRoomsRoute: AuthenticatedAdminRoomsRoute,
+  AuthenticatedAdminServicesRoute: AuthenticatedAdminServicesRoute,
+  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedAppointmentsCreateRoute: AuthenticatedAppointmentsCreateRoute,
   AuthenticatedDoctorMedicalRecordsIdRoute:
     AuthenticatedDoctorMedicalRecordsIdRoute,

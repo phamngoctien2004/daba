@@ -8,22 +8,25 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Badge } from '@/components/ui/badge'
 import { useAuthStore } from '@/stores/auth-store'
+import { useUnreadStore } from '@/stores/unread-store'
 import { UserRole } from '@/types/auth'
 
-interface ChatButtonProps {
-  showBadge?: boolean
-  badgeCount?: number
-}
-
-export function ChatButton({ showBadge = false, badgeCount = 0 }: ChatButtonProps) {
+export function ChatButton() {
   const { user } = useAuthStore()
+  // Subscribe to unreadMap to trigger re-render on changes
+  const unreadMap = useUnreadStore((state) => state.unreadMap)
 
   // Only show for LE_TAN role
   if (user?.role !== UserRole.LE_TAN) {
     return null
   }
+
+  // Calculate total unread from the map
+  let totalUnread = 0
+  unreadMap.forEach((unread) => {
+    totalUnread += unread.count
+  })
 
   return (
     <TooltipProvider>
@@ -32,18 +35,13 @@ export function ChatButton({ showBadge = false, badgeCount = 0 }: ChatButtonProp
           <Button
             variant='ghost'
             size='icon'
-            className='relative h-9 w-9'
+            className='relative h-9 w-9 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors'
             asChild
           >
             <Link to='/chats'>
               <MessagesSquare className='h-[1.2rem] w-[1.2rem]' />
-              {showBadge && badgeCount > 0 && (
-                <Badge
-                  variant='destructive'
-                  className='absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs'
-                >
-                  {badgeCount > 9 ? '9+' : badgeCount}
-                </Badge>
+              {totalUnread > 0 && (
+                <span className='absolute -top-1 -right-1 h-2.5 w-2.5 bg-red-500 rounded-full' />
               )}
               <span className='sr-only'>Tin nhắn</span>
             </Link>

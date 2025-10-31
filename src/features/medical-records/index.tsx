@@ -9,6 +9,7 @@ import { ConfigDrawer } from '@/components/config-drawer'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search as GlobalSearch } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { useDebounce } from '@/hooks/use-debounce'
 import type { NavigateFn } from '@/hooks/use-table-url-state'
 import { MedicalRecordsTable } from './components/medical-records-table-view'
 import { fetchMedicalRecords, type MedicalRecordStatus } from './api/medical-records'
@@ -49,7 +50,10 @@ export function MedicalRecordsManagement() {
         return todayIso
     }, [search.date, todayIso])
 
-    const keywordFilter = resolveKeyword(search.keyword)
+    // Debounce keyword to avoid excessive API calls
+    const rawKeyword = resolveKeyword(search.keyword)
+    const keywordFilter = useDebounce(rawKeyword, 500)
+
     const statusFilter = resolveStatus(search.status)
 
     const page = Math.max(1, search.page ?? DEFAULT_PAGE)
@@ -119,7 +123,7 @@ export function MedicalRecordsManagement() {
         <>
             <Header fixed>
                 <GlobalSearch />
-                <div className='ms-auto flex items-center space-x-4'>
+                <div className='ms-auto flex items-center gap-1'>
                     <ThemeSwitch />
                     <ChatButton />
                     <ConfigDrawer />

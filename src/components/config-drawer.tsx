@@ -48,9 +48,9 @@ export function ConfigDrawer() {
           variant='ghost'
           aria-label='Open theme settings'
           aria-describedby='config-drawer-description'
-          className='rounded-full'
+          className='h-9 w-9 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors'
         >
-          <Settings aria-hidden='true' />
+          <Settings aria-hidden='true' className='h-[1.2rem] w-[1.2rem]' />
         </Button>
       </SheetTrigger>
       <SheetContent className='flex flex-col'>
@@ -152,7 +152,7 @@ function RadioGroupItem({
         <item.icon
           className={cn(
             !isTheme &&
-              'stroke-primary fill-primary group-data-[state=unchecked]:stroke-muted-foreground group-data-[state=unchecked]:fill-muted-foreground'
+            'stroke-primary fill-primary group-data-[state=unchecked]:stroke-muted-foreground group-data-[state=unchecked]:fill-muted-foreground'
           )}
           aria-hidden='true'
         />

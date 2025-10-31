@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -13,8 +13,6 @@ import { createAppointment } from '../api/appointments'
 import { fetchDepartments, type Department } from '@/features/departments/api/departments'
 import {
   fetchAvailableDoctorsByDepartment,
-  getTodayDate,
-  getCurrentShift,
   type AvailableDoctor
 } from '@/features/schedules/api/schedules'
 import { type Patient } from '@/features/patients/api/patients'
@@ -81,24 +79,51 @@ export function CreateAppointmentForm({
   const { data: departments = [], isLoading: isDepartmentsLoading } = useQuery({
     queryKey: ['departments'],
     queryFn: fetchDepartments,
+    staleTime: 5 * 60 * 1000, // 5 minutes - avoid refetching departments too often
+    gcTime: 10 * 60 * 1000, // 10 minutes cache time
   })
 
-  // Fetch available doctors by selected department and today's date
+  // Calculate date range for fetching available doctors (today + next 7 days)
+  // This is much lighter than fetching entire week history
+  const dateRange = useMemo(() => {
+    const today = new Date()
+    const endDate = new Date()
+    endDate.setDate(today.getDate() + 7) // Next 7 days
+
+    return {
+      startDate: format(today, 'yyyy-MM-dd'),
+      endDate: format(endDate, 'yyyy-MM-dd'),
+    }
+  }, []) // Empty dependency - only calculate once on mount
+
+  // Fetch available doctors by selected department
+  // Only fetch when department is selected to avoid timeout from too much data
   const { data: availableDoctors = [], isLoading: isAvailableDoctorsLoading } = useQuery({
-    queryKey: ['available-doctors', selectedDepartment?.id],
+    queryKey: ['available-doctors', selectedDepartment?.id, dateRange.startDate, dateRange.endDate],
     queryFn: async () => {
       if (!selectedDepartment) return []
-      const today = getTodayDate()
-      const currentShift = getCurrentShift()
+
       return fetchAvailableDoctorsByDepartment({
         departmentId: selectedDepartment.id,
-        startDate: today,
-        endDate: today,
-        shift: currentShift,
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+        // No shift filter - get all shifts for better availability
       })
     },
-    enabled: !!selectedDepartment,
+    enabled: !!selectedDepartment, // Critical: only fetch when department is selected
+    staleTime: 2 * 60 * 1000, // 2 minutes - schedules don't change that often
+    gcTime: 5 * 60 * 1000, // 5 minutes cache time
   })
+
+  // Auto-select first department when departments are loaded
+  // This improves UX and immediately loads available doctors
+  useEffect(() => {
+    if (departments.length > 0 && !selectedDepartment) {
+      const firstDepartment = departments[0]
+      setSelectedDepartment(firstDepartment)
+      form.setValue('departmentId', firstDepartment.id)
+    }
+  }, [departments, selectedDepartment, form])
 
   // Create appointment mutation
   const { mutate: createAppointmentMutation, isPending: isCreating } = useMutation({
