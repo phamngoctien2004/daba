@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -27,16 +26,20 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import { toast } from 'sonner'
+import { useCreateUser } from '../hooks/use-users-crud'
 
 const formSchema = z.object({
-    username: z.string().min(3, 'Username phải có ít nhất 3 ký tự'),
-    password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
-    email: z.string().email('Email không hợp lệ'),
-    role: z.enum(['BAC_SI', 'LE_TAN', 'BENH_NHAN', 'ADMIN'], {
-        message: 'Vui lòng chọn vai trò',
-    }),
     name: z.string().min(1, 'Tên là bắt buộc'),
+    email: z.string().email('Email không hợp lệ'),
+    phone: z.string().min(10, 'Số điện thoại không hợp lệ').max(11, 'Số điện thoại không hợp lệ'),
+    password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+    confirmPassword: z.string().min(1, 'Vui lòng xác nhận mật khẩu'),
+    role: z.enum(['BAC_SI', 'LE_TAN', 'BENH_NHAN', 'ADMIN'], {
+        message: 'Vai trò là bắt buộc',
+    }),
+}).refine((data) => data.password === data.confirmPassword, {
+    message: 'Mật khẩu xác nhận không khớp',
+    path: ['confirmPassword'],
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -44,39 +47,37 @@ type FormValues = z.infer<typeof formSchema>
 type CreateUserDialogProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
+    onSuccess?: () => void
 }
 
 export function CreateUserDialog({
     open,
     onOpenChange,
+    onSuccess,
 }: CreateUserDialogProps) {
-    const [isSubmitting, setIsSubmitting] = useState(false)
+    const { mutate: createMutation, isPending } = useCreateUser(onSuccess)
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            username: '',
-            password: '',
-            email: '',
             name: '',
+            email: '',
+            phone: '',
+            password: '',
+            confirmPassword: '',
+            role: 'BENH_NHAN',
         },
     })
 
-    const onSubmit = async (data: FormValues) => {
-        setIsSubmitting(true)
-        try {
-            console.log('Create user:', data)
-            // TODO: Implement API call
-            // await createUser(data)
-            toast.success('Tạo tài khoản thành công')
-            form.reset()
-            onOpenChange(false)
-        } catch (error) {
-            console.error('Failed to create user:', error)
-            toast.error('Có lỗi xảy ra khi tạo tài khoản')
-        } finally {
-            setIsSubmitting(false)
-        }
+    const onSubmit = async (values: FormValues) => {
+        // Không gửi confirmPassword cho BE, chỉ dùng để validate
+        const { confirmPassword, ...userData } = values
+        createMutation(userData, {
+            onSuccess: () => {
+                form.reset()
+                onOpenChange(false)
+            },
+        })
     }
 
     return (
@@ -91,108 +92,134 @@ export function CreateUserDialog({
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-                        <FormField
-                            control={form.control}
-                            name='username'
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Username</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder='Nhập username' {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            control={form.control}
-                            name='password'
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Mật khẩu</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type='password'
-                                            placeholder='Nhập mật khẩu'
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            control={form.control}
-                            name='email'
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Email</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type='email'
-                                            placeholder='example@email.com'
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            control={form.control}
-                            name='name'
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Tên</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder='Nhập tên người dùng' {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            control={form.control}
-                            name='role'
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Vai trò</FormLabel>
-                                    <Select
-                                        onValueChange={field.onChange}
-                                        defaultValue={field.value}
-                                    >
+                        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                            {/* Name */}
+                            <FormField
+                                control={form.control}
+                                name='name'
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Họ và tên *</FormLabel>
                                         <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder='Chọn vai trò' />
-                                            </SelectTrigger>
+                                            <Input placeholder='Nguyễn Văn A' {...field} />
                                         </FormControl>
-                                        <SelectContent>
-                                            <SelectItem value='ADMIN'>Admin</SelectItem>
-                                            <SelectItem value='BAC_SI'>Bác sĩ</SelectItem>
-                                            <SelectItem value='LE_TAN'>Lễ tân</SelectItem>
-                                            <SelectItem value='BENH_NHAN'>Bệnh nhân</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Email */}
+                            <FormField
+                                control={form.control}
+                                name='email'
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Email *</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type='email'
+                                                placeholder='email@example.com'
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Phone */}
+                            <FormField
+                                control={form.control}
+                                name='phone'
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Số điện thoại *</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder='0901234567' {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Password */}
+                            <FormField
+                                control={form.control}
+                                name='password'
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Mật khẩu *</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type='password'
+                                                placeholder='Nhập mật khẩu'
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Confirm Password */}
+                            <FormField
+                                control={form.control}
+                                name='confirmPassword'
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Xác nhận mật khẩu *</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type='password'
+                                                placeholder='Nhập lại mật khẩu'
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Role */}
+                            <FormField
+                                control={form.control}
+                                name='role'
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Vai trò *</FormLabel>
+                                        <Select
+                                            onValueChange={field.onChange}
+                                            value={field.value}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder='Chọn vai trò' />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value='BENH_NHAN'>Bệnh nhân</SelectItem>
+                                                <SelectItem value='BAC_SI'>Bác sĩ</SelectItem>
+                                                <SelectItem value='LE_TAN'>Lễ tân</SelectItem>
+                                                <SelectItem value='ADMIN'>Admin</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
 
                         <DialogFooter>
                             <Button
                                 type='button'
                                 variant='outline'
                                 onClick={() => onOpenChange(false)}
-                                disabled={isSubmitting}
+                                disabled={isPending}
                             >
                                 Hủy
                             </Button>
-                            <Button type='submit' disabled={isSubmitting}>
-                                {isSubmitting ? 'Đang tạo...' : 'Tạo mới'}
+                            <Button type='submit' disabled={isPending}>
+                                {isPending ? 'Đang thêm...' : 'Thêm người dùng'}
                             </Button>
                         </DialogFooter>
                     </form>

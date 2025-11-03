@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -21,12 +21,11 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { toast } from 'sonner'
-import type { Department } from '../api/departments-list'
+import { useDepartmentDetail, useUpdateDepartment } from '../hooks/use-departments-crud'
 
 const formSchema = z.object({
     name: z.string().min(1, 'Tên khoa là bắt buộc'),
-    phone: z.string().min(10, 'Số điện thoại không hợp lệ'),
+    phone: z.string().min(10, 'Số điện thoại không hợp lệ').max(11, 'Số điện thoại không hợp lệ'),
     description: z.string().min(1, 'Mô tả là bắt buộc'),
 })
 
@@ -35,15 +34,16 @@ type FormValues = z.infer<typeof formSchema>
 type EditDepartmentDialogProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
-    department: Department | null
+    departmentId: number | null
 }
 
 export function EditDepartmentDialog({
     open,
     onOpenChange,
-    department,
+    departmentId,
 }: EditDepartmentDialogProps) {
-    const [isSubmitting, setIsSubmitting] = useState(false)
+    const { data: department, isLoading } = useDepartmentDetail(departmentId, open)
+    const { mutate: updateMutation, isPending } = useUpdateDepartment()
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -54,38 +54,40 @@ export function EditDepartmentDialog({
         },
     })
 
-    // Reset form when department changes
+    // Reset form when department data is loaded
     useEffect(() => {
-        if (department) {
+        if (department && open) {
+            console.log('🔵 [EditDepartmentDialog] Filling form with department data:', department)
             form.reset({
-                name: department.name,
-                phone: department.phone,
-                description: department.description,
+                name: department.name || '',
+                phone: department.phone || '',
+                description: department.description || '',
+            })
+        } else if (!open) {
+            form.reset({
+                name: '',
+                phone: '',
+                description: '',
             })
         }
-    }, [department, form])
+    }, [department, open, form.reset])
 
     const onSubmit = async (values: FormValues) => {
-        if (!department) return
+        if (!departmentId) return
 
-        setIsSubmitting(true)
-        try {
-            console.log('Update department:', department.id, values)
-
-            // TODO: API chưa có - giả lập delay
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-
-            toast.info('API cập nhật khoa chưa được triển khai')
-            onOpenChange(false)
-        } catch (error) {
-            toast.error('Có lỗi xảy ra')
-            console.error(error)
-        } finally {
-            setIsSubmitting(false)
-        }
+        updateMutation(
+            {
+                id: departmentId,
+                ...values,
+            },
+            {
+                onSuccess: () => {
+                    form.reset()
+                    onOpenChange(false)
+                },
+            }
+        )
     }
-
-    if (!department) return null
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -93,78 +95,82 @@ export function EditDepartmentDialog({
                 <DialogHeader>
                     <DialogTitle>Chỉnh sửa khoa</DialogTitle>
                     <DialogDescription>
-                        Cập nhật thông tin khoa #{department.id} - {department.name}
+                        {department ? `Cập nhật thông tin khoa #${department.id} - ${department.name}` : 'Đang tải...'}
                     </DialogDescription>
                 </DialogHeader>
 
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
-                        <FormField
-                            control={form.control}
-                            name='name'
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Tên khoa *</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder='Khoa Nội tổng hợp' {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            control={form.control}
-                            name='phone'
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Số điện thoại *</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder='0901234567' {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            control={form.control}
-                            name='description'
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Mô tả *</FormLabel>
-                                    <FormControl>
-                                        <Textarea
-                                            placeholder='Khám và điều trị các bệnh lý...'
-                                            className='min-h-[100px]'
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <div className='rounded-lg bg-muted/50 p-4'>
-                            <p className='text-sm text-muted-foreground'>
-                                💡 API cập nhật khoa chưa được triển khai. Form này chỉ hiển thị giao diện.
-                            </p>
+                {isLoading ? (
+                    <div className='flex items-center justify-center py-8'>
+                        <div className='text-center'>
+                            <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto'></div>
+                            <p className='mt-2 text-sm text-muted-foreground'>Đang tải thông tin...</p>
                         </div>
+                    </div>
+                ) : (
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+                            <FormField
+                                control={form.control}
+                                name='name'
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Tên khoa *</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder='Khoa Nội tổng hợp' {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                        <DialogFooter>
-                            <Button
-                                type='button'
-                                variant='outline'
-                                onClick={() => onOpenChange(false)}
-                            >
-                                Hủy
-                            </Button>
-                            <Button type='submit' disabled={isSubmitting}>
-                                {isSubmitting ? 'Đang cập nhật...' : 'Cập nhật'}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </Form>
+                            <FormField
+                                control={form.control}
+                                name='phone'
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Số điện thoại *</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder='0901234567' {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name='description'
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Mô tả *</FormLabel>
+                                        <FormControl>
+                                            <Textarea
+                                                placeholder='Khám và điều trị các bệnh lý...'
+                                                className='min-h-[100px]'
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <DialogFooter>
+                                <Button
+                                    type='button'
+                                    variant='outline'
+                                    onClick={() => onOpenChange(false)}
+                                    disabled={isPending}
+                                >
+                                    Hủy
+                                </Button>
+                                <Button type='submit' disabled={isPending}>
+                                    {isPending ? 'Đang cập nhật...' : 'Cập nhật'}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </Form>
+                )}
             </DialogContent>
         </Dialog>
     )

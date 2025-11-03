@@ -9,9 +9,9 @@ import { RoomDetailDialog } from './components/room-detail-dialog'
 import { CreateRoomDialog } from './components/create-room-dialog'
 import { EditRoomDialog } from './components/edit-room-dialog'
 import { fetchRoomsList } from './api/rooms'
-import { fetchDepartmentsForFilter, type Department } from './api/departments-filter'
+import { fetchDepartmentsForFilter } from './api/departments-filter'
+import { useDeleteRoom } from './hooks/use-rooms-crud'
 import type { RoomsSearch } from './types'
-import type { Room } from './api/rooms'
 import {
     AlertDialog,
     AlertDialogAction,
@@ -22,7 +22,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { toast } from 'sonner'
 
 const roomsRoute = getRouteApi('/_authenticated/admin/rooms')
 const roomsQueryBaseKey: QueryKey = ['admin-rooms']
@@ -59,7 +58,9 @@ export function RoomsManagement() {
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [detailDialogOpen, setDetailDialogOpen] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-    const [selectedRoom, setSelectedRoom] = useState<Room | null>(null)
+    const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null)
+
+    const { mutate: deleteRoom } = useDeleteRoom()
 
     // Debounce keyword to avoid excessive API calls
     const rawKeyword = resolveKeyword(search.keyword)
@@ -83,6 +84,14 @@ export function RoomsManagement() {
             value: dept.id.toString(),
         }))
     }, [departments])
+
+    console.log('🔵 [RoomsManagement] Departments state:', {
+        isLoading: departmentsQuery.isLoading,
+        isFetching: departmentsQuery.isFetching,
+        count: departments.length,
+        hasData: !!departmentsQuery.data,
+        data: departmentsQuery.data,
+    })
 
     const queryInput = useMemo(() => {
         const input: {
@@ -130,42 +139,36 @@ export function RoomsManagement() {
 
     const handleViewDetail = useCallback(
         (id: number) => {
-            const room = rooms.find((r) => r.roomId === id)
-            if (room) {
-                setSelectedRoom(room)
-                setDetailDialogOpen(true)
-            }
+            setSelectedRoomId(id)
+            setDetailDialogOpen(true)
         },
-        [rooms]
+        []
     )
 
     const handleEdit = useCallback(
         (id: number) => {
-            const room = rooms.find((r) => r.roomId === id)
-            if (room) {
-                setSelectedRoom(room)
-                setEditDialogOpen(true)
-            }
+            setSelectedRoomId(id)
+            setEditDialogOpen(true)
         },
-        [rooms]
+        []
     )
 
     const handleDelete = useCallback(
         (id: number) => {
-            const room = rooms.find((r) => r.roomId === id)
-            if (room) {
-                setSelectedRoom(room)
-                setDeleteDialogOpen(true)
-            }
+            setSelectedRoomId(id)
+            setDeleteDialogOpen(true)
         },
-        [rooms]
+        []
     )
 
     const confirmDelete = () => {
-        if (selectedRoom) {
-            toast.info('API xóa phòng chưa được triển khai')
-            setDeleteDialogOpen(false)
-            setSelectedRoom(null)
+        if (selectedRoomId) {
+            deleteRoom(selectedRoomId, {
+                onSuccess: () => {
+                    setDeleteDialogOpen(false)
+                    setSelectedRoomId(null)
+                },
+            })
         }
     }
 
@@ -199,19 +202,21 @@ export function RoomsManagement() {
                 open={createDialogOpen}
                 onOpenChange={setCreateDialogOpen}
                 departments={departments}
+                isDepartmentsLoading={departmentsQuery.isLoading}
             />
 
             <EditRoomDialog
                 open={editDialogOpen}
                 onOpenChange={setEditDialogOpen}
-                room={selectedRoom}
+                roomId={selectedRoomId}
                 departments={departments}
+                isDepartmentsLoading={departmentsQuery.isLoading || departmentsQuery.isFetching}
             />
 
             <RoomDetailDialog
                 open={detailDialogOpen}
                 onOpenChange={setDetailDialogOpen}
-                roomId={selectedRoom?.roomId ?? null}
+                roomId={selectedRoomId}
             />
 
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -219,7 +224,7 @@ export function RoomsManagement() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Bạn có chắc chắn muốn xóa phòng "{selectedRoom?.roomName}" không? Hành
+                            Bạn có chắc chắn muốn xóa phòng này không? Hành
                             động này không thể hoàn tác.
                         </AlertDialogDescription>
                     </AlertDialogHeader>

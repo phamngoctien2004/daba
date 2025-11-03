@@ -24,6 +24,8 @@ export const getDepartmentsColumns = ({
         {
             accessorKey: 'id',
             header: 'ID',
+            size: 80,
+            minSize: 60,
             cell: ({ row }) => {
                 return <div className='font-medium'>#{row.original.id}</div>
             },
@@ -31,6 +33,8 @@ export const getDepartmentsColumns = ({
         {
             accessorKey: 'name',
             header: 'Tên khoa',
+            size: 300,
+            minSize: 200,
             cell: ({ row }) => {
                 return (
                     <div>
@@ -47,6 +51,8 @@ export const getDepartmentsColumns = ({
         {
             accessorKey: 'phone',
             header: 'Số điện thoại',
+            size: 150,
+            minSize: 120,
             cell: ({ row }) => {
                 return <div>{row.original.phone}</div>
             },
@@ -54,6 +60,8 @@ export const getDepartmentsColumns = ({
         {
             accessorKey: 'description',
             header: 'Mô tả',
+            size: 350,
+            minSize: 200,
             cell: ({ row }) => {
                 const description = row.original.description
                 if (!description) return <div>-</div>
@@ -68,6 +76,8 @@ export const getDepartmentsColumns = ({
         {
             id: 'actions',
             header: 'Thao tác',
+            size: 100,
+            minSize: 80,
             cell: ({ row }) => {
                 const department = row.original
 

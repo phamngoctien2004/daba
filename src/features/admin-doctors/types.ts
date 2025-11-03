@@ -25,7 +25,12 @@ export interface DepartmentResponse {
 export interface DoctorDetail {
     id: number
     fullName: string
+    phone: string
+    address: string
+    birth: string // yyyy-MM-dd format
+    gender: 'NAM' | 'NU'
     degreeResponse: DegreeResponse
+    exp: number
     position: string
     departmentResponse: DepartmentResponse
     examinationFee: number
@@ -79,5 +84,43 @@ export interface DoctorsResponse {
         numberOfElements: number
         empty: boolean
     }
+    message: string
+}
+
+// Create/Update Doctor Request
+export interface CreateDoctorRequest {
+    fullName: string
+    phone: string
+    address: string
+    birth: string // yyyy-MM-dd
+    gender: 'NAM' | 'NU'
+    departmentId: number
+    degreeId: number
+    exp: number
+    email: string
+}
+
+export interface UpdateDoctorRequest {
+    id: number
+    fullName: string
+    phone: string
+    address: string
+    birth: string // yyyy-MM-dd
+    gender: 'NAM' | 'NU'
+    departmentId: number
+    degreeId: number
+    exp: number
+    email?: string // Optional for update since API doesn't return it
+}
+
+// Single Doctor Response (for GET by ID, POST, PUT)
+export interface DoctorResponse {
+    data: DoctorDetail
+    message: string
+}
+
+// List Doctors Response (for GET all)
+export interface DoctorsListResponse {
+    data: DoctorDetail[]
     message: string
 }

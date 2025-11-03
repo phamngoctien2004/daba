@@ -21,7 +21,6 @@ import type { Department } from '../api/departments-list'
 import type { DepartmentsSearch } from '../types-list'
 
 const SKELETON_ROWS = Array.from({ length: 5 })
-const SKELETON_COLUMNS = Array.from({ length: 5 })
 
 const DEFAULT_PAGE = 1
 const DEFAULT_PAGE_SIZE = 10
@@ -88,6 +87,12 @@ export function DepartmentsTable({
         onPaginationChange,
         onGlobalFilterChange,
         autoResetPageIndex: false,
+        // Enable column sizing
+        columnResizeMode: 'onChange',
+        defaultColumn: {
+            minSize: 80,
+            size: 150,
+        },
     })
 
     useEffect(() => {
@@ -114,13 +119,19 @@ export function DepartmentsTable({
             />
 
             <div className='rounded-md border'>
-                <Table>
+                <Table style={{ tableLayout: 'fixed', width: '100%' }}>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
                                     return (
-                                        <TableHead key={header.id}>
+                                        <TableHead
+                                            key={header.id}
+                                            style={{
+                                                width: header.getSize(),
+                                                minWidth: header.column.columnDef.minSize,
+                                            }}
+                                        >
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
@@ -138,8 +149,14 @@ export function DepartmentsTable({
                             <>
                                 {SKELETON_ROWS.map((_, rowIndex) => (
                                     <TableRow key={rowIndex}>
-                                        {SKELETON_COLUMNS.map((_, cellIndex) => (
-                                            <TableCell key={cellIndex}>
+                                        {table.getHeaderGroups()[0].headers.map((header) => (
+                                            <TableCell
+                                                key={header.id}
+                                                style={{
+                                                    width: header.getSize(),
+                                                    minWidth: header.column.columnDef.minSize,
+                                                }}
+                                            >
                                                 <Skeleton className='h-6 w-full' />
                                             </TableCell>
                                         ))}
@@ -154,7 +171,13 @@ export function DepartmentsTable({
                                 >
                                     {row.getVisibleCells().map((cell) => {
                                         return (
-                                            <TableCell key={cell.id}>
+                                            <TableCell
+                                                key={cell.id}
+                                                style={{
+                                                    width: cell.column.getSize(),
+                                                    minWidth: cell.column.columnDef.minSize,
+                                                }}
+                                            >
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
                                                     cell.getContext()

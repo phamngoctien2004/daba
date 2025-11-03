@@ -1,7 +1,7 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+import { Loader2 } from 'lucide-react'
 import {
     Dialog,
     DialogContent,
@@ -27,13 +27,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import { toast } from 'sonner'
+import { useCreateRoom } from '../hooks/use-rooms-crud'
 import type { Department } from '../api/departments-filter'
 
 const formSchema = z.object({
     roomNumber: z.string().min(1, 'Mã phòng là bắt buộc'),
     roomName: z.string().min(1, 'Tên phòng là bắt buộc'),
-    departmentId: z.string().min(1, 'Vui lòng chọn khoa'),
+    departmentId: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -42,15 +42,15 @@ type CreateRoomDialogProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
     departments: Department[]
+    isDepartmentsLoading?: boolean
 }
 
 export function CreateRoomDialog({
     open,
     onOpenChange,
     departments,
+    isDepartmentsLoading = false,
 }: CreateRoomDialogProps) {
-    const [isSubmitting, setIsSubmitting] = useState(false)
-
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -60,23 +60,17 @@ export function CreateRoomDialog({
         },
     })
 
-    const onSubmit = async (values: FormValues) => {
-        setIsSubmitting(true)
-        try {
-            console.log('Create room:', values)
+    const { mutate, isPending } = useCreateRoom(() => {
+        form.reset()
+        onOpenChange(false)
+    })
 
-            // TODO: API chưa có - giả lập delay
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-
-            toast.info('API tạo phòng chưa được triển khai')
-            form.reset()
-            onOpenChange(false)
-        } catch (error) {
-            toast.error('Có lỗi xảy ra')
-            console.error(error)
-        } finally {
-            setIsSubmitting(false)
-        }
+    const onSubmit = (values: FormValues) => {
+        mutate({
+            roomNumber: values.roomNumber,
+            roomName: values.roomName,
+            departmentId: values.departmentId ? Number(values.departmentId) : null,
+        })
     }
 
     return (
@@ -128,10 +122,11 @@ export function CreateRoomDialog({
                                     <Select
                                         onValueChange={field.onChange}
                                         defaultValue={field.value}
+                                        disabled={isDepartmentsLoading}
                                     >
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder='Chọn khoa' />
+                                                <SelectValue placeholder={isDepartmentsLoading ? 'Đang tải danh sách khoa...' : 'Chọn khoa'} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
@@ -147,22 +142,20 @@ export function CreateRoomDialog({
                             )}
                         />
 
-                        <div className='rounded-lg bg-muted/50 p-4'>
-                            <p className='text-sm text-muted-foreground'>
-                                💡 API tạo phòng chưa được triển khai. Form này chỉ hiển thị giao diện.
-                            </p>
-                        </div>
+
 
                         <DialogFooter>
                             <Button
                                 type='button'
                                 variant='outline'
                                 onClick={() => onOpenChange(false)}
+                                disabled={isPending}
                             >
                                 Hủy
                             </Button>
-                            <Button type='submit' disabled={isSubmitting}>
-                                {isSubmitting ? 'Đang tạo...' : 'Tạo phòng'}
+                            <Button type='submit' disabled={isPending}>
+                                {isPending && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+                                {isPending ? 'Đang tạo...' : 'Tạo phòng'}
                             </Button>
                         </DialogFooter>
                     </form>

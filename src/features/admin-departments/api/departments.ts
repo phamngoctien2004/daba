@@ -36,8 +36,8 @@ export async function fetchDepartments(
  * Get department by ID
  */
 export async function getDepartmentById(id: number): Promise<DepartmentDetail> {
-    const { data } = await get<DepartmentDetail>(`/admin/departments/${id}`)
-    return data
+    const response = await get<{ data: DepartmentDetail; message: string }>(`/departments/${id}`)
+    return response.data.data
 }
 
 /**
@@ -46,26 +46,25 @@ export async function getDepartmentById(id: number): Promise<DepartmentDetail> {
 export async function createDepartment(
     request: CreateDepartmentRequest
 ): Promise<DepartmentDetail> {
-    const { data } = await post<DepartmentDetail>('/admin/departments', request)
-    return data
+    const response = await post<{ data: DepartmentDetail; message: string }>('/departments', request)
+    return response.data.data
 }
 
 /**
  * Update department
  */
 export async function updateDepartment(
-    id: number,
     request: UpdateDepartmentRequest
 ): Promise<DepartmentDetail> {
-    const { data } = await put<DepartmentDetail>(`/admin/departments/${id}`, request)
-    return data
+    const response = await put<{ data: DepartmentDetail; message: string }>('/departments', request)
+    return response.data.data
 }
 
 /**
  * Delete department
  */
 export async function deleteDepartment(id: number): Promise<void> {
-    await del(`/admin/departments/${id}`)
+    await del(`/departments/${id}`)
 }
 
 /**

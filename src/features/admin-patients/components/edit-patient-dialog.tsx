@@ -91,6 +91,7 @@ export function EditPatientDialog({
     mutationFn: updatePatient,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-patients'] })
+      queryClient.removeQueries({ queryKey: ['admin-patients'] })
       toast.success('Đã cập nhật thông tin bệnh nhân')
       onOpenChange(false)
     },

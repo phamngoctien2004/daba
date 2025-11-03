@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
-import { getRouteApi, useNavigate } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import { getRouteApi } from '@tanstack/react-router'
+import { useQuery, type QueryKey } from '@tanstack/react-query'
+import { Download } from 'lucide-react'
+import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { useDebounce } from '@/hooks/use-debounce'
 import type { NavigateFn } from '@/hooks/use-table-url-state'
@@ -9,18 +10,9 @@ import { ServicesTable } from './components/services-table-view'
 import { ServiceDetailDialog } from './components/service-detail-dialog'
 import { CreateServiceDialog } from './components/create-service-dialog'
 import { EditServiceDialog } from './components/edit-service-dialog'
-import { fetchServices, deleteService } from './api/services'
-import type { ServicesSearch, Service } from './types'
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+import { DeleteServiceDialog } from './components/delete-service-dialog'
+import { fetchServices } from './api/services'
+import type { ServicesSearch } from './types'
 
 const servicesRoute = getRouteApi('/_authenticated/admin/services')
 const servicesQueryBaseKey: QueryKey = ['admin-services']
@@ -37,14 +29,13 @@ const resolveKeyword = (value: string | undefined): string | undefined => {
 export function ServicesManagement() {
     const search = servicesRoute.useSearch() as ServicesSearch
     const navigate = servicesRoute.useNavigate()
-    const globalNavigate = useNavigate()
-    const queryClient = useQueryClient()
 
     const [createDialogOpen, setCreateDialogOpen] = useState(false)
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [detailDialogOpen, setDetailDialogOpen] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-    const [selectedService, setSelectedService] = useState<Service | null>(null)
+    const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null)
+    const [selectedServiceName, setSelectedServiceName] = useState('')
 
     // Debounce keyword to avoid excessive API calls
     const rawKeyword = resolveKeyword(search.keyword)
@@ -96,7 +87,8 @@ export function ServicesManagement() {
         queryKey: [...servicesQueryBaseKey, queryInput],
         queryFn: () => fetchServices(queryInput),
         placeholderData: (previous) => previous,
-        staleTime: 30_000,
+        staleTime: 0, // Không cache - luôn fetch mới
+        gcTime: 0, // Không giữ cache trong bộ nhớ
     })
 
     const services = servicesQuery.data?.services ?? []
@@ -118,55 +110,64 @@ export function ServicesManagement() {
 
     const handleViewDetail = useCallback(
         (id: number) => {
-            const service = services.find((s) => s.id === id)
-            if (service) {
-                setSelectedService(service)
-                setDetailDialogOpen(true)
-            }
+            setSelectedServiceId(id)
+            setDetailDialogOpen(true)
         },
-        [services]
+        []
     )
 
     const handleEdit = useCallback(
         (id: number) => {
-            const service = services.find((s) => s.id === id)
-            if (service) {
-                setSelectedService(service)
-                setEditDialogOpen(true)
-            }
+            setSelectedServiceId(id)
+            setEditDialogOpen(true)
         },
-        [services]
+        []
     )
 
     const handleDelete = useCallback(
         (id: number) => {
             const service = services.find((s) => s.id === id)
             if (service) {
-                setSelectedService(service)
+                setSelectedServiceId(id)
+                setSelectedServiceName(service.name)
                 setDeleteDialogOpen(true)
             }
         },
         [services]
     )
 
-    const deleteMutation = useMutation({
-        mutationFn: deleteService,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: servicesQueryBaseKey })
-            toast.success('Đã xóa dịch vụ')
-            setDeleteDialogOpen(false)
-            setSelectedService(null)
-        },
-        onError: (error: Error) => {
-            toast.error(error.message || 'Không thể xóa dịch vụ')
-        },
-    })
-
-    const confirmDelete = () => {
-        if (selectedService) {
-            deleteMutation.mutate(selectedService.id)
+    const handleExport = useCallback(() => {
+        // Export data to CSV
+        if (services.length === 0) {
+            alert('Không có dữ liệu để xuất')
+            return
         }
-    }
+
+        const headers = ['ID', 'Tên dịch vụ', 'Loại', 'Giá (VNĐ)', 'Mô tả']
+        const rows = services.map(service => [
+            service.id,
+            service.name,
+            service.type === 'DICH_VU' ? 'Dịch vụ' :
+                service.type === 'XET_NGHIEM' ? 'Xét nghiệm' : 'Khác',
+            service.price,
+            service.description || ''
+        ])
+
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ].join('\n')
+
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+        const link = document.createElement('a')
+        const url = URL.createObjectURL(blob)
+        link.setAttribute('href', url)
+        link.setAttribute('download', `dich-vu-kham-${format(new Date(), 'yyyy-MM-dd-HHmmss')}.csv`)
+        link.style.visibility = 'hidden'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+    }, [services])
 
     return (
         <>
@@ -177,8 +178,9 @@ export function ServicesManagement() {
                         Theo dõi và quản lý thông tin dịch vụ khám bệnh.
                     </p>
                 </div>
-                <Button onClick={() => setCreateDialogOpen(true)}>
-                    Thêm dịch vụ
+                <Button onClick={handleExport} variant="outline">
+                    <Download className="mr-2 h-4 w-4" />
+                    Xuất dữ liệu
                 </Button>
             </div>
 
@@ -192,6 +194,7 @@ export function ServicesManagement() {
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onResetFilters={handleResetFilters}
+                onCreateNew={() => setCreateDialogOpen(true)}
                 search={search}
                 navigate={navigate as NavigateFn}
             />
@@ -204,35 +207,21 @@ export function ServicesManagement() {
             <EditServiceDialog
                 open={editDialogOpen}
                 onOpenChange={setEditDialogOpen}
-                service={selectedService}
+                serviceId={selectedServiceId}
             />
 
             <ServiceDetailDialog
                 open={detailDialogOpen}
                 onOpenChange={setDetailDialogOpen}
-                serviceId={selectedService?.id ?? null}
+                serviceId={selectedServiceId}
             />
 
-            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Bạn có chắc chắn muốn xóa dịch vụ "{selectedService?.name}" không?
-                            Hành động này không thể hoàn tác.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Hủy</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={confirmDelete}
-                            className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-                        >
-                            Xóa
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <DeleteServiceDialog
+                open={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+                serviceId={selectedServiceId}
+                serviceName={selectedServiceName}
+            />
         </>
     )
 }

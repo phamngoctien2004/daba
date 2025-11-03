@@ -44,6 +44,7 @@ type UsersTableProps = {
     onViewDetail: (id: number) => void
     onEdit?: (id: number) => void
     onDelete?: (id: number) => void
+    onResetPassword?: (id: number) => void
     search: UsersSearch
     navigate: NavigateFn
 }
@@ -56,6 +57,7 @@ export function UsersTable({
     onViewDetail,
     onEdit,
     onDelete,
+    onResetPassword,
     search,
     navigate,
 }: UsersTableProps) {
@@ -85,8 +87,8 @@ export function UsersTable({
     })
 
     const columns = useMemo(
-        () => getUsersColumns({ onViewDetail, onEdit, onDelete }),
-        [onViewDetail, onEdit, onDelete]
+        () => getUsersColumns({ onViewDetail, onEdit, onDelete, onResetPassword }),
+        [onViewDetail, onEdit, onDelete, onResetPassword]
     )
 
     const effectivePageCount = Math.max(pageCount, 1)

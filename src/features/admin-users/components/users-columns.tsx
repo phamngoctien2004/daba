@@ -9,13 +9,14 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-import { MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Eye, Edit, Trash2, KeyRound } from 'lucide-react'
 import type { User } from '../api/users'
 
 type UsersColumnsProps = {
     onViewDetail: (id: number) => void
     onEdit?: (id: number) => void
     onDelete?: (id: number) => void
+    onResetPassword?: (id: number) => void
 }
 
 const roleLabels: Record<string, string> = {
@@ -39,6 +40,7 @@ export function getUsersColumns({
     onViewDetail,
     onEdit,
     onDelete,
+    onResetPassword,
 }: UsersColumnsProps): ColumnDef<User>[] {
     return [
         {
@@ -113,6 +115,12 @@ export function getUsersColumns({
                                 <DropdownMenuItem onClick={() => onEdit(user.id)}>
                                     <Edit className='mr-2 h-4 w-4' />
                                     Chỉnh sửa
+                                </DropdownMenuItem>
+                            )}
+                            {onResetPassword && (
+                                <DropdownMenuItem onClick={() => onResetPassword(user.id)}>
+                                    <KeyRound className='mr-2 h-4 w-4' />
+                                    Thiết lập mật khẩu
                                 </DropdownMenuItem>
                             )}
                             {onDelete && (

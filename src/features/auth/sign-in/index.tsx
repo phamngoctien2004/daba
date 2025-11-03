@@ -17,17 +17,17 @@ export function SignIn() {
     <AuthLayout>
       <Card className='gap-4'>
         <CardHeader>
-          <CardTitle className='text-lg tracking-tight'>Sign in</CardTitle>
-          <CardDescription>
+          <CardTitle className='text-lg tracking-tight'>Đăng nhập</CardTitle>
+          {/* <CardDescription>
             Enter your email and password below to <br />
             log into your account
-          </CardDescription>
+          </CardDescription> */}
         </CardHeader>
         <CardContent>
           <UserAuthForm redirectTo={redirect} />
         </CardContent>
         <CardFooter>
-          <p className='text-muted-foreground px-8 text-center text-sm'>
+          {/* <p className='text-muted-foreground px-8 text-center text-sm'>
             By clicking sign in, you agree to our{' '}
             <a
               href='/terms'
@@ -43,7 +43,7 @@ export function SignIn() {
               Privacy Policy
             </a>
             .
-          </p>
+          </p> */}
         </CardFooter>
       </Card>
     </AuthLayout>

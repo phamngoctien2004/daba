@@ -2,10 +2,15 @@
  * Admin Doctors Management API
  */
 
-import { get } from '@/lib/api-client'
+import { get, post, put, del } from '@/lib/api-client'
 import type {
     DoctorListParams,
     DoctorsResponse,
+    DoctorsListResponse,
+    DoctorResponse,
+    DoctorDetail,
+    CreateDoctorRequest,
+    UpdateDoctorRequest,
 } from '../types'
 
 /**
@@ -61,4 +66,91 @@ export async function fetchDoctors(params: DoctorListParams): Promise<{
         number: responseData.number || 0,
         size: responseData.size || size,
     }
+}
+
+/**
+ * Fetch all doctors (no pagination)
+ * GET /api/doctors
+ */
+export async function fetchAllDoctors(): Promise<DoctorDetail[]> {
+    console.log('🔵 [fetchAllDoctors] Request:', {
+        url: '/doctors',
+        method: 'GET',
+    })
+
+    const { data } = await get<DoctorsListResponse>('/doctors')
+
+    console.log('🔵 [fetchAllDoctors] Response:', data)
+
+    // Response format: {data: [...], message: "..."}
+    return data?.data || []
+}
+
+/**
+ * Fetch doctor by ID
+ * GET /api/doctors/{id}
+ */
+export async function fetchDoctorById(id: number): Promise<DoctorDetail | null> {
+    console.log('🔵 [fetchDoctorById] Request:', {
+        url: `/doctors/${id}`,
+        method: 'GET',
+    })
+
+    const { data } = await get<DoctorResponse>(`/doctors/${id}`)
+
+    console.log('🔵 [fetchDoctorById] Response:', data)
+
+    // Response format: {data: {...}, message: "..."}
+    return data?.data || null
+}
+
+/**
+ * Create a new doctor
+ * POST /api/doctors
+ */
+export async function createDoctor(requestData: CreateDoctorRequest): Promise<DoctorDetail> {
+    console.log('🔵 [createDoctor] Request:', {
+        url: '/doctors',
+        method: 'POST',
+        data: requestData,
+    })
+
+    const { data } = await post<DoctorResponse>('/doctors', requestData)
+
+    console.log('🔵 [createDoctor] Response:', data)
+
+    // Response format: {data: {...}, message: "Created doctor successfully"}
+    return data.data
+}
+
+/**
+ * Update an existing doctor
+ * PUT /api/doctors
+ */
+export async function updateDoctor(requestData: UpdateDoctorRequest): Promise<DoctorDetail> {
+    console.log('🔵 [updateDoctor] Request:', {
+        url: '/doctors',
+        method: 'PUT',
+        data: requestData,
+    })
+
+    const { data } = await put<DoctorResponse>('/doctors', requestData)
+
+    console.log('🔵 [updateDoctor] Response:', data)
+
+    // Response format: {data: {...}, message: "Updated doctor successfully"}
+    return data.data
+}
+
+/**
+ * Delete a doctor
+ * DELETE /api/doctors/{id}
+ */
+export async function deleteDoctor(id: number): Promise<void> {
+    console.log('🔵 [deleteDoctor] Request:', {
+        url: `/doctors/${id}`,
+        method: 'DELETE',
+    })
+
+    await del(`/doctors/${id}`)
 }

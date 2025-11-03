@@ -39,7 +39,7 @@ export const getServicesColumns = ({
             id: 'priceRange',
             accessorFn: (row) => row.price,
             header: 'Price Range Filter',
-            filterFn: (row, id, value) => {
+            filterFn: (row, _id, value) => {
                 const price = row.original.price
                 const ranges = value as string[]
 
@@ -72,6 +72,7 @@ export const getServicesColumns = ({
         {
             accessorKey: 'code',
             header: 'Mã dịch vụ',
+            size: 120,
             cell: ({ row }) => {
                 return <div className='font-medium'>{row.original.code}</div>
             },
@@ -79,6 +80,7 @@ export const getServicesColumns = ({
         {
             accessorKey: 'name',
             header: 'Tên dịch vụ',
+            size: 250,
             cell: ({ row }) => {
                 return (
                     <div>
@@ -94,6 +96,7 @@ export const getServicesColumns = ({
             id: 'typeDisplay',
             accessorKey: 'type',
             header: 'Loại',
+            size: 110,
             cell: ({ row }) => {
                 const type = row.original.type
                 const label = serviceTypeLabels[type] || type
@@ -104,6 +107,7 @@ export const getServicesColumns = ({
         {
             accessorKey: 'price',
             header: 'Giá',
+            size: 130,
             cell: ({ row }) => {
                 const price = row.original.price
                 return (
@@ -119,6 +123,7 @@ export const getServicesColumns = ({
         {
             accessorKey: 'roomNumber',
             header: 'Phòng',
+            size: 80,
             cell: ({ row }) => {
                 return <div>{row.original.roomNumber || '-'}</div>
             },
@@ -126,6 +131,7 @@ export const getServicesColumns = ({
         {
             accessorKey: 'description',
             header: 'Mô tả',
+            size: 300,
             cell: ({ row }) => {
                 const description = row.original.description
                 if (!description) return <div>-</div>
@@ -140,6 +146,7 @@ export const getServicesColumns = ({
         {
             id: 'actions',
             header: 'Thao tác',
+            size: 80,
             cell: ({ row }) => {
                 const service = row.original
 

@@ -18,7 +18,6 @@ import { createDoctorsColumns } from './doctors-columns'
 import type { DoctorDetail } from '../types'
 
 const SKELETON_ROWS = Array.from({ length: 10 })
-const SKELETON_COLUMNS = Array.from({ length: 7 })
 
 interface DoctorsTableProps {
   data: DoctorDetail[]
@@ -73,17 +72,29 @@ export function DoctorsTable({
         }
       }
     },
+    // Enable column sizing
+    columnResizeMode: 'onChange',
+    defaultColumn: {
+      minSize: 80,
+      size: 150,
+    },
   })
 
   return (
     <div className="space-y-4">
       <div className="rounded-md border">
-        <Table>
+        <Table style={{ tableLayout: 'fixed', width: '100%' }}>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    style={{
+                      width: header.getSize(),
+                      minWidth: header.column.columnDef.minSize,
+                    }}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -99,8 +110,14 @@ export function DoctorsTable({
             {isLoading ? (
               SKELETON_ROWS.map((_, rowIndex) => (
                 <TableRow key={`skeleton-${rowIndex}`}>
-                  {SKELETON_COLUMNS.map((__, cellIndex) => (
-                    <TableCell key={cellIndex}>
+                  {table.getHeaderGroups()[0].headers.map((header) => (
+                    <TableCell
+                      key={header.id}
+                      style={{
+                        width: header.getSize(),
+                        minWidth: header.column.columnDef.minSize,
+                      }}
+                    >
                       <Skeleton className='h-4 w-full' />
                     </TableCell>
                   ))}
@@ -110,7 +127,13 @@ export function DoctorsTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      style={{
+                        width: cell.column.getSize(),
+                        minWidth: cell.column.columnDef.minSize,
+                      }}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}

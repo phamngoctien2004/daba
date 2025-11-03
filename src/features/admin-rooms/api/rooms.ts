@@ -2,13 +2,35 @@
  * Rooms Management API
  */
 
-import { get } from '@/lib/api-client'
+import { get, post, put, del } from '@/lib/api-client'
 
 export interface Room {
     roomId: number
     roomName: string
     roomNumber: string
     departmentName: string
+    departmentId?: number
+}
+
+export interface RoomDetail {
+    roomId: number
+    roomName: string
+    roomNumber: string
+    departmentId: number | null
+    departmentName: string
+}
+
+export interface CreateRoomRequest {
+    roomName: string
+    roomNumber: string
+    departmentId: number | null
+}
+
+export interface UpdateRoomRequest {
+    roomId: number
+    roomName: string
+    roomNumber: string
+    departmentId: number | null
 }
 
 export interface RoomsListParams {
@@ -152,4 +174,126 @@ export async function fetchRoomsList(
         rooms: [],
         pagination: { page, pageSize: size, total: 0, totalPages: 0 },
     }
+}
+
+/**
+ * Fetch room detail by ID
+ */
+export async function fetchRoomDetail(roomId: number): Promise<RoomDetail | null> {
+    try {
+        const { data } = await get<unknown>(`/rooms/${roomId}`)
+
+        console.log('🔵 [fetchRoomDetail] Raw response:', data)
+
+        // Handle wrapped response: {data: {...}, message: "..."}
+        if (isRecord(data) && 'data' in data) {
+            const innerData = data.data
+            if (isRecord(innerData)) {
+                return {
+                    roomId: typeof innerData.roomId === 'number' ? innerData.roomId : roomId,
+                    roomName: typeof innerData.roomName === 'string' ? innerData.roomName : '',
+                    roomNumber: typeof innerData.roomNumber === 'string' ? innerData.roomNumber : '',
+                    departmentId: typeof innerData.departmentId === 'number' ? innerData.departmentId : null,
+                    departmentName: typeof innerData.departmentName === 'string' ? innerData.departmentName : '',
+                }
+            }
+        }
+
+        // Handle direct response
+        if (isRecord(data)) {
+            return {
+                roomId: typeof data.roomId === 'number' ? data.roomId : roomId,
+                roomName: typeof data.roomName === 'string' ? data.roomName : '',
+                roomNumber: typeof data.roomNumber === 'string' ? data.roomNumber : '',
+                departmentId: typeof data.departmentId === 'number' ? data.departmentId : null,
+                departmentName: typeof data.departmentName === 'string' ? data.departmentName : '',
+            }
+        }
+
+        console.warn('⚠️ [fetchRoomDetail] Unexpected response format:', data)
+        return null
+    } catch (error) {
+        console.error('🔴 [fetchRoomDetail] Error:', error)
+        return null
+    }
+}
+
+/**
+ * Create new room
+ */
+export async function createRoom(payload: CreateRoomRequest): Promise<RoomDetail> {
+    const { data } = await post<unknown>('/rooms', payload)
+
+    console.log('🔵 [createRoom] Response:', data)
+
+    // Handle wrapped response
+    if (isRecord(data) && 'data' in data) {
+        const innerData = data.data
+        if (isRecord(innerData)) {
+            return {
+                roomId: typeof innerData.roomId === 'number' ? innerData.roomId : 0,
+                roomName: typeof innerData.roomName === 'string' ? innerData.roomName : '',
+                roomNumber: typeof innerData.roomNumber === 'string' ? innerData.roomNumber : '',
+                departmentId: typeof innerData.departmentId === 'number' ? innerData.departmentId : null,
+                departmentName: typeof innerData.departmentName === 'string' ? innerData.departmentName : '',
+            }
+        }
+    }
+
+    // Handle direct response
+    if (isRecord(data)) {
+        return {
+            roomId: typeof data.roomId === 'number' ? data.roomId : 0,
+            roomName: typeof data.roomName === 'string' ? data.roomName : '',
+            roomNumber: typeof data.roomNumber === 'string' ? data.roomNumber : '',
+            departmentId: typeof data.departmentId === 'number' ? data.departmentId : null,
+            departmentName: typeof data.departmentName === 'string' ? data.departmentName : '',
+        }
+    }
+
+    throw new Error('Invalid response format from create room API')
+}
+
+/**
+ * Update room
+ */
+export async function updateRoom(payload: UpdateRoomRequest): Promise<RoomDetail> {
+    const { data } = await put<unknown>('/rooms', payload)
+
+    console.log('🔵 [updateRoom] Response:', data)
+
+    // Handle wrapped response
+    if (isRecord(data) && 'data' in data) {
+        const innerData = data.data
+        if (isRecord(innerData)) {
+            return {
+                roomId: typeof innerData.roomId === 'number' ? innerData.roomId : payload.roomId,
+                roomName: typeof innerData.roomName === 'string' ? innerData.roomName : '',
+                roomNumber: typeof innerData.roomNumber === 'string' ? innerData.roomNumber : '',
+                departmentId: typeof innerData.departmentId === 'number' ? innerData.departmentId : null,
+                departmentName: typeof innerData.departmentName === 'string' ? innerData.departmentName : '',
+            }
+        }
+    }
+
+    // Handle direct response
+    if (isRecord(data)) {
+        return {
+            roomId: typeof data.roomId === 'number' ? data.roomId : payload.roomId,
+            roomName: typeof data.roomName === 'string' ? data.roomName : '',
+            roomNumber: typeof data.roomNumber === 'string' ? data.roomNumber : '',
+            departmentId: typeof data.departmentId === 'number' ? data.departmentId : null,
+            departmentName: typeof data.departmentName === 'string' ? data.departmentName : '',
+        }
+    }
+
+    throw new Error('Invalid response format from update room API')
+}
+
+/**
+ * Delete room
+ */
+export async function deleteRoom(roomId: number): Promise<void> {
+    await del(`/rooms/${roomId}`)
+    console.log('🔵 [deleteRoom] Room deleted:', roomId)
 }

@@ -4,6 +4,7 @@ import {
     getCoreRowModel,
     useReactTable,
 } from '@tanstack/react-table'
+import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTableUrlState, type NavigateFn } from '@/hooks/use-table-url-state'
 import {
@@ -14,6 +15,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
 import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getServicesColumns } from './services-columns'
@@ -36,6 +38,7 @@ type ServicesTableProps = {
     onEdit?: (id: number) => void
     onDelete?: (id: number) => void
     onResetFilters: () => void
+    onCreateNew?: () => void
     search: ServicesSearch
     navigate: NavigateFn
 }
@@ -65,6 +68,7 @@ export function ServicesTable({
     onEdit,
     onDelete,
     onResetFilters,
+    onCreateNew,
     search,
     navigate,
 }: ServicesTableProps) {
@@ -145,25 +149,33 @@ export function ServicesTable({
                 isRefetching && 'pointer-events-none opacity-60'
             )}
         >
-            <DataTableToolbar
-                table={table}
-                searchPlaceholder='Tìm kiếm dịch vụ...'
-                filters={[
-                    {
-                        columnId: 'priceRange',
-                        title: 'Giá khám',
-                        options: priceRangeOptions,
-                    },
-                    {
-                        columnId: 'type',
-                        title: 'Loại dịch vụ',
-                        options: serviceTypeOptions,
-                    },
-                ]}
-            />
+            <div className='flex items-center justify-between gap-2'>
+                <DataTableToolbar
+                    table={table}
+                    searchPlaceholder='Tìm kiếm dịch vụ...'
+                    filters={[
+                        {
+                            columnId: 'priceRange',
+                            title: 'Giá khám',
+                            options: priceRangeOptions,
+                        },
+                        {
+                            columnId: 'type',
+                            title: 'Loại dịch vụ',
+                            options: serviceTypeOptions,
+                        },
+                    ]}
+                />
+                {onCreateNew && (
+                    <Button onClick={onCreateNew} className='shrink-0'>
+                        <Plus className='mr-2 h-4 w-4' />
+                        Thêm dịch vụ
+                    </Button>
+                )}
+            </div>
 
             <div className='rounded-md border'>
-                <Table>
+                <Table style={{ tableLayout: 'fixed', width: '100%' }}>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
@@ -172,7 +184,10 @@ export function ServicesTable({
                                     if (!header.column.getIsVisible()) return null
 
                                     return (
-                                        <TableHead key={header.id}>
+                                        <TableHead
+                                            key={header.id}
+                                            style={{ width: header.getSize() }}
+                                        >
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
@@ -209,7 +224,10 @@ export function ServicesTable({
                                         if (!cell.column.getIsVisible()) return null
 
                                         return (
-                                            <TableCell key={cell.id}>
+                                            <TableCell
+                                                key={cell.id}
+                                                style={{ width: cell.column.getSize() }}
+                                            >
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
                                                     cell.getContext()

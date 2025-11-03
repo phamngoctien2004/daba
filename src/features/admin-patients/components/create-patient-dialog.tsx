@@ -69,6 +69,7 @@ export function CreatePatientDialog({
     mutationFn: createPatient,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-patients'] })
+      queryClient.removeQueries({ queryKey: ['admin-patients'] })
       toast.success('Đã tạo bệnh nhân mới')
       form.reset()
       onOpenChange(false)

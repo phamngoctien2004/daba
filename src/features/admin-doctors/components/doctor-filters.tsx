@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { FilterIcon, XIcon } from 'lucide-react'
+import { XIcon, Plus } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,9 +20,10 @@ interface DoctorFiltersProps {
     filters: DoctorFilters
     onFiltersChange: (filters: DoctorFilters) => void
     onReset: () => void
+    onAddClick?: () => void
 }
 
-export function DoctorFiltersComponent({ filters, onFiltersChange, onReset }: DoctorFiltersProps) {
+export function DoctorFiltersComponent({ filters, onFiltersChange, onReset, onAddClick }: DoctorFiltersProps) {
     // Local state for keyword input (before debounce)
     const [keywordInput, setKeywordInput] = useState(filters.keyword || '')
 
@@ -87,77 +88,81 @@ export function DoctorFiltersComponent({ filters, onFiltersChange, onReset }: Do
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center gap-2">
-                <FilterIcon className="h-5 w-5" />
-                <h3 className="text-lg font-semibold">Bộ lọc</h3>
-            </div>
-
-            <div className="flex flex-col md:flex-row gap-4 md:items-center">
-                <div className="grid gap-3 grid-cols-1 md:grid-cols-3 flex-1">
-                    {/* Keyword search */}
-                    <div className="space-y-2">
-                        <Label htmlFor="keyword">Tìm kiếm</Label>
-                        <Input
-                            id="keyword"
-                            placeholder="Tên bác sĩ..."
-                            value={keywordInput}
-                            onChange={(e) => handleKeywordChange(e.target.value)}
-                        />
-                    </div>
-
-                    {/* Department */}
-                    <div className="space-y-2">
-                        <Label htmlFor="department">Khoa</Label>
-                        <Select
-                            value={filters.departmentId?.toString() || 'all'}
-                            onValueChange={handleDepartmentChange}
-                        >
-                            <SelectTrigger id="department">
-                                <SelectValue placeholder="Tất cả" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Tất cả</SelectItem>
-                                {departments.map((dept) => (
-                                    <SelectItem key={dept.id} value={dept.id.toString()}>
-                                        {dept.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Degree */}
-                    <div className="space-y-2">
-                        <Label htmlFor="degree">Bằng cấp</Label>
-                        <Select
-                            value={filters.degreeId?.toString() || 'all'}
-                            onValueChange={handleDegreeChange}
-                        >
-                            <SelectTrigger id="degree">
-                                <SelectValue placeholder="Tất cả" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Tất cả</SelectItem>
-                                {degrees.map((degree) => (
-                                    <SelectItem key={degree.degreeId} value={degree.degreeId.toString()}>
-                                        {degree.degreeName}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+            <div className="flex flex-col md:flex-row gap-4 md:items-end justify-between">
+                {/* Keyword search - 35% */}
+                <div className="space-y-2 w-full md:w-[35%]">
+                    <Label htmlFor="keyword">Tìm kiếm</Label>
+                    <Input
+                        id="keyword"
+                        placeholder="Tên bác sĩ..."
+                        value={keywordInput}
+                        onChange={(e) => handleKeywordChange(e.target.value)}
+                    />
                 </div>
 
-                {/* Reset button */}
+                {/* Department - 25% */}
+                <div className="space-y-2 w-full md:w-[15%]">
+                    <Label htmlFor="department">Khoa</Label>
+                    <Select
+                        value={filters.departmentId?.toString() || 'all'}
+                        onValueChange={handleDepartmentChange}
+                    >
+                        <SelectTrigger id="department">
+                            <SelectValue placeholder="Tất cả" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Tất cả</SelectItem>
+                            {departments.map((dept) => (
+                                <SelectItem key={dept.id} value={dept.id.toString()}>
+                                    {dept.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* Degree - 25% */}
+                <div className="space-y-2 w-full md:w-[15%]">
+                    <Label htmlFor="degree">Bằng cấp</Label>
+                    <Select
+                        value={filters.degreeId?.toString() || 'all'}
+                        onValueChange={handleDegreeChange}
+                    >
+                        <SelectTrigger id="degree">
+                            <SelectValue placeholder="Tất cả" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Tất cả</SelectItem>
+                            {degrees.map((degree) => (
+                                <SelectItem key={degree.degreeId} value={degree.degreeId.toString()}>
+                                    {degree.degreeName}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* Reset button - auto width */}
                 {hasActiveFilters && (
                     <Button
                         variant="outline"
                         size="default"
                         onClick={onReset}
-                        className="whitespace-nowrap"
+                        className="whitespace-nowrap w-full md:w-auto"
                     >
                         <XIcon className="mr-2 h-4 w-4" />
                         Xóa bộ lọc
+                    </Button>
+                )}
+
+                {/* Add button */}
+                {onAddClick && (
+                    <Button
+                        onClick={onAddClick}
+                        className="whitespace-nowrap w-full md:w-auto"
+                    >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Thêm bác sĩ
                     </Button>
                 )}
             </div>

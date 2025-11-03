@@ -536,6 +536,73 @@
     }
 ]
 ```
+###  Thêm khoa
+**Endpoint:** `POST /api/departments`
+
+**request:**
+```json
+{
+  "name": "Khoa Xương khớp, chỉnh hình",
+  "phone": "0901234567",
+  "description": "Phòng khám chuyên tổng quát, nội, nhi, tai mũi họng, sản phụ khoa."
+}
+
+```
+###  Chi tiết khoa
+**Endpoint:** `GET /api/departments/{id}`
+
+
+**Response:**
+```json
+{
+    "data": {
+        "id": 11,
+        "name": "Khoa Xương khớp, Chỉnh hình",
+        "phone": "039557082",
+        "description": "Phòng khám chuyên xương khớp, chỉnh hình"
+    },
+    "message": "Fetched department successfully"
+}
+```
+**Response:**
+```json
+{
+    "data": {
+        "id": 11,
+        "name": "Khoa Xương khớp, chỉnh hình",
+        "phone": "0901234567",
+        "description": "Phòng khám chuyên tổng quát, nội, nhi, tai mũi họng, sản phụ khoa."
+    },
+    "message": "Created department successfully"
+}
+```
+###  Sửa khoa
+**Endpoint:** `PUT /api/departments`
+
+**request:**
+```json
+{
+  "id": 1,
+  "name": "Phòng Khám Đa Khoa Trung Tâm",
+  "phone": "0901234567",
+  "description": "Phòng khám chuyên tổng quát, nội, nhi, tai mũi họng, sản phụ khoa."
+}
+
+```
+**Response:**
+```json
+{
+    "data": {
+        "id": 11,
+        "name": "Khoa Xương khớp, chỉnh hình",
+        "phone": "0901234567",
+        "description": "Phòng khám chuyên tổng quát, nội, nhi, tai mũi họng, sản phụ khoa."
+    },
+    "message": "Created department successfully"
+}
+```
+###  Xóa khoa
+**Endpoint:** `PUT /api/departments/{id}`
 
 ---
 
@@ -553,18 +620,46 @@
 {
   "data": [
         {
-            "id": 3,
-            "fullName": "BS. PHAM VAN TIEN",
-            "position": "ThS. PHAM VAN TIEN",
+            "id": 37,
+            "fullName": "Đàm Văn Tú",
+            "phone": "0123445677",
+            "address": "Bắc Ninh",
+            "birth": "2025-10-07",
+            "gender": "NAM",
+            "degreeResponse": {
+                "degreeId": 2,
+                "degreeName": "Thạc sĩ Y học",
+                "examinationFee": 4000
+            },
+            "exp": 20,
+            "position": "ThS. Đàm Văn Tú",
+            "departmentResponse": {
+                "id": 1,
+                "name": "Khoa Nội tổng quát"
+            },
             "examinationFee": 4000,
             "available": true,
             "roomNumber": "101A",
             "roomName": "Phòng khám Nội tổng quát"
         },
         {
-            "id": 23,
-            "fullName": "BS. TRAN VAN T",
-            "position": "ThS. TRAN VAN T",
+            "id": 37,
+            "fullName": "Đàm Văn Tú",
+            "phone": "0123445677",
+            "address": "Bắc Ninh",
+            "birth": "2025-10-07",
+            "gender": "NAM",
+            "degreeResponse": {
+                "degreeId": 2,
+                "degreeName": "Thạc sĩ Y học",
+                "examinationFee": 4000
+            },
+            "exp": 20,
+            "position": "ThS. Đàm Văn Tú",
+            "departmentResponse": {
+                "id": 1,
+                "name": "Khoa Nội tổng quát"
+            },
             "examinationFee": 4000,
             "available": true,
             "roomNumber": "101A",
@@ -585,18 +680,23 @@
 {
     "data": {
         "id": 1,
-        "fullName": "BS. PNT",
+        "fullName": "Phạm Ngọc Tiến",
+        "phone": "0395555551",
+        "address": "Hà Nội",
+        "birth": "1990-05-15",
+        "gender": "NAM",
         "degreeResponse": {
-            "degreeId": 6,
-            "degreeName": "Giáo sư",
-            "examinationFee": 6000
+            "degreeId": 3,
+            "degreeName": "Bác sĩ Chuyên khoa II",
+            "examinationFee": 5000
         },
-        "position": "PGS. Phạm Tiến",
+        "exp": 10,
+        "position": "BSCKII. Phạm Ngọc Tiến",
         "departmentResponse": {
             "id": 2,
             "name": "Khoa Ngoại tổng quát"
         },
-        "examinationFee": 6000,
+        "examinationFee": 5000,
         "available": true,
         "roomNumber": "112A",
         "roomName": "Phóng khám Ngoại tổng quát"
@@ -604,8 +704,107 @@
     "message": "Fetched doctor successfully"
 }
 ```
+### 4.3 Thêm sách bác sĩ
+**Endpoint:** `POST /api/doctors`
 
----
+**request:**
+```json
+{
+  "fullName": "Phạm Thị Ánh",
+  "phone": "0395555551",
+  "address": "123 Nguyen Trai, Quan 1, TP.HCM",
+  "birth": "1990-05-15",
+  "gender": "NAM",
+  "departmentId": 2,
+  "degreeId": 3,
+  "exp": 10,
+  "email": "phamthianh@gmail.com"
+}
+```
+
+**Response:**
+```json
+{
+    "data": {
+        "id": 1,
+        "fullName": "Phạm Ngọc Tiến",
+        "phone": "0395555551",
+        "address": "Hà Nội",
+        "birth": "1990-05-15",
+        "gender": "NAM",
+        "degreeResponse": {
+            "degreeId": 3,
+            "degreeName": "Bác sĩ Chuyên khoa II",
+            "examinationFee": 5000
+        },
+        "exp": 10,
+        "position": "BSCKII. Phạm Ngọc Tiến",
+        "departmentResponse": {
+            "id": 2,
+            "name": "Khoa Ngoại tổng quát"
+        },
+        "examinationFee": 5000,
+        "available": true,
+        "roomNumber": "112A",
+        "roomName": "Phóng khám Ngoại tổng quát"
+    },
+    "message": "Updated doctor successfully"
+}
+```
+
+### 4.4 Sửa sách bác sĩ
+**Endpoint:** `PUT /api/doctors`
+
+**request:**
+```json
+{
+   "id": "1",
+  "fullName": "Phạm Thị Ánh",
+  "phone": "0395555551",
+  "address": "123 Nguyen Trai, Quan 1, TP.HCM",
+  "birth": "1990-05-15",
+  "gender": "NAM",
+  "departmentId": 2,
+  "degreeId": 3,
+  "exp": 10,
+  "email": "phamthianh@gmail.com"
+}
+```
+
+**Response:**
+```json
+{
+    "data": {
+        "id": 1,
+        "fullName": "Phạm Ngọc Tiến",
+        "phone": "0395555551",
+        "address": "Hà Nội",
+        "birth": "1990-05-15",
+        "gender": "NAM",
+        "degreeResponse": {
+            "degreeId": 3,
+            "degreeName": "Bác sĩ Chuyên khoa II",
+            "examinationFee": 5000
+        },
+        "exp": 10,
+        "position": "BSCKII. Phạm Ngọc Tiến",
+        "departmentResponse": {
+            "id": 2,
+            "name": "Khoa Ngoại tổng quát"
+        },
+        "examinationFee": 5000,
+        "available": true,
+        "roomNumber": "112A",
+        "roomName": "Phóng khám Ngoại tổng quát"
+    },
+    "message": "Updated doctor successfully"
+}
+```
+
+### 4.5 XÓA sách bác sĩ
+**Endpoint:** `DELETE /api/doctors/1`
+- Không có response
+
 
 ## 5. Patient API
 
@@ -1147,15 +1346,51 @@
 **Response:**
 ```json
 {
-  "data": {
+    "id": 34,
+    "code": "HP-1762096643626",
+    "name": "Xét nghiệm tinh trùng",
+    "price": 500000.0,
+    "description": "Xét nghiệm tinh trùng",
+    "roomName": "Phòng khám Nhi khoa - 103A",
+    "type": "XET_NGHIEM"
+}
+hoặc nếu là loại dịch vụ thì có thêm dịch vụ trong gói
+{
     "id": 1,
-    "name": "Khám tổng quát",
-    "description": "string",
-    "price": 500000,
-    "duration": 30,
-    "details": []
-  },
-  "message": "success"
+    "code": "HP-1762096107937",
+    "name": "Gói khám xxx",
+    "price": 500000.0,
+    "description": "Gói khám sức khỏe tổng quát cho người lớn bé",
+    "type": "DICH_VU",
+    "subPlans": [
+        {
+            "id": 16,
+            "code": "XN_MAU_TQ",
+            "name": "Xét nghiệm máu tổng quát",
+            "price": 2000.0,
+            "description": "Xét nghiệm máu tổng quát (Complete Blood Count - CBC) là xét nghiệm cơ bản nhất để đánh giá tình trạng sức khỏe tổng thể của cơ thể. Xét nghiệm bao gồm: Đếm số lượng hồng cầu, bạch cầu, tiểu cầu. Đo nồng độ hemoglobin (Hb), hematocrit (Hct), thể tích hồng cầu trung bình (MCV), hàm lượng hemoglobin trung bình (MCH), nồng độ hemoglobin trung bình (MCHC). Phân loại bạch cầu (bạch cầu trung tính, lympho, mono, eo, baso). Chỉ số hồng cầu lưới (reticulocyte). Ngoài ra còn có các xét nghiệm bổ sung: đường huyết đói và sau ăn, HbA1c (đường huyết trung bình 3 tháng), mỡ máu (Cholesterol toàn phần, LDL-C, HDL-C, Triglyceride), chức năng gan (AST, ALT, GGT), chức năng thận (Ure, Creatinin, eGFR), acid uric, điện giải đồ (Na, K, Cl). Xét nghiệm giúp phát hiện: thiếu máu, nhiễm trùng, viêm, bệnh bạch cầu, rối loạn đông máu, đái tháo đường, bệnh tim mạch, bệnh gan, bệnh thận. Cần nhịn đói 8-12 giờ trước khi xét nghiệm để có kết quả chính xác nhất. Lấy mẫu máu tĩnh mạch, có kết quả trong 2-4 giờ.",
+            "roomName": "Phòng khám khoa xét nghiệm  - 204A",
+            "type": "XET_NGHIEM"
+        },
+        {
+            "id": 17,
+            "code": "XN_NUOC_TIEU",
+            "name": "Xét nghiệm nước tiểu tổng quát",
+            "price": 2000.0,
+            "description": "Xét nghiệm nước tiểu tổng quát là xét nghiệm đơn giản, không xâm lấn, giúp đánh giá chức năng thận và phát hiện các bệnh lý về đường tiết niệu, chuyển hóa. Xét nghiệm gồm 2 phần: Thử nhanh bằng que thử (test strip): đo pH, tỷ trọng, protein niệu, glucose niệu, ketone, bilirubin, urobilinogen, máu trong nước tiểu, bạch cầu esterase, nitrite. Xét nghiệm vi thể (soi kính hiển vi): đếm số lượng hồng cầu, bạch cầu, biểu mô, trụ (trụ hồng cầu, trụ bạch cầu, trụ hạt), vi khuẩn, nấm men, tinh thể (acid uric, oxalate, phosphate). Xét nghiệm giúp chẩn đoán: nhiễm trùng đường tiết niệu (viêm bàng quang, viêm thận, viêm niệu đạo), sỏi thận, bệnh thận mạn, hội chứng thận hư, viêm cầu thận, đái tháo đường (glucose niệu, ketone niệu), bệnh gan mật (bilirubin niệu), máu trong nước tiểu (do sỏi, u bàng quang, chấn thương). Hướng dẫn lấy mẫu: lấy nước tiểu giữa dòng, rửa sạch vùng kín trước khi lấy mẫu, bỏ phần đầu và phần cuối của dòng tiểu, lấy khoảng 30-50ml nước tiểu vào lọ sạch. Tốt nhất là lấy nước tiểu buổi sáng sớm. Có kết quả trong 1-2 giờ.",
+            "roomName": "Phòng khám khoa xét nghiệm  - 204A",
+            "type": "XET_NGHIEM"
+        },
+        {
+            "id": 18,
+            "code": "XN_SINH_HOA",
+            "name": "Xét nghiệm sinh hóa",
+            "price": 2000.0,
+            "description": "Xét nghiệm sinh hóa máu là nhóm xét nghiệm quan trọng để đánh giá chức năng các cơ quan nội tạng và phát hiện các rối loạn chuyển hóa. Bao gồm: Chức năng thận: Ure (BUN), Creatinine, eGFR (tốc độ lọc cầu thận ước tính), Acid uric. Chức năng gan: AST (SGOT), ALT (SGPT), GGT, ALP, Bilirubin toàn phần, Bilirubin trực tiếp, Albumin, Protein toàn phần, A/G ratio. Lipid máu (mỡ máu): Cholesterol toàn phần, Triglyceride, HDL-Cholesterol (mỡ tốt), LDL-Cholesterol (mỡ xấu), VLDL, ApoA1, ApoB, Lipoprotein(a). Chuyển hóa đường: Glucose đói, Glucose sau ăn 2h, HbA1c. Điện giải: Natri (Na+), Kali (K+), Clo (Cl-), Canxi (Ca2+), Magie (Mg2+), Phospho (P). Enzyme tim: Troponin I/T, CK-MB, BNP/NT-proBNP. Xét nghiệm giúp chẩn đoán và theo dõi: bệnh thận mạn, suy thận, sỏi thận, gút (tăng acid uric), bệnh gan (viêm gan, xơ gan, gan nhiễm mỡ), bệnh mật (tắc mật, sỏi mật), rối loạn lipid máu (nguy cơ tim mạch), đái tháo đường, rối loạn điện giải, bệnh tim mạch. Cần nhịn đói 8-12 giờ, không uống rượu bia 24h trước xét nghiệm. Có kết quả trong 2-6 giờ tùy số lượng chỉ số cần xét nghiệm.",
+            "roomName": "Phòng khám khoa xét nghiệm  - 204A",
+            "type": "XET_NGHIEM"
+        }
+    ]
 }
 ```
 
@@ -1227,7 +1462,256 @@
 }
 ```
 ---
+### Thêm dịch vụ
+**Endpoint:** `POST /api/services`
 
+**request:**
+```json
+{
+  "name": "Gói khám 1",
+  "type": "DICH_VU",
+  "price": 500000,
+  "description": "Gói khám sức khỏe tổng quát cho người lớn",
+  "roomId": 3,
+  "detailIds": [16,17,18],
+  "paramIds": null
+}
+// nếu chọn loại là dịch vụ thì các thông số sẽ không được chọn
+```
+**Response:**
+```json
+{
+    "data": {
+        "id": 1,
+        "code": "HP-1762096107937",
+        "name": "Gói khám 1",
+        "price": 500000.0,
+        "description": "Gói khám sức khỏe tổng quát cho người lớn",
+        "type": "DICH_VU",
+        "subPlans": [
+            {
+                "id": 16,
+                "code": "XN_MAU_TQ",
+                "name": "Xét nghiệm máu tổng quát",
+                "price": 2000.0,
+                "description": "Xét nghiệm máu tổng quát (Complete Blood Count - CBC) là xét nghiệm cơ bản nhất để đánh giá tình trạng sức khỏe tổng thể của cơ thể. Xét nghiệm bao gồm: Đếm số lượng hồng cầu, bạch cầu, tiểu cầu. Đo nồng độ hemoglobin (Hb), hematocrit (Hct), thể tích hồng cầu trung bình (MCV), hàm lượng hemoglobin trung bình (MCH), nồng độ hemoglobin trung bình (MCHC). Phân loại bạch cầu (bạch cầu trung tính, lympho, mono, eo, baso). Chỉ số hồng cầu lưới (reticulocyte). Ngoài ra còn có các xét nghiệm bổ sung: đường huyết đói và sau ăn, HbA1c (đường huyết trung bình 3 tháng), mỡ máu (Cholesterol toàn phần, LDL-C, HDL-C, Triglyceride), chức năng gan (AST, ALT, GGT), chức năng thận (Ure, Creatinin, eGFR), acid uric, điện giải đồ (Na, K, Cl). Xét nghiệm giúp phát hiện: thiếu máu, nhiễm trùng, viêm, bệnh bạch cầu, rối loạn đông máu, đái tháo đường, bệnh tim mạch, bệnh gan, bệnh thận. Cần nhịn đói 8-12 giờ trước khi xét nghiệm để có kết quả chính xác nhất. Lấy mẫu máu tĩnh mạch, có kết quả trong 2-4 giờ.",
+                "roomName": "Phòng khám khoa xét nghiệm  - 204A",
+                "type": "XET_NGHIEM"
+            },
+            {
+                "id": 17,
+                "code": "XN_NUOC_TIEU",
+                "name": "Xét nghiệm nước tiểu tổng quát",
+                "price": 2000.0,
+                "description": "Xét nghiệm nước tiểu tổng quát là xét nghiệm đơn giản, không xâm lấn, giúp đánh giá chức năng thận và phát hiện các bệnh lý về đường tiết niệu, chuyển hóa. Xét nghiệm gồm 2 phần: Thử nhanh bằng que thử (test strip): đo pH, tỷ trọng, protein niệu, glucose niệu, ketone, bilirubin, urobilinogen, máu trong nước tiểu, bạch cầu esterase, nitrite. Xét nghiệm vi thể (soi kính hiển vi): đếm số lượng hồng cầu, bạch cầu, biểu mô, trụ (trụ hồng cầu, trụ bạch cầu, trụ hạt), vi khuẩn, nấm men, tinh thể (acid uric, oxalate, phosphate). Xét nghiệm giúp chẩn đoán: nhiễm trùng đường tiết niệu (viêm bàng quang, viêm thận, viêm niệu đạo), sỏi thận, bệnh thận mạn, hội chứng thận hư, viêm cầu thận, đái tháo đường (glucose niệu, ketone niệu), bệnh gan mật (bilirubin niệu), máu trong nước tiểu (do sỏi, u bàng quang, chấn thương). Hướng dẫn lấy mẫu: lấy nước tiểu giữa dòng, rửa sạch vùng kín trước khi lấy mẫu, bỏ phần đầu và phần cuối của dòng tiểu, lấy khoảng 30-50ml nước tiểu vào lọ sạch. Tốt nhất là lấy nước tiểu buổi sáng sớm. Có kết quả trong 1-2 giờ.",
+                "roomName": "Phòng khám khoa xét nghiệm  - 204A",
+                "type": "XET_NGHIEM"
+            },
+            {
+                "id": 18,
+                "code": "XN_SINH_HOA",
+                "name": "Xét nghiệm sinh hóa",
+                "price": 2000.0,
+                "description": "Xét nghiệm sinh hóa máu là nhóm xét nghiệm quan trọng để đánh giá chức năng các cơ quan nội tạng và phát hiện các rối loạn chuyển hóa. Bao gồm: Chức năng thận: Ure (BUN), Creatinine, eGFR (tốc độ lọc cầu thận ước tính), Acid uric. Chức năng gan: AST (SGOT), ALT (SGPT), GGT, ALP, Bilirubin toàn phần, Bilirubin trực tiếp, Albumin, Protein toàn phần, A/G ratio. Lipid máu (mỡ máu): Cholesterol toàn phần, Triglyceride, HDL-Cholesterol (mỡ tốt), LDL-Cholesterol (mỡ xấu), VLDL, ApoA1, ApoB, Lipoprotein(a). Chuyển hóa đường: Glucose đói, Glucose sau ăn 2h, HbA1c. Điện giải: Natri (Na+), Kali (K+), Clo (Cl-), Canxi (Ca2+), Magie (Mg2+), Phospho (P). Enzyme tim: Troponin I/T, CK-MB, BNP/NT-proBNP. Xét nghiệm giúp chẩn đoán và theo dõi: bệnh thận mạn, suy thận, sỏi thận, gút (tăng acid uric), bệnh gan (viêm gan, xơ gan, gan nhiễm mỡ), bệnh mật (tắc mật, sỏi mật), rối loạn lipid máu (nguy cơ tim mạch), đái tháo đường, rối loạn điện giải, bệnh tim mạch. Cần nhịn đói 8-12 giờ, không uống rượu bia 24h trước xét nghiệm. Có kết quả trong 2-6 giờ tùy số lượng chỉ số cần xét nghiệm.",
+                "roomName": "Phòng khám khoa xét nghiệm  - 204A",
+                "type": "XET_NGHIEM"
+            }
+        ]
+    },
+    "message": "Created service successfully"
+}
+```
+### Sửa dịch vụ
+**Endpoint:** `PUT /api/services`
+
+**request:**
+```json
+{
+  "id" : 1,
+  "name": "Gói khám 1",
+  "price": 500000,
+  "description": "Gói khám sức khỏe tổng quát cho người lớn",
+  "roomId": 3,
+}
+```
+**Response:**
+```json
+{
+    "data": {
+        "id": 1,
+        "code": "HP-1762096107937",
+        "name": "Gói khám 1",
+        "price": 500000.0,
+        "description": "Gói khám sức khỏe tổng quát cho người lớn",
+        "type": "DICH_VU",
+        "subPlans": [
+            {
+                "id": 16,
+                "code": "XN_MAU_TQ",
+                "name": "Xét nghiệm máu tổng quát",
+                "price": 2000.0,
+                "description": "Xét nghiệm máu tổng quát (Complete Blood Count - CBC) là xét nghiệm cơ bản nhất để đánh giá tình trạng sức khỏe tổng thể của cơ thể. Xét nghiệm bao gồm: Đếm số lượng hồng cầu, bạch cầu, tiểu cầu. Đo nồng độ hemoglobin (Hb), hematocrit (Hct), thể tích hồng cầu trung bình (MCV), hàm lượng hemoglobin trung bình (MCH), nồng độ hemoglobin trung bình (MCHC). Phân loại bạch cầu (bạch cầu trung tính, lympho, mono, eo, baso). Chỉ số hồng cầu lưới (reticulocyte). Ngoài ra còn có các xét nghiệm bổ sung: đường huyết đói và sau ăn, HbA1c (đường huyết trung bình 3 tháng), mỡ máu (Cholesterol toàn phần, LDL-C, HDL-C, Triglyceride), chức năng gan (AST, ALT, GGT), chức năng thận (Ure, Creatinin, eGFR), acid uric, điện giải đồ (Na, K, Cl). Xét nghiệm giúp phát hiện: thiếu máu, nhiễm trùng, viêm, bệnh bạch cầu, rối loạn đông máu, đái tháo đường, bệnh tim mạch, bệnh gan, bệnh thận. Cần nhịn đói 8-12 giờ trước khi xét nghiệm để có kết quả chính xác nhất. Lấy mẫu máu tĩnh mạch, có kết quả trong 2-4 giờ.",
+                "roomName": "Phòng khám khoa xét nghiệm  - 204A",
+                "type": "XET_NGHIEM"
+            },
+            {
+                "id": 17,
+                "code": "XN_NUOC_TIEU",
+                "name": "Xét nghiệm nước tiểu tổng quát",
+                "price": 2000.0,
+                "description": "Xét nghiệm nước tiểu tổng quát là xét nghiệm đơn giản, không xâm lấn, giúp đánh giá chức năng thận và phát hiện các bệnh lý về đường tiết niệu, chuyển hóa. Xét nghiệm gồm 2 phần: Thử nhanh bằng que thử (test strip): đo pH, tỷ trọng, protein niệu, glucose niệu, ketone, bilirubin, urobilinogen, máu trong nước tiểu, bạch cầu esterase, nitrite. Xét nghiệm vi thể (soi kính hiển vi): đếm số lượng hồng cầu, bạch cầu, biểu mô, trụ (trụ hồng cầu, trụ bạch cầu, trụ hạt), vi khuẩn, nấm men, tinh thể (acid uric, oxalate, phosphate). Xét nghiệm giúp chẩn đoán: nhiễm trùng đường tiết niệu (viêm bàng quang, viêm thận, viêm niệu đạo), sỏi thận, bệnh thận mạn, hội chứng thận hư, viêm cầu thận, đái tháo đường (glucose niệu, ketone niệu), bệnh gan mật (bilirubin niệu), máu trong nước tiểu (do sỏi, u bàng quang, chấn thương). Hướng dẫn lấy mẫu: lấy nước tiểu giữa dòng, rửa sạch vùng kín trước khi lấy mẫu, bỏ phần đầu và phần cuối của dòng tiểu, lấy khoảng 30-50ml nước tiểu vào lọ sạch. Tốt nhất là lấy nước tiểu buổi sáng sớm. Có kết quả trong 1-2 giờ.",
+                "roomName": "Phòng khám khoa xét nghiệm  - 204A",
+                "type": "XET_NGHIEM"
+            },
+            {
+                "id": 18,
+                "code": "XN_SINH_HOA",
+                "name": "Xét nghiệm sinh hóa",
+                "price": 2000.0,
+                "description": "Xét nghiệm sinh hóa máu là nhóm xét nghiệm quan trọng để đánh giá chức năng các cơ quan nội tạng và phát hiện các rối loạn chuyển hóa. Bao gồm: Chức năng thận: Ure (BUN), Creatinine, eGFR (tốc độ lọc cầu thận ước tính), Acid uric. Chức năng gan: AST (SGOT), ALT (SGPT), GGT, ALP, Bilirubin toàn phần, Bilirubin trực tiếp, Albumin, Protein toàn phần, A/G ratio. Lipid máu (mỡ máu): Cholesterol toàn phần, Triglyceride, HDL-Cholesterol (mỡ tốt), LDL-Cholesterol (mỡ xấu), VLDL, ApoA1, ApoB, Lipoprotein(a). Chuyển hóa đường: Glucose đói, Glucose sau ăn 2h, HbA1c. Điện giải: Natri (Na+), Kali (K+), Clo (Cl-), Canxi (Ca2+), Magie (Mg2+), Phospho (P). Enzyme tim: Troponin I/T, CK-MB, BNP/NT-proBNP. Xét nghiệm giúp chẩn đoán và theo dõi: bệnh thận mạn, suy thận, sỏi thận, gút (tăng acid uric), bệnh gan (viêm gan, xơ gan, gan nhiễm mỡ), bệnh mật (tắc mật, sỏi mật), rối loạn lipid máu (nguy cơ tim mạch), đái tháo đường, rối loạn điện giải, bệnh tim mạch. Cần nhịn đói 8-12 giờ, không uống rượu bia 24h trước xét nghiệm. Có kết quả trong 2-6 giờ tùy số lượng chỉ số cần xét nghiệm.",
+                "roomName": "Phòng khám khoa xét nghiệm  - 204A",
+                "type": "XET_NGHIEM"
+            }
+        ]
+    },
+    "message": "Created service successfully"
+}
+```
+### xem thông số của dịch vụ
+**Endpoint:** `PUT /api/services/params/{healthPlanId}`
+
+**repsonse:**
+```json
+{
+    "data": [
+        {
+            "id": 21,
+            "name": "Hồng cầu (RBC)",
+            "unit": "T/L",
+            "range": "3.6-5.4"
+        },
+        {
+            "id": 22,
+            "name": "Bạch cầu (WBC)",
+            "unit": "G/L",
+            "range": "4.0-10.0"
+        },
+        {
+            "id": 23,
+            "name": "Tiểu cầu (PLT)",
+            "unit": "G/L",
+            "range": "150-400"
+        },
+        {
+            "id": 24,
+            "name": "Huyết sắc tố (Hb)",
+            "unit": "g/L",
+            "range": "120-170"
+        },
+        {
+            "id": 25,
+            "name": "Hematocrit (Hct)",
+            "unit": "%",
+            "range": "36-50"
+        },
+        {
+            "id": 26,
+            "name": "Đường huyết (Glucose)",
+            "unit": "mmol/L",
+            "range": "3.9-6.4"
+        },
+        {
+            "id": 27,
+            "name": "Cholesterol toàn phần",
+            "unit": "mmol/L",
+            "range": "0-5.2"
+        }
+    ],
+    "message": "Fetched parameters successfully"
+}
+```
+### Lấy tất cả thông số  chung có tìm kiếm (đây là toàn bộ thông số  chung)
+**Endpoint:** `GET /api/params`
+
+**repsonse:**
+```json
+{
+    "data": [
+        {
+            "id": 21,
+            "name": "Hồng cầu (RBC)",
+            "unit": "T/L",
+            "range": "3.6-5.4"
+        },
+        {
+            "id": 22,
+            "name": "Bạch cầu (WBC)",
+            "unit": "G/L",
+            "range": "4.0-10.0"
+        },
+        {
+            "id": 23,
+            "name": "Tiểu cầu (PLT)",
+            "unit": "G/L",
+            "range": "150-400"
+        },
+        {
+            "id": 24,
+            "name": "Huyết sắc tố (Hb)",
+            "unit": "g/L",
+            "range": "120-170"
+        },
+        {
+            "id": 25,
+            "name": "Hematocrit (Hct)",
+            "unit": "%",
+            "range": "36-50"
+        },
+        {
+            "id": 26,
+            "name": "Đường huyết (Glucose)",
+            "unit": "mmol/L",
+            "range": "3.9-6.4"
+        },
+    ]
+}
+```
+### Xoas thông số cuar dịch vụ
+**Endpoint:** `DELETE /api/services/params`
+**request**
+
+```json
+{
+  "healthPlanId": 34,
+  "requestIds": [30,31,32,33,34,35]
+}
+```
+**repsonse:**
+```json
+{
+    "data": null,
+    "message": "Deleted parameters from health plan successfully"
+}
+```
+
+### Thêm thông số vào dịch vụ
+**Endpoint:** `PUT /api/services/params`
+**request**
+
+```json
+{
+  "healthPlanId": 34,
+  "requestIds": [30,31,32,33,34,35]
+}
+
+```
+**repsonse:**
+```json
+{
+    "data": null,
+    "message": "Added parameters to health plan successfully"
+}
+```
 ## 7. Medical Record API
 
 ### Base URL: `/api/medical-record`/medi
@@ -3335,6 +3819,67 @@ response
 
 ### Base URL: `/api/users`
 
+
+### 16.1 Tạo người dùng
+**Endpoint:** `GET /api/users`
+
+**Mô tả:** Lấy danh sách người dùng mới (admin)
+**param**
+- `keyword(optional)`
+- `role(optional): BAC_SI, BENH_NHAN, LE_TAN, ADMIN
+**response**
+```json
+{
+    "data": {
+        "content": [
+            {
+                "id": 1,
+                "email": "admin@gmail.com",
+                "role": "ADMIN",
+            },
+            {
+                "id": 2,
+                "email": "phamtien@gmail.com",
+                "name": "",
+                "role": "BAC_SI",
+            },
+            {
+                "id": 3,
+                "email": "letan@gmail.com",
+                "name": "anh ngoc",
+                "role": "LE_TAN",
+            }
+        ],
+        "pageable": {
+            "pageNumber": 0,
+            "pageSize": 3,
+            "sort": {
+                "unsorted": true,
+                "sorted": false,
+                "empty": true
+            },
+            "offset": 0,
+            "unpaged": false,
+            "paged": true
+        },
+        "totalPages": 20,
+        "totalElements": 58,
+        "last": false,
+        "first": true,
+        "size": 3,
+        "number": 0,
+        "sort": {
+            "unsorted": true,
+            "sorted": false,
+            "empty": true
+        },
+        "numberOfElements": 3,
+        "empty": false
+    },
+    "message": "Fetched all users successfully"
+}
+```
+
 ### 16.1 Tạo người dùng
 **Endpoint:** `POST /api/users`
 
@@ -3343,9 +3888,9 @@ response
 **Request Body:**
 ```json
 {
-  "username": "string",
-  "password": "string",
   "email": "string",
+  "password": "string",
+  "phone": "string",
   "role": "BAC_SI", // BAC_SI, LE_TAN, BENH_NHAN, etc.
   "name": "string"
 }
@@ -3354,12 +3899,45 @@ response
 **Response:**
 ```json
 {
-  "id": 1,
-  "username": "string",
-  "email": "string",
-  "role": "BAC_SI"
+    "id": 120,
+    "email": "string@gmail.com",
+    "phone": "1233334122",
+    "name": "string",
+    "role": "LE_TAN",
+    "status": true,
+    "createdAt": "2025-11-02T15:15:25.437769",
 }
 ```
+## 16.1 Sửa người dùng
+**Endpoint:** `PUT /api/users`
+
+
+**Request Body:**
+```json
+{
+  "id": 1,
+  "email": "string",
+  "password": "string",
+  "phone": "string",
+  "role": "BAC_SI", // BAC_SI, LE_TAN, BENH_NHAN, ADMIN
+  "name": "string"
+}
+```
+
+**Response:**
+```json
+{
+    "id": 120,
+    "email": "string@gmail.com",
+    "phone": "1233334122",
+    "name": "string",
+    "role": "LE_TAN",
+    "status": true,
+    "createdAt": "2025-11-02T15:15:25.437769",
+}
+```
+### Xóa
+**Endpoint:** `DELETE /api/users/{id}`
 
 ---
 
@@ -3374,16 +3952,28 @@ response
 **Response:**
 ```json
 {
-  "data": {
-    "id": 1,
-    "username": "string",
-    "email": "string",
-    "role": "BAC_SI"
-  },
-  "message": "Get info successfully"
+    "data": {
+        "id": 4,
+        "email": "tien@gmail.com",
+        "phone": "0395527082",
+        "name": "TIEN dep trai",
+        "role": "BENH_NHAN",
+        "status": true,
+        "createdAt": "2025-11-01T12:28:41",
+    },
+    "message": "Get info successfully"
 }
 ```
+### Đặt mật khẩu
+**Endpoint:** `POST /api/users/change-password`
 
+**request:**
+```json
+{
+    "id":1,
+    "newPassword": "12345678dsf"
+}
+```
 ---
 
 ### 16.3 Lấy thông tin người dùng hiện tại
@@ -3633,6 +4223,81 @@ files, type (xn,avatars)
     "message": "Fetched all rooms successfully"
 }
 ```
+## theem phong
+**Endpoint:** `POST /api/rooms`
+
+
+**req7uest:**
+```json
+{
+  "roomName": "Phòng Xets nghiem tong hop",
+  "roomNumber": "R101",
+  "departmentId": 3
+}
+```
+**ressponse:**
+```json
+{
+    "data": {
+        "roomId": 13,
+        "roomName": "Phòng xnth",
+        "roomNumber": "S101",
+        "departmentId": 4,
+        "departmentName": "Khoa Sản"
+    },
+    "message": "Fetched room successfully"
+}
+```
+
+## Xem chi tiet phong
+**Endpoint:** `GET /api/rooms/{id}`
+
+
+**ressponse:**
+```json
+{
+    "data": {
+        "roomId": 13,
+        "roomName": "Phòng xnth",
+        "roomNumber": "S101",
+        "departmentId": 4,
+        "departmentName": "Khoa Sản"
+    },
+    "message": "Fetched room successfully"
+}
+```
+## Sua phong
+**Endpoint:** `PUT /api/rooms`
+
+
+**req7uest:**
+```json
+{
+  "roomId": 13,
+  "roomName": "Phòng xnth",
+  "roomNumber": "S101",
+  "departmentId": 4
+}
+
+```
+**ressponse:**
+```json
+{
+    "data": {
+        "roomId": 13,
+        "roomName": "Phòng xnth",
+        "roomNumber": "S101",
+        "departmentId": 4,
+        "departmentName": "Khoa Sản"
+    },
+    "message": "Fetched room successfully"
+}
+```
+
+
+### xoas phong
+**Endpoint:** `DELETE /api/rooms/{id}`
+
 ## Thông tin chung
 
 ### Authentication

@@ -8,20 +8,9 @@ import { DepartmentsTable } from './components/departments-table'
 import { DepartmentDetailDialog } from './components/department-detail-dialog'
 import { CreateDepartmentDialog } from './components/create-department-dialog'
 import { EditDepartmentDialog } from './components/edit-department-dialog'
+import { DeleteDepartmentDialog } from './components/delete-department-dialog'
 import { fetchDepartmentsList } from './api/departments-list'
 import type { DepartmentsSearch } from './types-list'
-import type { Department } from './api/departments-list'
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { toast } from 'sonner'
 
 const departmentsRoute = getRouteApi('/_authenticated/admin/departments')
 const departmentsQueryBaseKey: QueryKey = ['admin-departments-list']
@@ -43,7 +32,8 @@ export function DepartmentsListManagement() {
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [detailDialogOpen, setDetailDialogOpen] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-    const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null)
+    const [selectedDepartmentId, setSelectedDepartmentId] = useState<number | null>(null)
+    const [selectedDepartmentName, setSelectedDepartmentName] = useState<string>('')
 
     // Debounce keyword to avoid excessive API calls
     const rawKeyword = resolveKeyword(search.keyword)
@@ -64,7 +54,8 @@ export function DepartmentsListManagement() {
         queryKey: [...departmentsQueryBaseKey, queryInput],
         queryFn: () => fetchDepartmentsList(queryInput),
         placeholderData: (previous) => previous,
-        staleTime: 30_000,
+        staleTime: 0, // Không cache - luôn fetch mới
+        gcTime: 0, // Không giữ cache trong bộ nhớ
     })
 
     const departments = departmentsQuery.data?.departments ?? []
@@ -82,7 +73,8 @@ export function DepartmentsListManagement() {
         (id: number) => {
             const department = departments.find((d) => d.id === id)
             if (department) {
-                setSelectedDepartment(department)
+                setSelectedDepartmentId(id)
+                setSelectedDepartmentName(department.name)
                 setDetailDialogOpen(true)
             }
         },
@@ -93,7 +85,8 @@ export function DepartmentsListManagement() {
         (id: number) => {
             const department = departments.find((d) => d.id === id)
             if (department) {
-                setSelectedDepartment(department)
+                setSelectedDepartmentId(id)
+                setSelectedDepartmentName(department.name)
                 setEditDialogOpen(true)
             }
         },
@@ -104,19 +97,17 @@ export function DepartmentsListManagement() {
         (id: number) => {
             const department = departments.find((d) => d.id === id)
             if (department) {
-                setSelectedDepartment(department)
+                setSelectedDepartmentId(id)
+                setSelectedDepartmentName(department.name)
                 setDeleteDialogOpen(true)
             }
         },
         [departments]
     )
 
-    const confirmDelete = () => {
-        if (selectedDepartment) {
-            toast.info('API xóa khoa chưa được triển khai')
-            setDeleteDialogOpen(false)
-            setSelectedDepartment(null)
-        }
+    const handleCreateSuccess = () => {
+        // Reset to first page after creating
+        navigate({ search: { ...search, page: DEFAULT_PAGE } })
     }
 
     return (
@@ -147,40 +138,27 @@ export function DepartmentsListManagement() {
             <CreateDepartmentDialog
                 open={createDialogOpen}
                 onOpenChange={setCreateDialogOpen}
+                onSuccess={handleCreateSuccess}
             />
 
             <EditDepartmentDialog
                 open={editDialogOpen}
                 onOpenChange={setEditDialogOpen}
-                department={selectedDepartment}
+                departmentId={selectedDepartmentId}
             />
 
             <DepartmentDetailDialog
                 open={detailDialogOpen}
                 onOpenChange={setDetailDialogOpen}
-                departmentId={selectedDepartment?.id ?? null}
+                departmentId={selectedDepartmentId}
             />
 
-            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Bạn có chắc chắn muốn xóa khoa "{selectedDepartment?.name}" không? Hành
-                            động này không thể hoàn tác.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Hủy</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={confirmDelete}
-                            className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-                        >
-                            Xóa
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <DeleteDepartmentDialog
+                open={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+                departmentId={selectedDepartmentId}
+                departmentName={selectedDepartmentName}
+            />
         </>
     )
 }

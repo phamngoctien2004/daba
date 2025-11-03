@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -21,11 +20,11 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { toast } from 'sonner'
+import { useCreateDepartment } from '../hooks/use-departments-crud'
 
 const formSchema = z.object({
     name: z.string().min(1, 'Tên khoa là bắt buộc'),
-    phone: z.string().min(10, 'Số điện thoại không hợp lệ'),
+    phone: z.string().min(10, 'Số điện thoại không hợp lệ').max(11, 'Số điện thoại không hợp lệ'),
     description: z.string().min(1, 'Mô tả là bắt buộc'),
 })
 
@@ -34,13 +33,15 @@ type FormValues = z.infer<typeof formSchema>
 type CreateDepartmentDialogProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
+    onSuccess?: () => void
 }
 
 export function CreateDepartmentDialog({
     open,
     onOpenChange,
+    onSuccess,
 }: CreateDepartmentDialogProps) {
-    const [isSubmitting, setIsSubmitting] = useState(false)
+    const { mutate: createMutation, isPending } = useCreateDepartment(onSuccess)
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -52,22 +53,12 @@ export function CreateDepartmentDialog({
     })
 
     const onSubmit = async (values: FormValues) => {
-        setIsSubmitting(true)
-        try {
-            console.log('Create department:', values)
-
-            // TODO: API chưa có - giả lập delay
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-
-            toast.info('API tạo khoa chưa được triển khai')
-            form.reset()
-            onOpenChange(false)
-        } catch (error) {
-            toast.error('Có lỗi xảy ra')
-            console.error(error)
-        } finally {
-            setIsSubmitting(false)
-        }
+        createMutation(values, {
+            onSuccess: () => {
+                form.reset()
+                onOpenChange(false)
+            },
+        })
     }
 
     return (
@@ -128,22 +119,17 @@ export function CreateDepartmentDialog({
                             )}
                         />
 
-                        <div className='rounded-lg bg-muted/50 p-4'>
-                            <p className='text-sm text-muted-foreground'>
-                                💡 API tạo khoa chưa được triển khai. Form này chỉ hiển thị giao diện.
-                            </p>
-                        </div>
-
                         <DialogFooter>
                             <Button
                                 type='button'
                                 variant='outline'
                                 onClick={() => onOpenChange(false)}
+                                disabled={isPending}
                             >
                                 Hủy
                             </Button>
-                            <Button type='submit' disabled={isSubmitting}>
-                                {isSubmitting ? 'Đang tạo...' : 'Tạo khoa'}
+                            <Button type='submit' disabled={isPending}>
+                                {isPending ? 'Đang tạo...' : 'Tạo khoa'}
                             </Button>
                         </DialogFooter>
                     </form>

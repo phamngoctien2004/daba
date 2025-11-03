@@ -11,19 +11,19 @@ export function SignIn2() {
         <div className='mx-auto flex w-full flex-col justify-center space-y-2 py-8 sm:w-[480px] sm:p-8'>
           <div className='mb-4 flex items-center justify-center'>
             <Logo className='me-2' />
-            <h1 className='text-xl font-medium'>Shadcn Admin</h1>
+            <h1 className='text-xl font-medium'>Trang chủ</h1>
           </div>
         </div>
         <div className='mx-auto flex w-full max-w-sm flex-col justify-center space-y-2'>
           <div className='flex flex-col space-y-2 text-start'>
             <h2 className='text-lg font-semibold tracking-tight'>Sign in</h2>
-            <p className='text-muted-foreground text-sm'>
+            {/* <p className='text-muted-foreground text-sm'>
               Enter your email and password below <br />
               to log into your account
-            </p>
+            </p> */}
           </div>
           <UserAuthForm />
-          <p className='text-muted-foreground px-8 text-center text-sm'>
+          {/* <p className='text-muted-foreground px-8 text-center text-sm'>
             By clicking sign in, you agree to our{' '}
             <a
               href='/terms'
@@ -39,7 +39,7 @@ export function SignIn2() {
               Privacy Policy
             </a>
             .
-          </p>
+          </p> */}
         </div>
       </div>
 

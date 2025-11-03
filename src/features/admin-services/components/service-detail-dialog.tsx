@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query'
 import {
     Dialog,
     DialogContent,
@@ -8,7 +7,8 @@ import {
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { fetchService } from '../api/services'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { useServiceDetail } from '../hooks/use-services-crud'
 
 interface ServiceDetailDialogProps {
     open: boolean
@@ -33,11 +33,7 @@ export function ServiceDetailDialog({
     onOpenChange,
     serviceId,
 }: ServiceDetailDialogProps) {
-    const { data: service, isLoading } = useQuery({
-        queryKey: ['service', serviceId],
-        queryFn: () => fetchService(serviceId!),
-        enabled: open && serviceId !== null,
-    })
+    const { data: service, isLoading } = useServiceDetail(serviceId, open)
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -102,10 +98,15 @@ export function ServiceDetailDialog({
                                     Phòng khám
                                 </div>
                                 <div className='mt-1'>
-                                    <div className='font-medium'>{service.roomNumber}</div>
-                                    <div className='text-sm text-muted-foreground'>
-                                        {service.roomName}
-                                    </div>
+                                    {service.roomName ? (
+                                        <>
+                                            <div className='text-sm text-muted-foreground'>
+                                                {service.roomName}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className='text-sm text-muted-foreground'>Chưa xác định</div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -118,6 +119,47 @@ export function ServiceDetailDialog({
                                 <div className='text-sm leading-relaxed bg-muted/50 p-4 rounded-lg'>
                                     {service.description}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Hiển thị sub-plans cho dịch vụ gói */}
+                        {service.type === 'DICH_VU' && service.subPlans && service.subPlans.length > 0 && (
+                            <div>
+                                <div className='text-sm font-medium text-muted-foreground mb-3'>
+                                    Dịch vụ trong gói ({service.subPlans.length})
+                                </div>
+                                <ScrollArea className='h-64 border rounded-lg'>
+                                    <div className='space-y-3 p-4'>
+                                        {service.subPlans.map((subPlan) => (
+                                            <div
+                                                key={subPlan.id}
+                                                className='border-l-4 border-primary/30 pl-4 py-2 bg-muted/30 rounded-r'
+                                            >
+                                                <div className='flex items-start justify-between gap-4'>
+                                                    <div className='flex-1'>
+                                                        <div className='font-medium'>{subPlan.name}</div>
+                                                        <div className='text-xs text-muted-foreground mt-1'>
+                                                            {subPlan.code}
+                                                        </div>
+                                                        {subPlan.roomName && (
+                                                            <div className='text-xs text-muted-foreground mt-1'>
+                                                                📍 {subPlan.roomName}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className='text-right'>
+                                                        <div className='font-semibold text-primary'>
+                                                            {subPlan.price.toLocaleString()} VNĐ
+                                                        </div>
+                                                        <Badge variant='secondary' className='text-xs mt-1'>
+                                                            {serviceTypeLabels[subPlan.type] || subPlan.type}
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </ScrollArea>
                             </div>
                         )}
                     </div>

@@ -8,6 +8,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Building2, MapPin } from 'lucide-react'
+import { useRoomDetail } from '../hooks/use-rooms-crud'
 
 type RoomDetailDialogProps = {
     open: boolean
@@ -20,16 +21,7 @@ export function RoomDetailDialog({
     onOpenChange,
     roomId,
 }: RoomDetailDialogProps) {
-    // Mock data - API chưa có
-    const isLoading = false
-    const room = roomId
-        ? {
-            roomId: roomId,
-            roomNumber: '101A',
-            roomName: 'Phòng khám Nội tổng quát',
-            departmentName: 'Khoa Nội tổng hợp',
-        }
-        : null
+    const { data: room, isLoading } = useRoomDetail(roomId, open)
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -88,13 +80,6 @@ export function RoomDetailDialog({
                                     <p className='text-base'>{room.departmentName}</p>
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Note */}
-                        <div className='rounded-lg bg-muted/50 p-4'>
-                            <p className='text-sm text-muted-foreground'>
-                                💡 API chi tiết phòng chưa được triển khai. Đây là dữ liệu mẫu.
-                            </p>
                         </div>
                     </div>
                 ) : (

@@ -26,6 +26,8 @@ export const createDoctorsColumns = ({
     {
       accessorKey: 'fullName',
       header: 'Họ và tên',
+      size: 200,
+      minSize: 150,
       cell: ({ row }) => (
         <div className="font-medium">{row.original.fullName}</div>
       ),
@@ -33,6 +35,8 @@ export const createDoctorsColumns = ({
     {
       accessorKey: 'degreeResponse.degreeName',
       header: 'Bằng cấp',
+      size: 150,
+      minSize: 120,
       cell: ({ row }) => (
         <div className="text-sm">{row.original.degreeResponse.degreeName}</div>
       ),
@@ -40,6 +44,8 @@ export const createDoctorsColumns = ({
     {
       accessorKey: 'position',
       header: 'Chức danh',
+      size: 200,
+      minSize: 150,
       cell: ({ row }) => (
         <div className="text-sm">{row.original.position}</div>
       ),
@@ -47,6 +53,8 @@ export const createDoctorsColumns = ({
     {
       accessorKey: 'departmentResponse.name',
       header: 'Khoa',
+      size: 180,
+      minSize: 150,
       cell: ({ row }) => (
         <Badge variant="outline">{row.original.departmentResponse.name}</Badge>
       ),
@@ -54,6 +62,8 @@ export const createDoctorsColumns = ({
     {
       accessorKey: 'roomNumber',
       header: 'Phòng khám',
+      size: 180,
+      minSize: 150,
       cell: ({ row }) => (
         <div>
           <div className="font-medium">{row.original.roomNumber}</div>
@@ -64,6 +74,8 @@ export const createDoctorsColumns = ({
     {
       accessorKey: 'available',
       header: 'Trạng thái',
+      size: 130,
+      minSize: 120,
       cell: ({ row }) => (
         <Badge variant={row.original.available ? 'default' : 'destructive'}>
           {row.original.available ? 'Hoạt động' : 'Không hoạt động'}
@@ -73,6 +85,8 @@ export const createDoctorsColumns = ({
     {
       id: 'actions',
       header: 'Thao tác',
+      size: 100,
+      minSize: 80,
       cell: ({ row }) => {
         const doctor = row.original
 

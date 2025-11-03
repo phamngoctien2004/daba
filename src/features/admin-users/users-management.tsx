@@ -7,20 +7,11 @@ import { useDebounce } from '@/hooks/use-debounce'
 import { UsersTable } from './components/users-table'
 import { UserDetailDialog } from './components/user-detail-dialog'
 import { CreateUserDialog } from './components/create-user-dialog'
+import { EditUserDialog } from './components/edit-user-dialog'
+import { DeleteUserDialog } from './components/delete-user-dialog'
+import { ResetPasswordDialog } from './components/reset-password-dialog'
 import { fetchUsersList } from './api/users'
 import type { UsersSearch, UserRole } from './types'
-import type { User } from './api/users'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { toast } from 'sonner'
 
 const usersRoute = getRouteApi('/_authenticated/admin/users')
 
@@ -45,9 +36,12 @@ export function UsersManagement() {
   const navigate = usersRoute.useNavigate()
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false)
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
+  const [selectedUserName, setSelectedUserName] = useState<string>('')
 
   // Debounce keyword to avoid excessive API calls
   const rawKeyword = resolveKeyword(search.keyword)
@@ -87,7 +81,8 @@ export function UsersManagement() {
     queryKey: [...usersQueryBaseKey, queryInput],
     queryFn: () => fetchUsersList(queryInput),
     placeholderData: (previous) => previous,
-    staleTime: 30_000,
+    staleTime: 0, // Không cache - luôn fetch mới
+    gcTime: 0, // Không giữ cache trong bộ nhớ
   })
 
   const users = usersQuery.data?.users ?? []
@@ -104,35 +99,42 @@ export function UsersManagement() {
   const handleViewDetail = (id: number) => {
     const user = users.find((u) => u.id === id)
     if (user) {
-      setSelectedUser(user)
+      setSelectedUserId(id)
+      setSelectedUserName(user.name)
       setDetailDialogOpen(true)
+    }
+  }
+
+  const handleEdit = (id: number) => {
+    const user = users.find((u) => u.id === id)
+    if (user) {
+      setSelectedUserId(id)
+      setSelectedUserName(user.name)
+      setEditDialogOpen(true)
     }
   }
 
   const handleDelete = (id: number) => {
     const user = users.find((u) => u.id === id)
     if (user) {
-      setSelectedUser(user)
+      setSelectedUserId(id)
+      setSelectedUserName(user.name)
       setDeleteDialogOpen(true)
     }
   }
 
-  const confirmDelete = async () => {
-    if (!selectedUser) return
-
-    try {
-      console.log('Delete user:', selectedUser.id)
-      // TODO: Implement API call
-      // await deleteUser(selectedUser.id)
-      toast.success('Xóa tài khoản thành công')
-      setDeleteDialogOpen(false)
-      setSelectedUser(null)
-      // Refetch data
-      // queryClient.invalidateQueries({ queryKey: usersQueryBaseKey })
-    } catch (error) {
-      console.error('Failed to delete user:', error)
-      toast.error('Có lỗi xảy ra khi xóa tài khoản')
+  const handleResetPassword = (id: number) => {
+    const user = users.find((u) => u.id === id)
+    if (user) {
+      setSelectedUserId(id)
+      setSelectedUserName(user.name || user.email)
+      setResetPasswordDialogOpen(true)
     }
+  }
+
+  const handleCreateSuccess = () => {
+    // Reset to first page after creating
+    navigate({ search: { ...search, page: DEFAULT_PAGE } })
   }
 
   return (
@@ -156,7 +158,9 @@ export function UsersManagement() {
         isLoading={isLoading}
         isRefetching={isRefetching}
         onViewDetail={handleViewDetail}
+        onEdit={handleEdit}
         onDelete={handleDelete}
+        onResetPassword={handleResetPassword}
         search={search}
         navigate={navigate}
       />
@@ -164,30 +168,34 @@ export function UsersManagement() {
       <UserDetailDialog
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
-        user={selectedUser}
+        userId={selectedUserId}
       />
 
       <CreateUserDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+        onSuccess={handleCreateSuccess}
       />
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa tài khoản{' '}
-              <strong>{selectedUser?.email}</strong>? Hành động này không thể hoàn
-              tác.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>Xóa</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <EditUserDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        userId={selectedUserId}
+      />
+
+      <DeleteUserDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        userId={selectedUserId}
+        userName={selectedUserName}
+      />
+
+      <ResetPasswordDialog
+        open={resetPasswordDialogOpen}
+        onOpenChange={setResetPasswordDialogOpen}
+        userId={selectedUserId}
+        userName={selectedUserName}
+      />
     </div>
   )
 }

@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Phone, FileText } from 'lucide-react'
+import { useDepartmentDetail } from '../hooks/use-departments-crud'
 
 type DepartmentDetailDialogProps = {
     open: boolean
@@ -19,16 +20,7 @@ export function DepartmentDetailDialog({
     onOpenChange,
     departmentId,
 }: DepartmentDetailDialogProps) {
-    // Mock data - API chưa có
-    const isLoading = false
-    const department = departmentId
-        ? {
-            id: departmentId,
-            name: 'Khoa Nội tổng hợp',
-            phone: '0901234567',
-            description: 'Khám và điều trị các bệnh lý nội khoa',
-        }
-        : null
+    const { data: department, isLoading } = useDepartmentDetail(departmentId, open)
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>

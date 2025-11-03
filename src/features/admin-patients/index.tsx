@@ -52,7 +52,8 @@ export function PatientsManagement() {
     queryKey: [...patientsQueryBaseKey, queryInput],
     queryFn: () => fetchPatients(queryInput),
     placeholderData: (previous) => previous,
-    staleTime: 30_000,
+    staleTime: 0, // Không cache - luôn fetch mới
+    gcTime: 0, // Không giữ cache trong bộ nhớ
   })
 
   const patients = patientsQuery.data?.patients ?? []
