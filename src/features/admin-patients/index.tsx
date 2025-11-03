@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { getRouteApi, useNavigate } from '@tanstack/react-router'
+import { getRouteApi } from '@tanstack/react-router'
 import { useQuery, type QueryKey } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { useDebounce } from '@/hooks/use-debounce'
@@ -26,7 +26,6 @@ const resolveKeyword = (value?: string | null) => {
 export function PatientsManagement() {
   const search = patientsRoute.useSearch() as PatientsSearch
   const navigate = patientsRoute.useNavigate()
-  const globalNavigate = useNavigate()
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)

@@ -67,7 +67,6 @@ export function ServicesTable({
     onViewDetail,
     onEdit,
     onDelete,
-    onResetFilters,
     onCreateNew,
     search,
     navigate,
