@@ -13,6 +13,7 @@ import { Main } from '@/components/layout/main'
 import { ChatButton } from '@/components/chat-button'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { ProfileDropdown } from '@/components/profile-dropdown'
+import { NotificationDropdown } from '@/features/notifications'
 import { Search as GlobalSearch } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import type { NavigateFn } from '@/hooks/use-table-url-state'
@@ -236,6 +237,7 @@ export function AppointmentsManagement() {
           <ThemeSwitch />
           <ChatButton />
           <ConfigDrawer />
+          <NotificationDropdown />
           <ProfileDropdown />
         </div>
       </Header>

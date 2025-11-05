@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { queryClient } from '@/lib/query-client'
+import { wsClient } from '@/lib/websocket-client'
 import { DirectionProvider } from './context/direction-provider'
 import { FontProvider } from './context/font-provider'
 import { ThemeProvider } from './context/theme-provider'
@@ -43,4 +44,13 @@ if (!rootElement.innerHTML) {
       </QueryClientProvider>
     </StrictMode>
   )
+}
+
+// Expose to window for debugging (development only)
+if (import.meta.env.DEV) {
+  // @ts-ignore
+  window.queryClient = queryClient
+  // @ts-ignore
+  window.wsClient = wsClient
+  console.log('🔧 [Debug] queryClient and wsClient exposed to window')
 }

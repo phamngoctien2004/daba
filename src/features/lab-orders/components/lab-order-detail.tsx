@@ -10,10 +10,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
-import { ConfigDrawer } from '@/components/config-drawer'
-import { ProfileDropdown } from '@/components/profile-dropdown'
+import { HeaderActions } from '@/components/layout/header-actions'
 import { Search as GlobalSearch } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { useToast } from '@/hooks/use-toast'
 import {
     fetchLabOrderById,
@@ -86,11 +84,7 @@ export function LabOrderDetail({ id }: LabOrderDetailProps) {
             <>
                 <Header fixed>
                     <GlobalSearch />
-                    <div className='ms-auto flex items-center space-x-4'>
-                        <ThemeSwitch />
-                        <ConfigDrawer />
-                        <ProfileDropdown />
-                    </div>
+                    <HeaderActions />
                 </Header>
 
                 <Main className='flex flex-1 flex-col gap-6'>
@@ -108,11 +102,7 @@ export function LabOrderDetail({ id }: LabOrderDetailProps) {
             <>
                 <Header fixed>
                     <GlobalSearch />
-                    <div className='ms-auto flex items-center space-x-4'>
-                        <ThemeSwitch />
-                        <ConfigDrawer />
-                        <ProfileDropdown />
-                    </div>
+                    <HeaderActions />
                 </Header>
 
                 <Main className='flex flex-1 flex-col items-center justify-center gap-4'>
@@ -134,11 +124,7 @@ export function LabOrderDetail({ id }: LabOrderDetailProps) {
         <>
             <Header fixed>
                 <GlobalSearch />
-                <div className='ms-auto flex items-center space-x-4'>
-                    <ThemeSwitch />
-                    <ConfigDrawer />
-                    <ProfileDropdown />
-                </div>
+                <HeaderActions />
             </Header>
 
             <Main className='flex flex-1 flex-col gap-6'>

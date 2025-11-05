@@ -7,6 +7,7 @@ import { Main } from '@/components/layout/main'
 import { ChatButton } from '@/components/chat-button'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { ProfileDropdown } from '@/components/profile-dropdown'
+import { NotificationDropdown } from '@/features/notifications'
 import { Search as GlobalSearch } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { StatsCards } from './components/stats-cards'
@@ -27,6 +28,7 @@ export default function AdminOverviewPage() {
                         <ThemeSwitch />
                         <ChatButton />
                         <ConfigDrawer />
+                        <NotificationDropdown />
                         <ProfileDropdown />
                     </div>
                 </Header>
@@ -57,6 +59,7 @@ export default function AdminOverviewPage() {
                     <ThemeSwitch />
                     <ChatButton />
                     <ConfigDrawer />
+                    <NotificationDropdown />
                     <ProfileDropdown />
                 </div>
             </Header>

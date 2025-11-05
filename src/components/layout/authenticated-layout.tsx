@@ -7,6 +7,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { SkipToMain } from '@/components/skip-to-main'
 import { useGlobalChatSubscription } from '@/features/chats/hooks/use-global-chat-subscription'
+import { useNotificationSubscription } from '@/features/notifications'
 
 type AuthenticatedLayoutProps = {
   children?: React.ReactNode
@@ -17,6 +18,9 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
 
   // Subscribe to all conversations for unread tracking (global)
   useGlobalChatSubscription()
+
+  // Subscribe to admin notifications for real-time updates
+  useNotificationSubscription()
 
   return (
     <SearchProvider>

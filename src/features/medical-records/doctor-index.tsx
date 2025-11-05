@@ -4,10 +4,8 @@ import { getRouteApi } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
-import { ConfigDrawer } from '@/components/config-drawer'
-import { ProfileDropdown } from '@/components/profile-dropdown'
+import { HeaderActions } from '@/components/layout/header-actions'
 import { Search as GlobalSearch } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDebounce } from '@/hooks/use-debounce'
 import type { NavigateFn } from '@/hooks/use-table-url-state'
@@ -214,11 +212,7 @@ export function DoctorMedicalRecordsManagement() {
     <>
       <Header fixed>
         <GlobalSearch />
-        <div className='ms-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-          <ConfigDrawer />
-          <ProfileDropdown />
-        </div>
+        <HeaderActions />
       </Header>
 
       <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>

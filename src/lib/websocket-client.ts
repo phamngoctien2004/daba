@@ -1,6 +1,7 @@
 import { Client, type IMessage } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 import type { Message } from '@/features/chats/types'
+import type { Notification } from '@/features/notifications/types'
 
 const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || 'http://localhost:8080/ws'
 
@@ -12,6 +13,7 @@ export interface PaymentSuccessEvent {
 
 export type PaymentEventCallback = (event: PaymentSuccessEvent) => void
 export type ChatMessageCallback = (message: Message) => void
+export type NotificationCallback = (notification: Notification) => void
 
 class WebSocketClient {
     private client: Client | null = null
@@ -241,6 +243,78 @@ class WebSocketClient {
                 'Authorization': `Bearer ${token}`
             }
         })
+    }
+
+    /**
+     * Subscribe to notifications for a specific user (admin)
+     * Topic: /topic/notifications/book.{userId}
+     */
+    subscribeToNotifications(
+        userId: number,
+        callback: NotificationCallback
+    ): () => void {
+        const topic = `/topic/notifications/book.${userId}`
+
+        if (!this.client?.connected) {
+            console.warn('⚠️ [WebSocket] Not connected. Call connect() first.')
+            return () => { }
+        }
+
+        // Get or create callbacks set for this topic
+        if (!this.topicCallbacks.has(topic)) {
+            this.topicCallbacks.set(topic, new Set())
+        }
+        const callbacks = this.topicCallbacks.get(topic)!
+
+        // Add callback to set
+        callbacks.add(callback)
+        console.log(`🔵 [WebSocket] Added notification callback for ${topic} (total: ${callbacks.size})`)
+
+        // Subscribe to topic if not already subscribed
+        if (!this.subscriptions.has(topic)) {
+            console.log(`🔵 [WebSocket] Subscribing to ${topic}`)
+
+            const subscription = this.client.subscribe(topic, (message: IMessage) => {
+                try {
+                    const notification = JSON.parse(message.body) as Notification
+                    console.log(`✅ [WebSocket] Received notification from ${topic}:`, notification)
+
+                    // Call all registered callbacks
+                    const currentCallbacks = this.topicCallbacks.get(topic)
+                    if (currentCallbacks) {
+                        currentCallbacks.forEach((cb) => {
+                            try {
+                                cb(notification)
+                            } catch (error) {
+                                console.error('❌ [WebSocket] Notification callback error:', error)
+                            }
+                        })
+                    }
+                } catch (error) {
+                    console.error('❌ [WebSocket] Failed to parse notification:', error)
+                }
+            })
+
+            // Store subscription
+            this.subscriptions.set(topic, subscription)
+        }
+
+        // Return unsubscribe function for this specific callback
+        return () => {
+            console.log(`🔵 [WebSocket] Removing notification callback for ${topic}`)
+            callbacks.delete(callback)
+
+            // If no more callbacks, unsubscribe from topic
+            if (callbacks.size === 0) {
+                console.log(`🔵 [WebSocket] No more callbacks, unsubscribing from ${topic}`)
+                const subscription = this.subscriptions.get(topic)
+                if (subscription) {
+                    subscription.unsubscribe()
+                    this.subscriptions.delete(topic)
+                }
+                this.topicCallbacks.delete(topic)
+            }
+        }
     }
 
     /**
