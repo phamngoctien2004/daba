@@ -22,15 +22,9 @@ interface ScheduleCalendarProps {
 }
 
 const SHIFT_LABELS: Record<Shift, string> = {
-    SANG: 'Sáng (7h-12h)',
-    CHIEU: 'Chiều (12h-17h)',
-    TOI: 'Tối (17h-21h)',
-}
-
-const SHIFT_COLORS: Record<Shift, string> = {
-    SANG: 'bg-green-100 border-green-300 text-green-800',
-    CHIEU: 'bg-blue-100 border-blue-300 text-blue-800',
-    TOI: 'bg-purple-100 border-purple-300 text-purple-800',
+    SANG: 'Sáng',
+    CHIEU: 'Chiều',
+    TOI: 'Tối',
 }
 
 export function ScheduleCalendar({
@@ -48,15 +42,6 @@ export function ScheduleCalendar({
             return time.slice(0, 5) // Fallback to first 5 chars
         }
     }
-
-    const getShiftBadge = (shift: Shift) => (
-        <Badge
-            variant="outline"
-            className={cn('text-xs font-medium', SHIFT_COLORS[shift])}
-        >
-            {SHIFT_LABELS[shift]}
-        </Badge>
-    )
 
     if (isLoading) {
         return (
@@ -109,60 +94,79 @@ export function ScheduleCalendar({
                         </p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-7 gap-2">
-                        {schedules.map((schedule) => {
-                            const scheduleDate = new Date(schedule.date)
-                            const isTodayDate = isToday(scheduleDate)
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse border table-fixed">
+                            <thead>
+                                <tr className="bg-muted/50">
+                                    <th className="border p-2 text-sm font-semibold text-left w-20">Ca</th>
+                                    {schedules.map((schedule) => {
+                                        const scheduleDate = new Date(schedule.date)
+                                        const isTodayDate = isToday(scheduleDate)
 
-                            return (
-                                <div key={schedule.date} className="border rounded-lg">
-                                    {/* Date Header - Highlight if today */}
-                                    <div className={cn(
-                                        "border-b p-2 text-center",
-                                        isTodayDate
-                                            ? "bg-primary/10 border-primary/20" // Highlight today
-                                            : "bg-muted/50"
-                                    )}>
-                                        <div className={cn(
-                                            "text-xs",
-                                            isTodayDate ? "text-primary font-semibold" : "text-muted-foreground"
-                                        )}>
-                                            {schedule.dateName}
-                                        </div>
-                                        <div className={cn(
-                                            "text-sm font-medium",
-                                            isTodayDate && "text-primary"
-                                        )}>
-                                            {format(scheduleDate, 'dd/MM')}
-                                        </div>
-                                        <Badge
-                                            variant={isTodayDate ? "default" : "secondary"}
-                                            className="mt-1 text-xs"
-                                        >
-                                            {schedule.totalSlot} lịch
-                                        </Badge>
-                                    </div>
+                                        return (
+                                            <th
+                                                key={schedule.date}
+                                                className={cn(
+                                                    "border p-2 text-center",
+                                                    isTodayDate && "bg-primary/10"
+                                                )}
+                                            >
+                                                <div className={cn(
+                                                    "text-xs",
+                                                    isTodayDate ? "text-primary font-semibold" : "text-muted-foreground"
+                                                )}>
+                                                    {schedule.dateName}
+                                                </div>
+                                                <div className={cn(
+                                                    "text-sm font-medium",
+                                                    isTodayDate && "text-primary"
+                                                )}>
+                                                    {format(scheduleDate, 'dd/MM')}
+                                                </div>
+                                            </th>
+                                        )
+                                    })}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(['SANG', 'CHIEU', 'TOI'] as const).map((shift) => (
+                                    <tr key={shift} className="h-32">
+                                        <td className="border p-2 bg-muted/30 font-medium text-sm align-middle text-center">
+                                            {SHIFT_LABELS[shift]}
+                                        </td>
+                                        {schedules.map((schedule) => {
+                                            const scheduleDate = new Date(schedule.date)
+                                            const isTodayDate = isToday(scheduleDate)
+                                            const doctorsInShift = schedule.doctors.filter(d => d.shift === shift)
 
-                                    {/* Doctor Schedules */}
-                                    <div className="p-2 space-y-2 max-h-[600px] overflow-y-auto">
-                                        {schedule.doctors.length === 0 ? (
-                                            <p className="text-xs text-muted-foreground text-center py-4">
-                                                Không có lịch
-                                            </p>
-                                        ) : (
-                                            schedule.doctors.map((doctor) => (
-                                                <DoctorScheduleCard
-                                                    key={`${doctor.id}-${doctor.shift}`}
-                                                    doctor={doctor}
-                                                    formatTimeSlot={formatTimeSlot}
-                                                    getShiftBadge={getShiftBadge}
-                                                />
-                                            ))
-                                        )}
-                                    </div>
-                                </div>
-                            )
-                        })}
+                                            return (
+                                                <td
+                                                    key={`${schedule.date}-${shift}`}
+                                                    className={cn(
+                                                        "border p-2 align-top",
+                                                        isTodayDate && "bg-primary/5"
+                                                    )}
+                                                >
+                                                    {doctorsInShift.length === 0 ? (
+                                                        <div className="text-xs text-muted-foreground text-center py-2">-</div>
+                                                    ) : (
+                                                        <div className="space-y-2">
+                                                            {doctorsInShift.map((doctor) => (
+                                                                <DoctorScheduleCard
+                                                                    key={`${doctor.id}-${doctor.shift}`}
+                                                                    doctor={doctor}
+                                                                    formatTimeSlot={formatTimeSlot}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                            )
+                                        })}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 )}
             </CardContent>
@@ -175,39 +179,39 @@ export function ScheduleCalendar({
 interface DoctorScheduleCardProps {
     doctor: DoctorScheduleInfo
     formatTimeSlot: (time: string) => string
-    getShiftBadge: (shift: Shift) => React.ReactElement
 }
 
 function DoctorScheduleCard({
     doctor,
     formatTimeSlot,
-    getShiftBadge,
 }: DoctorScheduleCardProps) {
     return (
         <div
             className={cn(
-                'rounded-lg border p-2 text-xs',
+                'rounded-md border p-2 text-xs h-full',
                 doctor.available
-                    ? 'bg-card hover:bg-accent'
-                    : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900' // Red background for unavailable
+                    ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900'
+                    : 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-900'
             )}
         >
             {/* Doctor Info */}
             <div className="font-medium truncate" title={doctor.position}>
                 {doctor.position}
             </div>
-            <div className="text-muted-foreground truncate text-[10px]" title={doctor.fullName}>
-                {doctor.fullName}
+            <div className="text-muted-foreground truncate text-[11px]" title={doctor.fullName}>
+                BS. {doctor.fullName}
             </div>
 
-            {/* Shift Badge */}
-            <div className="mt-1">
-                {getShiftBadge(doctor.shift)}
-            </div>
+            {/* Room */}
+            {doctor.roomName && (
+                <div className="text-[10px] text-muted-foreground mt-1">
+                    Phòng: {doctor.roomName}
+                </div>
+            )}
 
             {/* Invalid Times */}
             {doctor.invalidTimes.length > 0 && (
-                <div className="mt-2 pt-2 border-t">
+                <div className="mt-2 pt-2 border-t border-green-200">
                     <div className="text-[10px] text-muted-foreground mb-1">Đã đặt:</div>
                     <div className="flex flex-wrap gap-1">
                         {doctor.invalidTimes.map((time, index) => (
@@ -221,6 +225,13 @@ function DoctorScheduleCard({
                         ))}
                     </div>
                 </div>
+            )}
+
+            {/* Unavailable badge */}
+            {!doctor.available && (
+                <Badge variant="destructive" className="mt-2 text-[10px]">
+                    Nghỉ phép
+                </Badge>
             )}
         </div>
     )

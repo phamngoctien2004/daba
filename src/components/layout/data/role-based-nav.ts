@@ -81,7 +81,7 @@ export const bacSiNavGroups: NavGroup[] = [
             },
             {
                 title: 'Lịch làm việc',
-                url: '/schedules',
+                url: '/doctor-schedules',
                 icon: CalendarCheck,
             },
             {

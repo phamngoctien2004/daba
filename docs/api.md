@@ -3751,8 +3751,7 @@ response
 ```json
 {
   "id": 1,
-  "status": "APPROVED", // PENDING, APPROVED, REJECTED
-  "note": "string"
+  "leaveStatus": "DA_DUYET", //         CHO_DUYET, DA_DUYET, TU_CHOI
 }
 ```
 

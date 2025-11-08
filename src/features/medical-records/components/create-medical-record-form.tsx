@@ -22,7 +22,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Printer, CheckCircle2 } from 'lucide-react'
 import { QRPaymentModal } from '@/components/qr-payment-modal'
 import {
   getAppointmentForMedicalRecord,
@@ -32,6 +32,7 @@ import {
 import {
   createMedicalRecord,
   exportInvoiceHtml,
+  exportMedicalRecordHtml,
   type CreateMedicalRecordPayload,
 } from '../api/medical-records'
 import { confirmAppointment } from '@/features/appointments/api/appointments'
@@ -370,31 +371,6 @@ export function CreateMedicalRecordForm({
       // Show success message
       toast.success('Tạo phiếu khám thành công')
 
-      // Auto-print invoice immediately after payment success
-      try {
-        const htmlContent = await exportInvoiceHtml(medicalRecordId)
-
-        // Create a new window to display the HTML content
-        const printWindow = window.open('', '_blank')
-        if (printWindow) {
-          printWindow.document.write(htmlContent)
-          printWindow.document.close()
-
-          // // Wait for content to load then trigger print
-          // printWindow.onload = () => {
-          //   printWindow.focus()
-          //   printWindow.print()
-          // }
-        } else {
-          toast.error('Không thể mở cửa sổ in. Vui lòng kiểm tra trình chặn popup.')
-        }
-      } catch (error) {
-        console.error('Print invoice error:', error)
-        toast.error('Lỗi khi in hóa đơn', {
-          description: error instanceof Error ? error.message : 'Vui lòng thử lại',
-        })
-      }
-
       // Clear form and localStorage
       form.reset()
       clearAppointmentForMedicalRecord()
@@ -472,12 +448,12 @@ export function CreateMedicalRecordForm({
 
           try {
             // Step 5: NOW create medical record with invoiceId
-            console.log('� [QR Payment] Creating medical record with invoiceId...')
+            console.log('🔵 [QR Payment] Creating medical record with invoiceId...')
             const payload: CreateMedicalRecordPayload = {
               patientId: formValues.patientId,
               doctorId: formValues.doctorId,
               healthPlanId: formValues.healthPlanId,
-              symptoms: formValues.symptoms,
+              symptoms: formValues.symptoms || '',
               appointmentId: null,
               invoiceId: paymentData.invoiceId, // ← GỬI INVOICE ID
             }
@@ -536,7 +512,7 @@ export function CreateMedicalRecordForm({
       patientId: values.patientId,
       doctorId: values.doctorId,
       healthPlanId: values.healthPlanId,
-      symptoms: values.symptoms,
+      symptoms: values.symptoms || '',
       // Gửi kèm appointmentId nếu bệnh nhân đã đặt lịch
       appointmentId: appointmentData?.appointmentId ?? null,
     }
@@ -556,6 +532,68 @@ export function CreateMedicalRecordForm({
     } else {
       // Cash payment - use existing flow
       createMedicalRecordMutation(payload)
+    }
+  }
+
+  const handlePrintInvoice = async () => {
+    if (!createdMedicalRecordId) return
+    try {
+      const htmlContent = await exportInvoiceHtml(createdMedicalRecordId)
+
+      // Create a temporary iframe to print
+      const iframe = document.createElement('iframe')
+      iframe.style.display = 'none'
+      document.body.appendChild(iframe)
+
+      const iframeDoc = iframe.contentWindow?.document
+      if (iframeDoc) {
+        iframeDoc.open()
+        iframeDoc.write(htmlContent)
+        iframeDoc.close()
+
+        // Wait for content to load then print
+        iframe.contentWindow?.focus()
+        iframe.contentWindow?.print()
+
+        // Remove iframe after printing
+        setTimeout(() => {
+          document.body.removeChild(iframe)
+        }, 1000)
+      }
+    } catch (error) {
+      console.error('Print invoice error:', error)
+      toast.error('Lỗi khi in hóa đơn')
+    }
+  }
+
+  const handlePrintMedicalRecord = async () => {
+    if (!createdMedicalRecordId) return
+    try {
+      const htmlContent = await exportMedicalRecordHtml(createdMedicalRecordId)
+
+      // Create a temporary iframe to print
+      const iframe = document.createElement('iframe')
+      iframe.style.display = 'none'
+      document.body.appendChild(iframe)
+
+      const iframeDoc = iframe.contentWindow?.document
+      if (iframeDoc) {
+        iframeDoc.open()
+        iframeDoc.write(htmlContent)
+        iframeDoc.close()
+
+        // Wait for content to load then print
+        iframe.contentWindow?.focus()
+        iframe.contentWindow?.print()
+
+        // Remove iframe after printing
+        setTimeout(() => {
+          document.body.removeChild(iframe)
+        }, 1000)
+      }
+    } catch (error) {
+      console.error('Print medical record error:', error)
+      toast.error('Lỗi khi in phiếu khám')
     }
   }
 
@@ -653,7 +691,7 @@ export function CreateMedicalRecordForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Triệu chứng <span className="text-destructive">*</span>
+                  Triệu chứng
                 </FormLabel>
                 <FormControl>
                   <Textarea
@@ -1084,6 +1122,50 @@ export function CreateMedicalRecordForm({
             )}
 
             {/* Show success message after payment */}
+            {paymentCompleted && createdMedicalRecordId && (
+              <Card className="w-full">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 text-green-600">
+                      <CheckCircle2 className="h-6 w-6" />
+                      <div>
+                        <p className="font-semibold text-lg">Tạo phiếu khám thành công!</p>
+                        <p className="text-sm text-muted-foreground">Mã phiếu khám: PKT{createdMedicalRecordId}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      <Button
+                        variant="outline"
+                        onClick={handlePrintInvoice}
+                        className="gap-2"
+                      >
+                        <Printer className="h-4 w-4" />
+                        In hóa đơn
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={handlePrintMedicalRecord}
+                        className="gap-2"
+                      >
+                        <Printer className="h-4 w-4" />
+                        In phiếu khám
+                      </Button>
+                      <Button
+                        variant="default"
+                        onClick={() => {
+                          setPaymentCompleted(false)
+                          setCreatedMedicalRecordId(null)
+                          onCancel?.()
+                        }}
+                      >
+                        Đóng
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
           </div>
         </form>

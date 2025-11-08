@@ -1,4 +1,11 @@
-import { get } from '@/lib/api-client'
+import { get, post, put, del } from '@/lib/api-client'
+import type {
+    LeaveRequest,
+    CreateLeaveRequest,
+    UpdateLeaveRequest,
+    DeleteLeaveRequest,
+    FetchMyLeavesParams,
+} from '../types'
 
 /**
  * Shift types matching API
@@ -159,4 +166,63 @@ export const fetchAvailableDoctorsByDepartment = async (
     const availableDoctors = allDoctors.filter((doctor) => doctor.available === true)
 
     return availableDoctors
+}
+
+/**
+ * ============================================
+ * LEAVE REQUEST APIs  
+ * ============================================
+ */
+
+/**
+ * Fetch my leave requests
+ * GET /api/schedules/leave/me
+ */
+export const fetchMyLeaves = async (params?: FetchMyLeavesParams): Promise<LeaveRequest[]> => {
+    const searchParams: Record<string, string> = {}
+
+    if (params?.date) {
+        searchParams.date = params.date
+    }
+
+    if (params?.leaveStatus) {
+        searchParams.leaveStatus = params.leaveStatus
+    }
+
+    const { data } = await get<{ data: LeaveRequest[] }>('/schedules/leave/me', {
+        params: searchParams,
+    })
+
+    const leaves = data?.data ?? []
+
+    // Debug log to check response structure
+    if (leaves.length > 0) {
+        console.log('🔵 [fetchMyLeaves] First leave:', leaves[0])
+    }
+
+    return leaves
+}
+
+/**
+ * Create leave request
+ * POST /api/schedules/leave
+ */
+export const createLeaveRequest = async (payload: CreateLeaveRequest): Promise<void> => {
+    await post('/schedules/leave', payload)
+}
+
+/**
+ * Update leave request (for approval/rejection by admin)
+ * PUT /api/schedules/leave
+ */
+export const updateLeaveRequest = async (payload: UpdateLeaveRequest): Promise<void> => {
+    await put('/schedules/leave', payload)
+}
+
+/**
+ * Delete/Cancel leave request
+ * DELETE /api/schedules/leave
+ */
+export const deleteLeaveRequest = async (payload: DeleteLeaveRequest): Promise<void> => {
+    await del('/schedules/leave', { data: payload })
 }

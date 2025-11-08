@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Save, Send, CheckCircle2 } from 'lucide-react'
+import { Save, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -103,18 +103,6 @@ export function ExaminationForm({ medicalRecord, readOnly = false }: Examination
     updateMutation.mutate({
       id: medicalRecord.id,
       ...formData,
-    })
-  }
-
-  const handleProceedToLabOrders = () => {
-    if (!hasLabOrders) {
-      toast.error('Chưa có chỉ định nào')
-      return
-    }
-
-    updateStatusMutation.mutate({
-      id: medicalRecord.id,
-      status: 'CHO_XET_NGHIEM',
     })
   }
 
@@ -235,16 +223,6 @@ export function ExaminationForm({ medicalRecord, readOnly = false }: Examination
               </Button>
 
               <Button
-                variant='secondary'
-                onClick={handleProceedToLabOrders}
-                disabled={isUpdating || !hasLabOrders}
-                className='gap-2'
-              >
-                <Send className='h-4 w-4' />
-                Tiến hành chỉ định
-              </Button>
-
-              <Button
                 variant='default'
                 onClick={handleComplete}
                 disabled={isUpdating || !isFormComplete || (hasLabOrders && !allLabOrdersCompleted || false)}
@@ -259,9 +237,6 @@ export function ExaminationForm({ medicalRecord, readOnly = false }: Examination
             <div className='mt-4 space-y-2 text-sm text-muted-foreground'>
               {!isFormComplete && (
                 <p>• Cần điền đầy đủ: Khám lâm sàng, Chẩn đoán, Kế hoạch điều trị</p>
-              )}
-              {!hasLabOrders && (
-                <p>• Nút "Tiến hành chỉ định" chỉ khả dụng khi đã có chỉ định</p>
               )}
               {hasLabOrders && !allLabOrdersCompleted && (
                 <p>• Nút "Hoàn thành" chỉ khả dụng khi tất cả chỉ định đã hoàn thành</p>

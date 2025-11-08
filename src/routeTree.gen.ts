@@ -32,6 +32,7 @@ import { Route as AuthenticatedPatientsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedMedicalRecordsIndexRouteImport } from './routes/_authenticated/medical-records/index'
 import { Route as AuthenticatedLabOrdersIndexRouteImport } from './routes/_authenticated/lab-orders/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
+import { Route as AuthenticatedDoctorSchedulesIndexRouteImport } from './routes/_authenticated/doctor-schedules/index'
 import { Route as AuthenticatedDoctorMedicalRecordsIndexRouteImport } from './routes/_authenticated/doctor-medical-records/index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
@@ -178,6 +179,12 @@ const AuthenticatedHelpCenterIndexRoute =
   AuthenticatedHelpCenterIndexRouteImport.update({
     id: '/help-center/',
     path: '/help-center/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDoctorSchedulesIndexRoute =
+  AuthenticatedDoctorSchedulesIndexRouteImport.update({
+    id: '/doctor-schedules/',
+    path: '/doctor-schedules/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedDoctorMedicalRecordsIndexRoute =
@@ -391,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/doctor-medical-records': typeof AuthenticatedDoctorMedicalRecordsIndexRoute
+  '/doctor-schedules': typeof AuthenticatedDoctorSchedulesIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/lab-orders': typeof AuthenticatedLabOrdersIndexRoute
   '/medical-records': typeof AuthenticatedMedicalRecordsIndexRoute
@@ -441,6 +449,7 @@ export interface FileRoutesByTo {
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/doctor-medical-records': typeof AuthenticatedDoctorMedicalRecordsIndexRoute
+  '/doctor-schedules': typeof AuthenticatedDoctorSchedulesIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/lab-orders': typeof AuthenticatedLabOrdersIndexRoute
   '/medical-records': typeof AuthenticatedMedicalRecordsIndexRoute
@@ -496,6 +505,7 @@ export interface FileRoutesById {
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/doctor-medical-records/': typeof AuthenticatedDoctorMedicalRecordsIndexRoute
+  '/_authenticated/doctor-schedules/': typeof AuthenticatedDoctorSchedulesIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/_authenticated/lab-orders/': typeof AuthenticatedLabOrdersIndexRoute
   '/_authenticated/medical-records/': typeof AuthenticatedMedicalRecordsIndexRoute
@@ -550,6 +560,7 @@ export interface FileRouteTypes {
     | '/apps'
     | '/chats'
     | '/doctor-medical-records'
+    | '/doctor-schedules'
     | '/help-center'
     | '/lab-orders'
     | '/medical-records'
@@ -600,6 +611,7 @@ export interface FileRouteTypes {
     | '/apps'
     | '/chats'
     | '/doctor-medical-records'
+    | '/doctor-schedules'
     | '/help-center'
     | '/lab-orders'
     | '/medical-records'
@@ -654,6 +666,7 @@ export interface FileRouteTypes {
     | '/_authenticated/apps/'
     | '/_authenticated/chats/'
     | '/_authenticated/doctor-medical-records/'
+    | '/_authenticated/doctor-schedules/'
     | '/_authenticated/help-center/'
     | '/_authenticated/lab-orders/'
     | '/_authenticated/medical-records/'
@@ -841,6 +854,13 @@ declare module '@tanstack/react-router' {
       path: '/help-center'
       fullPath: '/help-center'
       preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/doctor-schedules/': {
+      id: '/_authenticated/doctor-schedules/'
+      path: '/doctor-schedules'
+      fullPath: '/doctor-schedules'
+      preLoaderRoute: typeof AuthenticatedDoctorSchedulesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/doctor-medical-records/': {
@@ -1095,6 +1115,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedDoctorMedicalRecordsIndexRoute: typeof AuthenticatedDoctorMedicalRecordsIndexRoute
+  AuthenticatedDoctorSchedulesIndexRoute: typeof AuthenticatedDoctorSchedulesIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
   AuthenticatedLabOrdersIndexRoute: typeof AuthenticatedLabOrdersIndexRoute
   AuthenticatedMedicalRecordsIndexRoute: typeof AuthenticatedMedicalRecordsIndexRoute
@@ -1131,6 +1152,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedDoctorMedicalRecordsIndexRoute:
     AuthenticatedDoctorMedicalRecordsIndexRoute,
+  AuthenticatedDoctorSchedulesIndexRoute:
+    AuthenticatedDoctorSchedulesIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
   AuthenticatedLabOrdersIndexRoute: AuthenticatedLabOrdersIndexRoute,
   AuthenticatedMedicalRecordsIndexRoute: AuthenticatedMedicalRecordsIndexRoute,

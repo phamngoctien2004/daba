@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Eye, Trash2 } from 'lucide-react'
+import { Plus, Eye, Trash2, Send } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -33,6 +33,7 @@ import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import type { MedicalRecordDetail } from '../../api/medical-records'
+import { updateMedicalRecordStatus } from '../../api/medical-records'
 import {
   createLabOrder,
   deleteLabOrder,
@@ -137,6 +138,23 @@ export function LabOrders({ medicalRecord, readOnly = false }: LabOrdersProps) {
     },
   })
 
+  // Update status mutation for "Tiến hành chỉ định"
+  const updateStatusMutation = useMutation({
+    mutationFn: updateMedicalRecordStatus,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['medical-record-detail', medicalRecord.id],
+      })
+      toast.success('Chuyển sang chờ xét nghiệm thành công')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Không thể cập nhật trạng thái')
+    },
+  })
+
+  // Check if has lab orders
+  const hasLabOrders = labOrders.length > 0
+
   const handleCreate = () => {
     if (!createForm.healthPlanId) {
       toast.error('Vui lòng chọn dịch vụ')
@@ -161,6 +179,18 @@ export function LabOrders({ medicalRecord, readOnly = false }: LabOrdersProps) {
     setIsViewDialogOpen(true)
   }
 
+  const handleProceedToLabOrders = () => {
+    if (!hasLabOrders) {
+      toast.error('Chưa có chỉ định nào')
+      return
+    }
+
+    updateStatusMutation.mutate({
+      id: medicalRecord.id,
+      status: 'CHO_XET_NGHIEM',
+    })
+  }
+
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'dd/MM/yyyy HH:mm', { locale: vi })
@@ -176,10 +206,22 @@ export function LabOrders({ medicalRecord, readOnly = false }: LabOrdersProps) {
           <div className='flex items-center justify-between'>
             <CardTitle>Danh sách chỉ định</CardTitle>
             {!isReadOnly && (
-              <Button onClick={() => setIsCreateDialogOpen(true)} size='sm' className='gap-2'>
-                <Plus className='h-4 w-4' />
-                Thêm chỉ định
-              </Button>
+              <div className='flex gap-2'>
+                <Button onClick={() => setIsCreateDialogOpen(true)} size='sm' className='gap-2'>
+                  <Plus className='h-4 w-4' />
+                  Thêm chỉ định
+                </Button>
+                <Button
+                  variant='secondary'
+                  onClick={handleProceedToLabOrders}
+                  disabled={updateStatusMutation.isPending || !hasLabOrders}
+                  size='sm'
+                  className='gap-2'
+                >
+                  <Send className='h-4 w-4' />
+                  Tiến hành chỉ định
+                </Button>
+              </div>
             )}
           </div>
         </CardHeader>

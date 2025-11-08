@@ -2,13 +2,33 @@
  * Admin Doctor Schedules API Client
  */
 
-import { get } from '@/lib/api-client'
+import { get, put } from '@/lib/api-client'
 import type {
     SchedulesResponse,
     ScheduleFilters,
     Department,
     DoctorBasic,
 } from '../types'
+
+// ==================== Leave Request Types ====================
+
+export interface LeaveRequest {
+    id: number
+    doctorName: string
+    startTime: string
+    endTime: string
+    date: string
+    submitDate: string
+    reason: string
+    leaveStatus: 'CHO_DUYET' | 'DA_DUYET' | 'TU_CHOI'
+    userApprover: string | null
+}
+
+export interface UpdateLeaveStatusRequest {
+    id: number
+    leaveStatus: 'DA_DUYET' | 'TU_CHOI'
+    reason?: string
+}
 
 // ==================== Schedules API ====================
 
@@ -96,6 +116,73 @@ export async function fetchDoctorsByDepartment(
         profileImage: doctor.profileImage || doctor.avatar || '',
         available: doctor.available !== false,
     }))
+}
+
+// ==================== Leave Requests API ====================
+
+/**
+ * Fetch all leave requests (admin)
+ * GET /api/schedules/leave
+ */
+export async function fetchAllLeaves(params?: {
+    leaveStatus?: 'CHO_DUYET' | 'DA_DUYET' | 'TU_CHOI'
+    date?: string
+}): Promise<LeaveRequest[]> {
+    const searchParams = new URLSearchParams()
+
+    if (params?.leaveStatus) {
+        searchParams.append('leaveStatus', params.leaveStatus)
+    }
+
+    if (params?.date) {
+        searchParams.append('date', params.date)
+    }
+
+    const queryString = searchParams.toString()
+    const url = queryString ? `/schedules/leave?${queryString}` : '/schedules/leave'
+
+    const response = await get<{ data: LeaveRequest[]; message: string }>(url)
+
+    return response.data?.data || []
+}
+
+/**
+ * Fetch leave requests by doctor ID (admin)
+ * GET /api/schedules/leave/doctor/{doctorId}
+ */
+export async function fetchLeavesByDoctor(
+    doctorId: number,
+    params?: {
+        leaveStatus?: 'CHO_DUYET' | 'DA_DUYET' | 'TU_CHOI'
+        date?: string
+    }
+): Promise<LeaveRequest[]> {
+    const searchParams = new URLSearchParams()
+
+    if (params?.leaveStatus) {
+        searchParams.append('leaveStatus', params.leaveStatus)
+    }
+
+    if (params?.date) {
+        searchParams.append('date', params.date)
+    }
+
+    const queryString = searchParams.toString()
+    const url = queryString
+        ? `/schedules/leave/doctor/${doctorId}?${queryString}`
+        : `/schedules/leave/doctor/${doctorId}`
+
+    const response = await get<{ data: LeaveRequest[]; message: string }>(url)
+
+    return response.data?.data || []
+}
+
+/**
+ * Update leave request status (approve/reject)
+ * PUT /api/schedules/leave
+ */
+export async function updateLeaveStatus(payload: UpdateLeaveStatusRequest): Promise<void> {
+    await put('/schedules/leave', payload)
 }
 
 /**

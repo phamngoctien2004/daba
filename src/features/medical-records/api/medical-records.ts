@@ -418,7 +418,16 @@ export const fetchMedicalRecordsByPatient = async (patientId: number): Promise<M
 }
 
 /**
- * Export invoice as HTML
+ * Export medical record as HTML (phiếu khám)
+ * GET /api/html/medical-record/{id}
+ */
+export const exportMedicalRecordHtml = async (medicalRecordId: number): Promise<string> => {
+  const { data } = await get<string>(`/html/medical-record/${medicalRecordId}`)
+  return data ?? ''
+}
+
+/**
+ * Export invoice as HTML (hóa đơn)
  * GET /api/html/invoice/{medicalRecordId}
  */
 export const exportInvoiceHtml = async (medicalRecordId: number): Promise<string> => {
