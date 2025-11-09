@@ -1,5 +1,5 @@
 import { type ColumnDef } from '@tanstack/react-table'
-import { format, isValid, parseISO, isAfter, startOfDay } from 'date-fns'
+import { format, isValid, parseISO, isAfter, startOfDay, isSameDay } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,6 +28,50 @@ const formatDateDisplay = (value: string) => {
 
 const formatTimeDisplay = (value: string | null) =>
   value && value.trim() !== '' ? value : '—'
+
+// Helper function to check if current time is within appointment shift
+const isAppointmentTimeReached = (appointmentDate: string, appointmentTime: string): boolean => {
+  const now = new Date()
+  const apptDate = parseISO(appointmentDate)
+
+  // If appointment is in the future, not reached yet
+  if (isAfter(apptDate, startOfDay(now))) {
+    return false
+  }
+
+  // If appointment is in the past, already reached
+  if (!isSameDay(apptDate, now)) {
+    return isAfter(now, apptDate)
+  }
+
+  // Same day - check time/shift
+  const currentHour = now.getHours()
+  const currentMinute = now.getMinutes()
+  const currentTimeInMinutes = currentHour * 60 + currentMinute
+
+  // Parse appointment time (format: "HH:mm:ss" or "HH:mm")
+  const timeParts = appointmentTime.split(':')
+  const apptHour = parseInt(timeParts[0], 10)
+  const apptMinute = parseInt(timeParts[1] || '0', 10)
+  const apptTimeInMinutes = apptHour * 60 + apptMinute
+
+  // Determine shift start times (in minutes from midnight)
+  let shiftStartMinutes = 0
+
+  if (apptHour >= 7 && apptHour < 12) {
+    // Morning shift: 7:00 - 12:00
+    shiftStartMinutes = 7 * 60 // 7:00
+  } else if (apptHour >= 12 && apptHour < 17) {
+    // Afternoon shift: 12:00 - 17:00
+    shiftStartMinutes = 12 * 60 // 12:00
+  } else {
+    // Evening shift: 17:00 - 22:00
+    shiftStartMinutes = 17 * 60 // 17:00
+  }
+
+  // Check if current time has reached the shift start
+  return currentTimeInMinutes >= shiftStartMinutes
+}
 
 const renderDoctor = (appointment: Appointment) => {
   if (!appointment.doctorResponse) {
@@ -165,23 +209,21 @@ export const getAppointmentsColumns = ({
       cell: ({ row }) => {
         const appointment = row.original
 
-        // Check if appointment date is in the future
-        const appointmentDate = parseISO(appointment.date)
-        const today = startOfDay(new Date())
-        const isFutureAppointment = isValid(appointmentDate) && isAfter(appointmentDate, today)
+        // Check if appointment time/shift has been reached
+        const isTimeReached = isAppointmentTimeReached(appointment.date, appointment.time)
 
         return (
           <div className='flex flex-wrap items-center justify-end gap-2'>
             {appointment.status === 'DA_XAC_NHAN' && (
               <>
-                {isFutureAppointment ? (
+                {!isTimeReached ? (
                   <Button
                     size='sm'
                     variant='outline'
                     disabled
                   >
                     <Clock className='me-2 size-4' />
-                    Chưa đến lịch hẹn
+                    Chưa đến giờ khám
                   </Button>
                 ) : (
                   <Button

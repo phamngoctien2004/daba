@@ -245,42 +245,44 @@ export function LabOrders({ medicalRecord, readOnly = false }: LabOrdersProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {labOrders.map((labOrder) => {
-                    const config = statusConfig[labOrder.status]
-                    return (
-                      <TableRow key={labOrder.id}>
-                        <TableCell className='font-medium'>{labOrder.code}</TableCell>
-                        <TableCell>{labOrder.name}</TableCell>
-                        <TableCell>{labOrder.room}</TableCell>
-                        <TableCell>{labOrder.doctorPerforming || '-'}</TableCell>
-                        <TableCell>{formatDate(labOrder.createdAt)}</TableCell>
-                        <TableCell>
-                          <Badge variant={config.variant}>{config.label}</Badge>
-                        </TableCell>
-                        <TableCell className='text-right'>
-                          <div className='flex justify-end gap-2'>
-                            <Button
-                              variant='ghost'
-                              size='sm'
-                              onClick={() => handleView(labOrder.id)}
-                            >
-                              <Eye className='h-4 w-4' />
-                            </Button>
-                            {!isReadOnly && (
+                  {labOrders
+                    .filter((labOrder) => labOrder.name !== 'Khám bệnh')
+                    .map((labOrder) => {
+                      const config = statusConfig[labOrder.status]
+                      return (
+                        <TableRow key={labOrder.id}>
+                          <TableCell className='font-medium'>{labOrder.code}</TableCell>
+                          <TableCell>{labOrder.name}</TableCell>
+                          <TableCell>{labOrder.room}</TableCell>
+                          <TableCell>{labOrder.doctorPerforming || '-'}</TableCell>
+                          <TableCell>{formatDate(labOrder.createdAt)}</TableCell>
+                          <TableCell>
+                            <Badge variant={config.variant}>{config.label}</Badge>
+                          </TableCell>
+                          <TableCell className='text-right'>
+                            <div className='flex justify-end gap-2'>
                               <Button
                                 variant='ghost'
                                 size='sm'
-                                onClick={() => handleDelete(labOrder.id)}
-                                disabled={deleteMutation.isPending}
+                                onClick={() => handleView(labOrder.id)}
                               >
-                                <Trash2 className='h-4 w-4' />
+                                <Eye className='h-4 w-4' />
                               </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
+                              {!isReadOnly && (
+                                <Button
+                                  variant='ghost'
+                                  size='sm'
+                                  onClick={() => handleDelete(labOrder.id)}
+                                  disabled={deleteMutation.isPending}
+                                >
+                                  <Trash2 className='h-4 w-4' />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                 </TableBody>
               </Table>
             </div>

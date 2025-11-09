@@ -3752,6 +3752,7 @@ response
 {
   "id": 1,
   "leaveStatus": "DA_DUYET", //         CHO_DUYET, DA_DUYET, TU_CHOI
+    "reason": "sdfasdf"
 }
 ```
 

@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Calendar, User, Phone, MapPin, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowLeft, Calendar, User, Phone, MapPin, ChevronDown, ChevronUp, Printer } from 'lucide-react'
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import { useState, useEffect } from 'react'
@@ -313,6 +313,10 @@ export function MedicalRecordDetailPage({ id }: MedicalRecordDetailPageProps) {
                             <p>{record.patientGender === 'NAM' ? 'Nam' : record.patientGender === 'NU' ? 'Nữ' : 'Khác'}</p>
                         </div>
                         <div className="space-y-1">
+                            <p className="text-sm text-muted-foreground">Bác sĩ khám</p>
+                            <p className="font-medium">{record.doctorName || 'Chưa xác định'}</p>
+                        </div>
+                        <div className="space-y-1">
                             <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
                                 <MapPin className="h-3.5 w-3.5" />
                                 Địa chỉ
@@ -440,16 +444,11 @@ export function MedicalRecordDetailPage({ id }: MedicalRecordDetailPageProps) {
 
                                         console.log('🔵 Payment payload:', payload)
 
-                                        // Call payment API and auto-print invoice on success
+                                        // Call payment API but don't auto-print
                                         payWithCash(payload, {
                                             onSuccess: () => {
-                                                // Mark payment as successful to hide buttons
+                                                // Mark payment as successful to show print button
                                                 setPaymentSuccess(true)
-
-                                                // Auto print invoice after successful payment
-                                                setTimeout(() => {
-                                                    handlePrintInvoice(record.id)
-                                                }, 500) // Small delay to ensure data is updated
                                             },
                                         })
                                     }}
@@ -523,21 +522,12 @@ export function MedicalRecordDetailPage({ id }: MedicalRecordDetailPageProps) {
                                                         queryKey: ['medical-record', id]
                                                     })
 
-                                                    // Step 5: Print invoice (API dòng 3107/3113)
-                                                    try {
-                                                        console.log('🖨️ [QR Payment] Printing invoice...')
-                                                        await handlePrintInvoice(record.id)
-                                                    } catch (error) {
-                                                        console.error('❌ [QR Payment] Print error:', error)
-                                                        toast.error('Không thể in hóa đơn')
-                                                    }
-
-                                                    // Cleanup
+                                                    // Cleanup and show print button
                                                     setTimeout(() => {
                                                         unsubscribe()
                                                         setShowQRModal(false)
-                                                        setPaymentSuccess(true)
-                                                    }, 2000)
+                                                        setPaymentSuccess(true) // Show print button
+                                                    }, 1000)
                                                 }
                                             )
                                         } catch (error) {
@@ -553,6 +543,25 @@ export function MedicalRecordDetailPage({ id }: MedicalRecordDetailPageProps) {
                                 </Button>
                             )}
                         </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Print Invoice Button - Show after successful payment */}
+            {paymentSuccess && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Thanh toán thành công</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Button
+                            variant="default"
+                            onClick={() => handlePrintInvoice(record.id)}
+                            className="gap-2"
+                        >
+                            <Printer className="h-4 w-4" />
+                            In hóa đơn
+                        </Button>
                     </CardContent>
                 </Card>
             )}
