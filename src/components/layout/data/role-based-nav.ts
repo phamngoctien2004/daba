@@ -13,6 +13,8 @@ import {
     Building2,
     Briefcase,
     ShieldCheck,
+    TrendingUp,
+    Bell,
 } from 'lucide-react'
 
 import { UserRole } from '@/types/auth'
@@ -174,6 +176,21 @@ export const adminNavGroups: NavGroup[] = [
                 title: 'Quản lý tài khoản',
                 url: '/admin/users',
                 icon: ShieldCheck,
+            },
+            {
+                title: 'Quản lý thông báo',
+                url: '/admin/notifications',
+                icon: Bell,
+            },
+        ],
+    },
+    {
+        title: 'Báo cáo & Thống kê',
+        items: [
+            {
+                title: 'Báo cáo hệ thống',
+                url: '/admin/reports',
+                icon: TrendingUp,
             },
         ],
     },

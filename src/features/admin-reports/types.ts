@@ -1,101 +1,180 @@
 /**
  * Admin Reports & Analytics Types
+ * Based on backend API documentation
  */
 
-export type ReportType = 'REVENUE' | 'APPOINTMENTS' | 'PATIENTS' | 'DOCTORS' | 'SERVICES'
+export type ReportType = 'revenue' | 'appointments' | 'patients' | 'doctor-performance' | 'services'
+export type ExportFormat = 'pdf' | 'excel'
+export type PaymentMethod = 'TIEN_MAT' | 'CHUYEN_KHOAN' | 'THE'
+export type Gender = 'NAM' | 'NU'
 
-export type ReportPeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
+export interface DateRangeParams {
+    fromDate: string // YYYY-MM-DD
+    toDate: string // YYYY-MM-DD
+}
 
-export interface ReportFilter {
-    type: ReportType
-    period: ReportPeriod
-    startDate: string
-    endDate: string
-    departmentId?: number
+export interface AppointmentReportParams extends DateRangeParams {
     doctorId?: number
-    serviceId?: number
+    departmentId?: number
 }
 
-export interface RevenueReport {
-    period: string
+export interface DoctorPerformanceParams extends DateRangeParams {
+    doctorId?: number
+}
+
+export interface ExportReportParams extends DateRangeParams {
+    reportType: ReportType
+}
+
+// Revenue Report Response
+export interface RevenueByDay {
+    date: string
+    revenue: number
+    invoiceCount: number
+}
+
+export interface RevenueByPaymentMethod {
+    paymentMethod: PaymentMethod
+    amount: number
+    count: number
+}
+
+export interface RevenueReportData {
+    fromDate: string
+    toDate: string
     totalRevenue: number
-    totalAppointments: number
-    averageRevenuePerAppointment: number
-    paymentMethods: {
-        method: string
-        amount: number
-        count: number
-    }[]
+    totalPaid: number
+    totalUnpaid: number
+    totalInvoices: number
+    totalPaidInvoices: number
+    totalUnpaidInvoices: number
+    revenueByDays: RevenueByDay[]
+    revenueByPaymentMethods: RevenueByPaymentMethod[]
 }
 
-export interface AppointmentReport {
-    period: string
-    total: number
-    completed: number
-    cancelled: number
-    noShow: number
-    byDepartment: {
-        departmentId: number
-        departmentName: string
-        count: number
-    }[]
-    byDoctor: {
-        doctorId: number
-        doctorName: string
-        count: number
-    }[]
-}
-
-export interface PatientReport {
-    period: string
-    newPatients: number
-    returningPatients: number
-    totalVisits: number
-    byGender: {
-        gender: string
-        count: number
-    }[]
-    byAgeGroup: {
-        ageGroup: string
-        count: number
-    }[]
-}
-
-export interface DoctorReport {
-    period: string
+// Appointments Report Response
+export interface AppointmentByDoctor {
     doctorId: number
     doctorName: string
-    department: string
+    departmentName: string
     totalAppointments: number
     completedAppointments: number
     cancelledAppointments: number
-    averageConsultationTime: number
-    patientSatisfaction: number
-    revenue: number
 }
 
-export interface ServiceReport {
-    period: string
+export interface AppointmentByDepartment {
+    departmentId: number
+    departmentName: string
+    totalAppointments: number
+    completedAppointments: number
+}
+
+export interface AppointmentByDay {
+    date: string
+    appointmentCount: number
+    completedCount: number
+}
+
+export interface AppointmentReportData {
+    fromDate: string
+    toDate: string
+    totalAppointments: number
+    confirmedAppointments: number
+    completedAppointments: number
+    cancelledAppointments: number
+    noShowAppointments: number
+    appointmentsByDoctor: AppointmentByDoctor[]
+    appointmentsByDepartment: AppointmentByDepartment[]
+    appointmentsByDay: AppointmentByDay[]
+}
+
+// Patients Report Response
+export interface PatientByDay {
+    date: string
+    newPatientCount: number
+    returningPatientCount: number
+}
+
+export interface PatientByGender {
+    gender: Gender
+    count: number
+    percentage: number
+}
+
+export interface PatientByAgeGroup {
+    ageGroup: string
+    count: number
+    percentage: number
+}
+
+export interface PatientReportData {
+    fromDate: string
+    toDate: string
+    totalNewPatients: number
+    totalReturningPatients: number
+    totalPatients: number
+    patientsByDay: PatientByDay[]
+    patientsByGender: PatientByGender[]
+    patientsByAgeGroup: PatientByAgeGroup[]
+}
+
+// Doctor Performance Response
+export interface DoctorPerformance {
+    doctorId: number
+    doctorName: string
+    departmentName: string
+    totalAppointments: number
+    completedAppointments: number
+    cancelledAppointments: number
+    totalPatients: number
+    totalRevenue: number
+    completionRate: number
+    averageRating: number
+    totalRatings: number
+}
+
+export interface DoctorPerformanceData {
+    fromDate: string
+    toDate: string
+    doctorPerformances: DoctorPerformance[]
+}
+
+// Services Report Response
+export interface PopularService {
     serviceId: number
     serviceName: string
-    totalBookings: number
-    revenue: number
-    averagePrice: number
-    popularityRank: number
+    usageCount: number
+    totalRevenue: number
+    price: number
 }
 
-export interface Report {
-    id: number
-    type: ReportType
-    period: ReportPeriod
-    startDate: string
-    endDate: string
-    createdAt: string
-    createdBy: string
-    data: RevenueReport | AppointmentReport | PatientReport | DoctorReport[] | ServiceReport[]
+export interface ServiceByDepartment {
+    departmentId: number
+    departmentName: string
+    serviceCount: number
+    usageCount: number
+    totalRevenue: number
 }
 
-export interface ExportReportRequest {
-    reportId: number
-    format: 'PDF' | 'EXCEL' | 'CSV'
+export interface ServiceReportData {
+    fromDate: string
+    toDate: string
+    totalServices: number
+    popularServices: PopularService[]
+    servicesByDepartment: ServiceByDepartment[]
+}
+
+// Dashboard Response
+export interface DashboardReportData {
+    revenue: RevenueReportData
+    appointments: AppointmentReportData
+    patients: PatientReportData
+    services: ServiceReportData
+}
+
+// API Response Wrapper
+export interface ApiResponse<T> {
+    code: number
+    message: string
+    data: T
 }

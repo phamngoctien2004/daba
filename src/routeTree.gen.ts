@@ -55,6 +55,7 @@ import { Route as AuthenticatedAdminRoomsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminReportsRouteImport } from './routes/_authenticated/admin/reports'
 import { Route as AuthenticatedAdminPatientsRouteImport } from './routes/_authenticated/admin/patients'
 import { Route as AuthenticatedAdminOverviewRouteImport } from './routes/_authenticated/admin/overview'
+import { Route as AuthenticatedAdminNotificationsRouteImport } from './routes/_authenticated/admin/notifications'
 import { Route as AuthenticatedAdminInvoicesRouteImport } from './routes/_authenticated/admin/invoices'
 import { Route as AuthenticatedAdminDoctorsRouteImport } from './routes/_authenticated/admin/doctors'
 import { Route as AuthenticatedAdminDoctorSchedulesRouteImport } from './routes/_authenticated/admin/doctor-schedules'
@@ -313,6 +314,12 @@ const AuthenticatedAdminOverviewRoute =
     path: '/admin/overview',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminNotificationsRoute =
+  AuthenticatedAdminNotificationsRouteImport.update({
+    id: '/admin/notifications',
+    path: '/admin/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminInvoicesRoute =
   AuthenticatedAdminInvoicesRouteImport.update({
     id: '/admin/invoices',
@@ -376,6 +383,7 @@ export interface FileRoutesByFullPath {
   '/admin/doctor-schedules': typeof AuthenticatedAdminDoctorSchedulesRoute
   '/admin/doctors': typeof AuthenticatedAdminDoctorsRoute
   '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
+  '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
   '/admin/overview': typeof AuthenticatedAdminOverviewRoute
   '/admin/patients': typeof AuthenticatedAdminPatientsRoute
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
@@ -427,6 +435,7 @@ export interface FileRoutesByTo {
   '/admin/doctor-schedules': typeof AuthenticatedAdminDoctorSchedulesRoute
   '/admin/doctors': typeof AuthenticatedAdminDoctorsRoute
   '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
+  '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
   '/admin/overview': typeof AuthenticatedAdminOverviewRoute
   '/admin/patients': typeof AuthenticatedAdminPatientsRoute
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
@@ -483,6 +492,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/doctor-schedules': typeof AuthenticatedAdminDoctorSchedulesRoute
   '/_authenticated/admin/doctors': typeof AuthenticatedAdminDoctorsRoute
   '/_authenticated/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
+  '/_authenticated/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
   '/_authenticated/admin/overview': typeof AuthenticatedAdminOverviewRoute
   '/_authenticated/admin/patients': typeof AuthenticatedAdminPatientsRoute
   '/_authenticated/admin/reports': typeof AuthenticatedAdminReportsRoute
@@ -538,6 +548,7 @@ export interface FileRouteTypes {
     | '/admin/doctor-schedules'
     | '/admin/doctors'
     | '/admin/invoices'
+    | '/admin/notifications'
     | '/admin/overview'
     | '/admin/patients'
     | '/admin/reports'
@@ -589,6 +600,7 @@ export interface FileRouteTypes {
     | '/admin/doctor-schedules'
     | '/admin/doctors'
     | '/admin/invoices'
+    | '/admin/notifications'
     | '/admin/overview'
     | '/admin/patients'
     | '/admin/reports'
@@ -644,6 +656,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/doctor-schedules'
     | '/_authenticated/admin/doctors'
     | '/_authenticated/admin/invoices'
+    | '/_authenticated/admin/notifications'
     | '/_authenticated/admin/overview'
     | '/_authenticated/admin/patients'
     | '/_authenticated/admin/reports'
@@ -1017,6 +1030,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminOverviewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/notifications': {
+      id: '/_authenticated/admin/notifications'
+      path: '/admin/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AuthenticatedAdminNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/invoices': {
       id: '/_authenticated/admin/invoices'
       path: '/admin/invoices'
@@ -1100,6 +1120,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminDoctorSchedulesRoute: typeof AuthenticatedAdminDoctorSchedulesRoute
   AuthenticatedAdminDoctorsRoute: typeof AuthenticatedAdminDoctorsRoute
   AuthenticatedAdminInvoicesRoute: typeof AuthenticatedAdminInvoicesRoute
+  AuthenticatedAdminNotificationsRoute: typeof AuthenticatedAdminNotificationsRoute
   AuthenticatedAdminOverviewRoute: typeof AuthenticatedAdminOverviewRoute
   AuthenticatedAdminPatientsRoute: typeof AuthenticatedAdminPatientsRoute
   AuthenticatedAdminReportsRoute: typeof AuthenticatedAdminReportsRoute
@@ -1135,6 +1156,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedAdminDoctorSchedulesRoute,
   AuthenticatedAdminDoctorsRoute: AuthenticatedAdminDoctorsRoute,
   AuthenticatedAdminInvoicesRoute: AuthenticatedAdminInvoicesRoute,
+  AuthenticatedAdminNotificationsRoute: AuthenticatedAdminNotificationsRoute,
   AuthenticatedAdminOverviewRoute: AuthenticatedAdminOverviewRoute,
   AuthenticatedAdminPatientsRoute: AuthenticatedAdminPatientsRoute,
   AuthenticatedAdminReportsRoute: AuthenticatedAdminReportsRoute,
