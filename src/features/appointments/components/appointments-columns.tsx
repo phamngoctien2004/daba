@@ -52,8 +52,6 @@ const isAppointmentTimeReached = (appointmentDate: string, appointmentTime: stri
   // Parse appointment time (format: "HH:mm:ss" or "HH:mm")
   const timeParts = appointmentTime.split(':')
   const apptHour = parseInt(timeParts[0], 10)
-  const apptMinute = parseInt(timeParts[1] || '0', 10)
-  const apptTimeInMinutes = apptHour * 60 + apptMinute
 
   // Determine shift start times (in minutes from midnight)
   let shiftStartMinutes = 0
