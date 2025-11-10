@@ -62,8 +62,23 @@ export function UserAuthForm({
 
       toast.success(response.message || 'Đăng nhập thành công')
 
-      // Redirect to the stored location or default to dashboard
-      const targetPath = redirectTo || '/'
+      // Redirect based on user role
+      let targetPath = redirectTo
+      if (!targetPath) {
+        switch (userResponse.role) {
+          case 'LE_TAN':
+            targetPath = '/appointments' // Lễ tân -> Trang đặt lịch
+            break
+          case 'BAC_SI':
+            targetPath = '/doctor-medical-records' // Bác sĩ -> Trang khám bệnh
+            break
+          case 'ADMIN':
+            targetPath = '/admin/reports' // Admin -> Trang báo cáo thống kê
+            break
+          default:
+            targetPath = '/appointments' // Mặc định -> Trang đặt lịch
+        }
+      }
       navigate({ to: targetPath, replace: true })
     },
     onError: (error: unknown) => {
